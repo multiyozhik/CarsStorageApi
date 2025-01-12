@@ -18,25 +18,25 @@ namespace CarsStorageApi.Controllers
 		}
 
 		[HttpGet]
-		public async Task<IEnumerable<Car>> GetCars()
+		public async Task<IEnumerable<CarDTO>> GetCars()
 		{
-			var carDTOList = await carsService.GetCarsList();
-			return carDTOList.Select(carMapper.CarDTOToCar);
+			var carList = await carsService.GetCarsList();
+			return carList.Select(carMapper.CarToCarDto);
 		}
 
 		[HttpPost]
-		public async Task Add([FromBody] Car car)
+		public async Task Add([FromBody] CarDTO carDTO)
 		{
-			await carsService.AddAsync(carMapper.CarToCarDTO(car));
+			await carsService.AddAsync(carMapper.CarDtoToCar(carDTO));
 		}
 
 		[HttpPut]
-		public async Task Update([FromBody] Car car)
+		public async Task Update([FromBody] CarDTO carDTO)
 		{
-			await carsService.UpdateAsync(carMapper.CarToCarDTO(car));
+			await carsService.UpdateAsync(carMapper.CarDtoToCar(carDTO));
 		}
 
-		[HttpDelete]
+		[HttpDelete("{id}")]
 		public async Task Delete([FromRoute] Guid id)
 		{
 			await carsService.DeleteAsync(id);

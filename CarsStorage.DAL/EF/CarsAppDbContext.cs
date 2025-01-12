@@ -8,19 +8,15 @@ namespace CarsStorage.DAL.EF
 {
 	public class CarsAppDbContext: DbContext
 	{
-		private readonly IConfiguration config;
-		public DbSet<CarRow>? Cars { get; set; }
+		public DbSet<CarRow>? Cars => Set<CarRow>();
 		
 		//public DbSet<UsersModel>? Users { get; set; }
 
-		public CarsAppDbContext(IConfiguration configuration)
-		{
-			config = configuration;
+		public CarsAppDbContext(DbContextOptions<CarsAppDbContext> options)
+			: base(options)
+		{ 
 		}
 
-		protected override void  OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-		{
-			optionsBuilder.UseNpgsql(config["NpgConnection"]);
-		}
+	
 	}
 }

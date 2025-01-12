@@ -1,4 +1,4 @@
-﻿using CarsStorage.BLL;
+﻿using CarsStorage.BLL.Servises;
 using Riok.Mapperly.Abstractions;
 
 namespace CarsStorageApi
@@ -6,7 +6,7 @@ namespace CarsStorageApi
 	[Mapper]
 	public partial class CarMapper
 	{
-		public partial Car CarDTOToCar(CarDTO carDTO);
-		public partial CarDTO CarToCarDTO(Car car);
+		public partial Car CarDtoToCar(CarDTO carDTO);
+		public partial CarDTO CarToCarDto(Car car);
 	}
 }

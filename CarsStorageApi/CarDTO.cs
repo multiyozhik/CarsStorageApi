@@ -1,6 +1,6 @@
 namespace CarsStorageApi
 {
-	public class Car
+	public class CarDTO
 	{
 		public Guid Id { get; set; }
 		public string? Model { get; set; }
