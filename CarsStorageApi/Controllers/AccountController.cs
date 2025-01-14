@@ -19,7 +19,11 @@ namespace CarsStorageApi.Controllers
 		[HttpPost]
 		public async Task<StatusCodeResult> LogIn([FromBody] LoginDTO loginDTO)
 		{
-			return await accountService.LogIn(new AppUser() { UserName = loginDTO.UserName });
+			return await accountService.LogIn(
+				new AppUser() { 
+					UserName = loginDTO.UserName,
+					Password = loginDTO.Password
+				});
 		}
 
 		[Authorize]

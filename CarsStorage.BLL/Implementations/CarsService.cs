@@ -13,9 +13,9 @@ namespace CarsStorage.BLL.Implementations
 
 		private readonly CarsAppDbContext dbContext = dbContext;
 
-		public async Task<IEnumerable<Car>> GetCarsList()
+		public async Task<IEnumerable<Car>> GetList()
 		{
-			var carsList = await dbContext.Cars.ToListAsync<CarRow>();
+			var carsList = await dbContext.Cars.ToListAsync();
 			return carsList.Select(carMapper.CarRowToCar);
 		}
 

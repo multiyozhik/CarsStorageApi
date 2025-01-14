@@ -8,11 +8,14 @@ namespace CarsStorageApi.Controllers
 	[Route("[controller]/[action]")]
 	public class AdminController : Controller
 	{
-		private readonly IAdminUsersService adminUsersService;
-		public AdminController(IAdminUsersService adminUsersService) 
+		private readonly IAdminService adminUsersService;
+		public AdminController(IAdminService adminUsersService) 
 		{
 			this.adminUsersService = adminUsersService;
 		}
+
+		//[HttpPost]
+		//public IEnumerable< GetUsers
 
 
 

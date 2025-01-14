@@ -1,23 +1,20 @@
 ﻿using CarsStorage.BLL.Abstractions;
+using CarsStorage.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorage.BLL.Implementations
 {
-	public class AccountService : IAccountService
+	public class AccountService(SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager) : IAccountService
 	{
-		private readonly SignInManager<AppUser> signInManager;
-		private readonly UserManager<AppUser> userManager;
-		public AccountService(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager)
-		{
-			this.signInManager = signInManager;
-			this.userManager = userManager;
-		}
+		private readonly SignInManager<IdentityAppUser> signInManager = signInManager;
+		private readonly UserManager<IdentityAppUser> userManager = userManager;
 
 		//https://learn.microsoft.com/ru-ru/aspnet/web-api/overview/formats-and-model-binding/model-validation-in-aspnet-web-api
-		//может быть сделать потом фильтр валидации, чтобы фильтр возвращал HTTP-ответ, содержащий ошибки проверки
+		//TODO: может быть сделать потом фильтр валидации, чтобы фильтр возвращал HTTP-ответ, содержащий ошибки проверки
 		public async Task<StatusCodeResult> LogIn(AppUser appUser)
 		{
+			//TODO: здесь нужна какая-то проверка валидации на сервере типа ModelState
 			var user = await userManager.FindByNameAsync(appUser.UserName);
 			if (user is not null)
 			{
@@ -31,7 +28,7 @@ namespace CarsStorage.BLL.Implementations
 			return new StatusCodeResult(401);		//не авторизован, т.к. не найден в БД	
 		}
 
-		public async Task LogOut()
+		public async Task LogOut()      //возможно httpcontext передавать?
 		{	
 			await signInManager.SignOutAsync();
 		}

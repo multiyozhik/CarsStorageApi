@@ -20,7 +20,7 @@ namespace CarsStorageApi.Controllers
 		[HttpGet]
 		public async Task<IEnumerable<CarDTO>> GetCars()
 		{
-			var carList = await carsService.GetCarsList();
+			var carList = await carsService.GetList();
 			return carList.Select(carMapper.CarToCarDto);
 		}
 
