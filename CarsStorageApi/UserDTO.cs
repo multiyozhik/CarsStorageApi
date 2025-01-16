@@ -1,8 +1,10 @@
-﻿namespace CarsStorage.BLL.Abstractions
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CarsStorageApi
 {
-	public class AppUser
+	public class UserDTO
 	{
-		public Guid Id { get; set; }
+		public Guid Id {  get; set; }
 		public string? UserName { get; set; }
 		public string? Email { get; set; }
 		public IEnumerable<string>? Roles { get; set; }

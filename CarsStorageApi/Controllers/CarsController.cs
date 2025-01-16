@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using CarsStorage.BLL.Interfaces;
 using CarsStorage.BLL;
 using System.Linq;
+using CarsStorageApi.Filters;
 
 namespace CarsStorageApi.Controllers
 {
 	[ApiController]
 	[Route("[controller]/[action]")]
+	[ValidateModel]
 	public class CarsController : ControllerBase
 	{
 		private ICarsService carsService;

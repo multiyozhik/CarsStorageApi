@@ -2,25 +2,36 @@
 using CarsStorage.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Update;
+using System.Web.Http.ModelBinding;
 
 namespace CarsStorage.BLL.Implementations
 {
-	public class AccountService(SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager) : IAccountService
+	public class AuthenticateService(SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager) : IAuthenticateService
 	{
 		private readonly SignInManager<IdentityAppUser> signInManager = signInManager;
 		private readonly UserManager<IdentityAppUser> userManager = userManager;
 
-		//https://learn.microsoft.com/ru-ru/aspnet/web-api/overview/formats-and-model-binding/model-validation-in-aspnet-web-api
-		//TODO: может быть сделать потом фильтр валидации, чтобы фильтр возвращал HTTP-ответ, содержащий ошибки проверки
-		public async Task<StatusCodeResult> LogIn(AppUser appUser)
+		public async Task<IActionResult> Register(string userName, string email, string password)
 		{
-			//TODO: здесь нужна какая-то проверка валидации на сервере типа ModelState
-			var user = await userManager.FindByNameAsync(appUser.UserName);
+			var user = new IdentityAppUser { UserName = userName, Email = email };
+			var result = await userManager.CreateAsync(user, password);
+			if (result.Succeeded)
+			{
+				await signInManager.SignInAsync(user, isPersistent: false); 
+				return new StatusCodeResult(200);
+			}
+			return new StatusCodeResult(401);
+		}
+
+		public async Task<IActionResult> LogIn(string userName, string password)
+		{
+			var user = await userManager.FindByNameAsync(userName);
 			if (user is not null)
 			{
 				await signInManager.SignOutAsync();
 				var result = await signInManager.PasswordSignInAsync(
-					user, appUser.Password, false, false);
+					user, password, false, false);
 				if (result.Succeeded)
 					return new StatusCodeResult(200);
 				return new StatusCodeResult(400);   //Bad Request, например, пароль неверный

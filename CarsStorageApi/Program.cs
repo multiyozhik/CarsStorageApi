@@ -5,7 +5,6 @@ using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,12 +19,13 @@ Configure(app, app.Environment);
 static void ConfigureServices(IServiceCollection services, IConfiguration config)
 {
 	services.AddControllers();
+
 	services.AddEndpointsApiExplorer();
 	services.AddSwaggerGen();
 
 	services.AddScoped<ICarsService, CarsService>();
-	services.AddScoped<IAccountService, AccountService>();
-	services.AddScoped<IAdminService, AdminService>();
+	services.AddScoped<IAuthenticateService, AuthenticateService>();
+	services.AddScoped<IUsersService, UsersService>();
 
 	services.AddDbContext<CarsAppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
@@ -50,7 +50,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 	});
 
-	//сюда jwt токен потом
+	services.AddAuthentication().AddBearerToken();    //на основе jwt токена
 	services.AddAuthorizationBuilder()
 		.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"))
 		.AddPolicy("RequireManagerRole", policy => policy.RequireRole("Manager"));
@@ -98,8 +98,8 @@ static async Task CreateAdminAccount(IApplicationBuilder app, IConfiguration con
 			UserName = adminLogin,
 			Email = adminEmail
 		};
-		var result = await userManager.CreateAsync(adminUser, adminPassword);
-		if (result is not null)
+
+		if (await userManager.CreateAsync(adminUser, adminPassword) is not null)
 		{
 			await userManager.AddToRoleAsync(adminUser, adminRole);
 		}
