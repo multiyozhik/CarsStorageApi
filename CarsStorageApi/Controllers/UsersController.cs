@@ -1,13 +1,12 @@
 ﻿using CarsStorage.BLL.Abstractions;
-using CarsStorage.BLL.Implementations;
 using CarsStorageApi.Filters;
-using CarsStorageApi.ModelsDto;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorageApi.Controllers
 {
-    [ApiController]
+	[ApiController]
+	[Authorize(Roles = "admin")]
 	[Route("[controller]/[action]")]
 	[ValidateModel]
 	public class UsersController(IUsersService usersService) : ControllerBase
@@ -40,13 +39,13 @@ namespace CarsStorageApi.Controllers
 			return await usersService.Create(userMapper.RegUserDtoToRegAppUser(registerUserDTO));
 		}
 
-		[HttpPost]
+		[HttpPut]
 		public async Task<IActionResult> Update([FromBody] UserDTO userDTO)
 		{
 			return await usersService.Update(userMapper.UserDtoToAppUser(userDTO));
 		}
 
-		[HttpPost("{id}")]
+		[HttpDelete("{id}")]
 		public async Task<IActionResult> Delete([FromRoute] Guid id)
 		{
 			return await usersService.Delete(id);

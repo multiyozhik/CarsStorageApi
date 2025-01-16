@@ -28,7 +28,7 @@ namespace CarsStorageApi.Controllers
 				|| string.IsNullOrWhiteSpace(registerDTO.Password))
 				return BadRequest();
 
-			return await accountService.Register(registerDTO.UserName, registerDTO.Email, registerDTO.Password);
+			return await accountService.Register(registerDTO.UserName, registerDTO.Email, registerDTO.Password);			
 		}
 
 		[HttpPost]

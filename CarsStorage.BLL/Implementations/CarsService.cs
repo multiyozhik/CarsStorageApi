@@ -1,15 +1,13 @@
 ﻿using CarsStorage.BLL.Interfaces;
 using CarsStorage.BLL.Servises;
-using CarsStorage.DAL;
 using CarsStorage.DAL.EF;
-using CarsStorage.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.BLL.Implementations
 {
 	public class CarsService(CarsAppDbContext dbContext) : ICarsService
 	{
-		private readonly CarMapper carMapper = new CarMapper();
+		private readonly CarMapper carMapper = new();
 
 		private readonly CarsAppDbContext dbContext = dbContext;
 
@@ -36,6 +34,11 @@ namespace CarsStorage.BLL.Implementations
 		public async Task DeleteAsync(Guid id)
 		{
 			var i = await dbContext.Cars.Where(c => c.Id == id).ExecuteDeleteAsync();
+		}
+
+		public async Task ChangeCount(Guid id, int count)
+		{
+			await dbContext.Cars.Where(c => c.Id == id).ExecuteUpdateAsync(setters => setters.SetProperty(c => c.Count, count));
 		}
 	}
 }

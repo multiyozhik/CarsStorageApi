@@ -3,22 +3,20 @@ using CarsStorage.BLL.Interfaces;
 using CarsStorage.BLL;
 using System.Linq;
 using CarsStorageApi.Filters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CarsStorageApi.Controllers
 {
 	[ApiController]
+	[Authorize(Roles = "manager")]
 	[Route("[controller]/[action]")]
 	[ValidateModel]
-	public class CarsController : ControllerBase
+	public class CarsController(ICarsService carsService) : ControllerBase
 	{
-		private ICarsService carsService;
-		private CarMapper carMapper = new CarMapper();
+		private readonly ICarsService carsService = carsService;
+		private readonly CarMapper carMapper = new();
 
-		public CarsController(ICarsService carsService)
-		{
-			this.carsService = carsService;
-		}
-
+		[Authorize(Roles = "manager, user")]
 		[HttpGet]
 		public async Task<IEnumerable<CarDTO>> GetCars()
 		{
@@ -42,6 +40,12 @@ namespace CarsStorageApi.Controllers
 		public async Task Delete([FromRoute] Guid id)
 		{
 			await carsService.DeleteAsync(id);
+		}
+
+		[HttpPut]
+		public async Task ChangeCount([FromRoute] Guid id, [FromQuery] int count)
+		{
+			await carsService.ChangeCount(id, count);
 		}
 	}
 }

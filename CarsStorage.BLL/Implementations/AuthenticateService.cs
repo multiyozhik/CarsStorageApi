@@ -3,14 +3,16 @@ using CarsStorage.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Update;
+using Microsoft.Extensions.Configuration;
 using System.Web.Http.ModelBinding;
 
 namespace CarsStorage.BLL.Implementations
 {
-	public class AuthenticateService(SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager) : IAuthenticateService
+	public class AuthenticateService(SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager, IConfiguration config) : IAuthenticateService
 	{
 		private readonly SignInManager<IdentityAppUser> signInManager = signInManager;
 		private readonly UserManager<IdentityAppUser> userManager = userManager;
+		private readonly IConfiguration config = config;
 
 		public async Task<IActionResult> Register(string userName, string email, string password)
 		{
@@ -18,6 +20,7 @@ namespace CarsStorage.BLL.Implementations
 			var result = await userManager.CreateAsync(user, password);
 			if (result.Succeeded)
 			{
+				await userManager.AddToRoleAsync(user, config["RoleNames:AuthUserRoleName"]);
 				await signInManager.SignInAsync(user, isPersistent: false); 
 				return new StatusCodeResult(200);
 			}

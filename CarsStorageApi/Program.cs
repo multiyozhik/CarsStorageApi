@@ -3,8 +3,10 @@ using CarsStorage.BLL.Implementations;
 using CarsStorage.BLL.Interfaces;
 using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Entities;
+using CarsStorageApi.Config;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,10 +52,14 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 	});
 
-	services.AddAuthentication().AddBearerToken();    //на основе jwt токена
-	services.AddAuthorizationBuilder()
-		.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"))
-		.AddPolicy("RequireManagerRole", policy => policy.RequireRole("Manager"));
+	services.AddAuthentication().AddBearerToken();  
+	services.AddAuthorization();
+
+	services.AddOptions<AdminConfig>();          //.ValidateDataAnnotations().ValidateOnStart();
+	services.AddOptions<RoleNamesConfig>();
+
+	services.Configure<AdminConfig>(config.GetSection("AdminConfig"));
+	services.Configure<RoleNamesConfig>(config.GetSection("RoleNamesConfig"));
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -74,21 +80,24 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.MapControllers();
 
-	CreateAdminAccount(app, app.Configuration).Wait();
+	CreateAdminAccount(app).Wait();
+
+	CreateRoles(app).Wait();
 
 	app.Run();
 }
 
-static async Task CreateAdminAccount(IApplicationBuilder app, IConfiguration config)
+static async Task CreateAdminAccount(IApplicationBuilder app)
 {
 	using IServiceScope scope = app.ApplicationServices.CreateScope();
 	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
 	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-	var adminLogin = config["AdminUser:UserName"];
-	var adminPassword = config["AdminUser:Password"];
-	var adminEmail = config["AdminUser:Email"];
-	var adminRole = config["AdminUser:Role"];
+	var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminConfig>>().Value;
+	var adminLogin = admin.UserName;
+	var adminPassword = admin.Password;
+	var adminEmail = admin.Email;
+	var adminRole = admin.Role;
 	
 	if (await userManager.FindByNameAsync(adminLogin) is null)
 	{
@@ -102,6 +111,23 @@ static async Task CreateAdminAccount(IApplicationBuilder app, IConfiguration con
 		if (await userManager.CreateAsync(adminUser, adminPassword) is not null)
 		{
 			await userManager.AddToRoleAsync(adminUser, adminRole);
+		}
+	}
+}
+
+static async Task CreateRoles(IApplicationBuilder app)
+{
+	using IServiceScope scope = app.ApplicationServices.CreateScope();
+	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+	var defaultRoleNames = scope.ServiceProvider.GetRequiredService<IOptions<RoleNamesConfig>>().Value.DefaultRoleNamesList;
+	IdentityResult roleResult;
+
+	foreach (var roleName in defaultRoleNames)
+	{
+		var roleExist = await roleManager.RoleExistsAsync(roleName);
+		if (!roleExist)
+		{
+			roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
 		}
 	}
 }

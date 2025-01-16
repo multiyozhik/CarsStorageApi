@@ -2,14 +2,15 @@
 using CarsStorage.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace CarsStorage.BLL.Implementations
 {
 	public class UsersService(
-		UserManager<IdentityAppUser> usrMgr) : IUsersService
+		UserManager<IdentityAppUser> usrMgr, IConfiguration config) : IUsersService
 	{
 		private readonly UserManager<IdentityAppUser> userManager = usrMgr;
-
+		private readonly IConfiguration config = config;
 		public async Task<IEnumerable<AppUser>> GetList()
 		{
 			var users = userManager.Users.ToList();
@@ -44,6 +45,7 @@ namespace CarsStorage.BLL.Implementations
 			};
 			var result = await userManager.CreateAsync(user, registerAppUser.Password);
 			if (result.Succeeded) {
+				await userManager.AddToRoleAsync(user, config["RoleNames:AuthUserRoleName"]);
 				return new StatusCodeResult(200); 
 			}
 			return new StatusCodeResult(500);
@@ -62,7 +64,7 @@ namespace CarsStorage.BLL.Implementations
 			var result = await userManager.RemoveFromRolesAsync(user, roles);
 			if (result.Succeeded)
 			{
-				result = await userManager.AddToRolesAsync(user, roles);
+				result = await userManager.AddToRolesAsync(user, appUser.Roles);
 				if (result.Succeeded)
 				{
 					return new StatusCodeResult(200);
