@@ -1,8 +1,13 @@
-﻿using Riok.Mapperly.Abstractions;
+﻿using CarsStorage.BLL.Servises;
 using CarsStorage.DAL.Entities;
-using CarsStorage.BLL.Servises;
+using Riok.Mapperly.Abstractions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace CarsStorage.BLL
+namespace CarsStorage.BLL.Abstractions
 {
 	[Mapper]
 	public partial class CarMapper

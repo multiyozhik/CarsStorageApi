@@ -4,9 +4,14 @@ using CarsStorage.BLL.Interfaces;
 using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Entities;
 using CarsStorageApi.Config;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +29,40 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddEndpointsApiExplorer();
 	services.AddSwaggerGen();
+
+	//чтобы появилась кнопка Authorize в Swagger
+	services.AddSwaggerGen(option =>
+	{
+		option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
+		option.AddSecurityDefinition(
+			"Bearer",
+			new OpenApiSecurityScheme
+			{
+				In = ParameterLocation.Header,
+				Description = "Please enter a valid token",
+				Name = "Authorization",
+				Type = SecuritySchemeType.Http,
+				BearerFormat = "JWT",
+				Scheme = "Bearer"
+			}
+		);
+		option.AddSecurityRequirement(
+			new OpenApiSecurityRequirement
+			{
+			{
+				new OpenApiSecurityScheme
+				{
+					Reference = new OpenApiReference
+					{
+						Type = ReferenceType.SecurityScheme,
+						Id = "Bearer"
+					}
+				},
+				new string[] { }
+			}
+			}
+		);
+	});
 
 	services.AddScoped<ICarsService, CarsService>();
 	services.AddScoped<IAuthenticateService, AuthenticateService>();
@@ -52,7 +91,34 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 	});
 
-	services.AddAuthentication().AddBearerToken();  
+	var jwtSection = config.GetSection("Jwt");
+	var key = jwtSection.GetValue<string>("Key");
+	var issuer = jwtSection.GetValue<string>("Issuer");
+	var audience = jwtSection.GetValue<string>("Audience");
+	var expireMinutes = jwtSection.GetValue<int>("ExpireMinutes");
+
+	services.AddAuthentication(options =>
+	{
+		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+		options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+	})
+		.AddJwtBearer(options =>
+		{
+			options.TokenValidationParameters = new TokenValidationParameters
+			{
+				ValidateIssuerSigningKey = true,
+				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+				ValidateIssuer = true,
+				ValidIssuer = issuer,
+				ValidateAudience = true,
+				ValidAudience = audience,
+				ValidateLifetime = true,
+				RequireExpirationTime = true
+			};
+		})
+		.AddBearerToken();
+
 	services.AddAuthorization();
 
 	services.AddOptions<AdminConfig>();          //.ValidateDataAnnotations().ValidateOnStart();
@@ -67,7 +133,10 @@ static void Configure(WebApplication app, IHostEnvironment env)
 	if (app.Environment.IsDevelopment())
 	{
 		app.UseSwagger();
-		app.UseSwaggerUI();
+		app.UseSwaggerUI(c =>
+		{
+			c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+		});
 	}
 
 	app.UseHttpsRedirection();

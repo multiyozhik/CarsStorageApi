@@ -16,7 +16,9 @@ namespace CarsStorageApi.Controllers
 		private readonly ICarsService carsService = carsService;
 		private readonly CarMapper carMapper = new();
 
-		[Authorize(Roles = "manager, user")]
+		[Authorize(Roles = "admin")]
+		[Authorize(Roles = "manager")]
+		[Authorize(Roles = "user")]
 		[HttpGet]
 		public async Task<IEnumerable<CarDTO>> GetCars()
 		{

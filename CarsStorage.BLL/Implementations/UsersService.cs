@@ -45,7 +45,7 @@ namespace CarsStorage.BLL.Implementations
 			};
 			var result = await userManager.CreateAsync(user, registerAppUser.Password);
 			if (result.Succeeded) {
-				await userManager.AddToRoleAsync(user, config["RoleNames:AuthUserRoleName"]);
+				await userManager.AddToRoleAsync(user, config["RoleNamesConfig:AuthUserRoleName"]);
 				return new StatusCodeResult(200); 
 			}
 			return new StatusCodeResult(500);
