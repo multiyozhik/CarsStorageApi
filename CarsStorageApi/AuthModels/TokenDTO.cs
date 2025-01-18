@@ -1,4 +1,4 @@
-﻿namespace CarsStorageApi
+﻿namespace CarsStorageApi.AuthModels
 {
 	public class TokenDTO
 	{

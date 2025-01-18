@@ -1,8 +1,7 @@
 ﻿using CarsStorage.BLL.Abstractions;
-using CarsStorage.BLL.Servises;
 using Riok.Mapperly.Abstractions;
 
-namespace CarsStorageApi
+namespace CarsStorageApi.Mappers
 {
 	[Mapper]
 	public partial class UserMapper
@@ -11,6 +10,5 @@ namespace CarsStorageApi
 		public partial UserDTO AppUserToUserDto(AppUser appUser);
 
 		public partial RegisterAppUser RegUserDtoToRegAppUser(RegisterUserDTO regUserDTO);
-		public partial RegisterUserDTO RegAppUserToRegUserDto(RegisterAppUser regAppUser);
 	}
 }

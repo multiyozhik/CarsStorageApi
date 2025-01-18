@@ -1,7 +1,7 @@
-﻿using CarsStorage.BLL.Servises;
+﻿using CarsStorage.BLL.Abstractions;
 using Riok.Mapperly.Abstractions;
 
-namespace CarsStorageApi
+namespace CarsStorageApi.Mappers
 {
 	[Mapper]
 	public partial class CarMapper

@@ -1,4 +1,5 @@
 using CarsStorage.BLL.Abstractions;
+using CarsStorage.BLL.Config;
 using CarsStorage.BLL.Implementations;
 using CarsStorage.BLL.Interfaces;
 using CarsStorage.DAL.EF;
@@ -58,7 +59,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 						Id = "Bearer"
 					}
 				},
-				new string[] { }
+				Array.Empty<string>()
 			}
 			}
 		);
@@ -73,6 +74,14 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddDbContext<IdentityAppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
+
+	services.AddOptions<AdminConfig>();
+	services.AddOptions<RoleNamesConfig>();
+	services.AddOptions<JwtDTOConfig>();
+
+	services.Configure<AdminConfig>(config.GetSection("AdminConfig"));
+	services.Configure<RoleNamesConfig>(config.GetSection("RoleNamesConfig"));
+	services.Configure<JwtDTOConfig>(config.GetSection("JWTConfig"));
 
 	services.AddIdentity<IdentityAppUser, IdentityRole>()
 		.AddEntityFrameworkStores<IdentityAppDbContext>()
@@ -91,12 +100,6 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 	});
 
-	var jwtSection = config.GetSection("Jwt");
-	var key = jwtSection.GetValue<string>("Key");
-	var issuer = jwtSection.GetValue<string>("Issuer");
-	var audience = jwtSection.GetValue<string>("Audience");
-	var expireMinutes = jwtSection.GetValue<int>("ExpireMinutes");
-
 	services.AddAuthentication(options =>
 	{
 		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -105,27 +108,28 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	})
 		.AddJwtBearer(options =>
 		{
-			options.TokenValidationParameters = new TokenValidationParameters
+			var jwtConfig = config.GetSection("JWTConfig");
+			if (!string.IsNullOrEmpty(jwtConfig["Key"]))
 			{
-				ValidateIssuerSigningKey = true,
-				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-				ValidateIssuer = true,
-				ValidIssuer = issuer,
-				ValidateAudience = true,
-				ValidAudience = audience,
-				ValidateLifetime = true,
-				RequireExpirationTime = true
-			};
+				options.TokenValidationParameters = new TokenValidationParameters
+				{
+					ValidateIssuerSigningKey = true,
+					IssuerSigningKey = new SymmetricSecurityKey(
+						Convert.FromBase64String(jwtConfig["Key"])),
+					ValidateIssuer = true,
+					ValidIssuer = jwtConfig["Issuer"],
+					ValidateAudience = true,
+					ValidAudience = jwtConfig["Audience"],
+					ValidateLifetime = true,
+					RequireExpirationTime = true
+				};
+			}
+			else
+				throw new Exception("Не задан секретный ключ для конфигурации jwt авторизации");
 		})
 		.AddBearerToken();
 
-	services.AddAuthorization();
-
-	services.AddOptions<AdminConfig>();          //.ValidateDataAnnotations().ValidateOnStart();
-	services.AddOptions<RoleNamesConfig>();
-
-	services.Configure<AdminConfig>(config.GetSection("AdminConfig"));
-	services.Configure<RoleNamesConfig>(config.GetSection("RoleNamesConfig"));
+	services.AddAuthorization();	
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -163,23 +167,24 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
 	var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminConfig>>().Value;
-	var adminLogin = admin.UserName;
-	var adminPassword = admin.Password;
-	var adminEmail = admin.Email;
-	var adminRole = admin.Role;
-	
-	if (await userManager.FindByNameAsync(adminLogin) is null)
+
+	if (string.IsNullOrEmpty(admin.UserName)
+		|| string.IsNullOrEmpty(admin.Password)
+		|| string.IsNullOrEmpty(admin.Role))
+		throw new Exception("Не заданы конфигурации для администратора");
+
+	if (await userManager.FindByNameAsync(admin.UserName) is null)
 	{
-		await roleManager.CreateAsync(new IdentityRole(adminRole));
+		await roleManager.CreateAsync(new IdentityRole(admin.Role));
 		var adminUser = new IdentityAppUser()
 		{
-			UserName = adminLogin,
-			Email = adminEmail
+			UserName = admin.UserName,
+			Email = admin.Email
 		};
 
-		if (await userManager.CreateAsync(adminUser, adminPassword) is not null)
+		if (await userManager.CreateAsync(adminUser, admin.Password) is not null)
 		{
-			await userManager.AddToRoleAsync(adminUser, adminRole);
+			await userManager.AddToRoleAsync(adminUser, admin.Role);
 		}
 	}
 }
@@ -188,15 +193,13 @@ static async Task CreateRoles(IApplicationBuilder app)
 {
 	using IServiceScope scope = app.ApplicationServices.CreateScope();
 	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-	var defaultRoleNames = scope.ServiceProvider.GetRequiredService<IOptions<RoleNamesConfig>>().Value.DefaultRoleNamesList;
-	IdentityResult roleResult;
+	var defaultRoleNames = scope.ServiceProvider.GetRequiredService<IOptions<RoleNamesConfig>>().Value
+		.DefaultRoleNamesList ?? throw new Exception("Не заданы конфигурации для начального списка ролей пользователей");
 
 	foreach (var roleName in defaultRoleNames)
 	{
 		var roleExist = await roleManager.RoleExistsAsync(roleName);
 		if (!roleExist)
-		{
-			roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
-		}
+			await roleManager.CreateAsync(new IdentityRole(roleName));
 	}
 }

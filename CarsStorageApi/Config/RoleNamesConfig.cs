@@ -5,9 +5,9 @@ namespace CarsStorageApi.Config
     public class RoleNamesConfig
     {
 		[Required]
-		public string AuthUserRoleName { get; set; } = "";
+		public string? DefaultUserRoleName { get; set; }
 
 		[Required]
-		public IEnumerable<string> DefaultRoleNamesList { get; set; } = [];
+		public IEnumerable<string>? DefaultRoleNamesList { get; set; }
     }
 }

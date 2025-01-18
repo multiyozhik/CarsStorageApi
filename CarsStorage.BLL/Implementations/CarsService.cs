@@ -1,6 +1,6 @@
 ﻿using CarsStorage.BLL.Abstractions;
 using CarsStorage.BLL.Interfaces;
-using CarsStorage.BLL.Servises;
+using CarsStorage.BLL.Mappers;
 using CarsStorage.DAL.EF;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,7 +37,7 @@ namespace CarsStorage.BLL.Implementations
 			var i = await dbContext.Cars.Where(c => c.Id == id).ExecuteDeleteAsync();
 		}
 
-		public async Task ChangeCount(Guid id, int count)
+		public async Task UpdateCount(Guid id, int count)
 		{
 			await dbContext.Cars.Where(c => c.Id == id).ExecuteUpdateAsync(setters => setters.SetProperty(c => c.Count, count));
 		}
