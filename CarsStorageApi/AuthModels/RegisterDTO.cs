@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CarsStorageApi.ModelsDto
+namespace CarsStorageApi.AuthModels
 {
     public class RegisterDTO
     {

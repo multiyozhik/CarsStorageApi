@@ -1,34 +1,41 @@
 ﻿using CarsStorage.BLL.Abstractions;
+using CarsStorage.BLL.Config;
 using CarsStorage.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 
 namespace CarsStorage.BLL.Implementations
 {
-	public class UsersService(
-		UserManager<IdentityAppUser> usrMgr, IConfiguration config) : IUsersService
+	public class UsersService(UserManager<IdentityAppUser> userManager) : IUsersService
 	{
-		private readonly UserManager<IdentityAppUser> userManager = usrMgr;
-		private readonly IConfiguration config = config;
 		public async Task<IEnumerable<AppUser>> GetList()
 		{
-			var users = userManager.Users.ToList();
-			var appUsers = users.Select(u => new AppUser
-			{
-				Id = new Guid(u.Id),
-				UserName = u.UserName,
-				Email = u.Email,
-				Roles = userManager.GetRolesAsync(u).Result
-			});
-			return appUsers;
+			//ToDo: не пойму, как сделать без ToList? чтоб не выгружать, а всю работу на стороне сервера
+			//var users = userManager.Users;       //через IQyerable
+			var users = userManager.Users.ToList();   
+
+			var tasks = users.Select(
+				async (u) => 
+				{
+					var roles = await userManager.GetRolesAsync(u);
+					return new AppUser()
+					{
+						Id = new Guid(u.Id),
+						UserName = u.UserName,
+						Email = u.Email,
+						Roles = roles
+					};
+				}).ToList();
+			return await Task.WhenAll(tasks);
 		}
+
 
 		public async Task<ActionResult<AppUser>> GetById(Guid id)
 		{
 			var user = await userManager.FindByIdAsync(id.ToString());
 
-			if (user is null) return new NotFoundResult();
+			if (user is null) 
+				return new NotFoundObjectResult("Не найден пользователь по id");
 
 			var roles = await userManager.GetRolesAsync(user);
 
@@ -36,29 +43,38 @@ namespace CarsStorage.BLL.Implementations
 		}
 
 
-		public async Task<IActionResult> Create(RegisterAppUser registerAppUser)
+		public async Task<IActionResult> Create(RegisterAppUser registerAppUser, RoleNames roleNames)
 		{
-			var user = new IdentityAppUser { UserName = registerAppUser.UserName, Email = registerAppUser.Email };
-			if (registerAppUser.Password is null) 
+			if (string.IsNullOrEmpty(roleNames.DefaultUserRoleName))
+				throw new Exception("Не задана конфигурация ролей пользователя");
+
+			var user = new IdentityAppUser 
 			{ 
-				return new BadRequestResult(); 
+				UserName = registerAppUser.UserName, 
+				Email = registerAppUser.Email 
 			};
+
+			if (string.IsNullOrEmpty(registerAppUser.Password))
+				return new BadRequestObjectResult("Не задан пароль для пользователя");			
 			var result = await userManager.CreateAsync(user, registerAppUser.Password);
-			if (result.Succeeded) {
-				await userManager.AddToRoleAsync(user, config["RoleNamesConfig:AuthUserRoleName"]);
-				return new StatusCodeResult(200); 
-			}
-			return new StatusCodeResult(500);
+			
+			if (!result.Succeeded) 
+				return new StatusCodeResult(500);			
+			await userManager.AddToRoleAsync(user, roleNames.DefaultUserRoleName);
+			return new OkResult();
 		}
+
 
 		public async Task<IActionResult> Update(AppUser appUser)
 		{
 			var user = await userManager.FindByIdAsync(appUser.Id.ToString());
             if (user is null)
-            {
-				return new BadRequestResult();
-            }
-            user.UserName = appUser.UserName;
+				return new NotFoundObjectResult("Не найден пользователь по id");
+
+			if (appUser.Roles is null)
+				return new BadRequestObjectResult("Не заданы роли для пользователя");
+
+			user.UserName = appUser.UserName;
 			user.Email = appUser.Email;
 			var roles = await userManager.GetRolesAsync(user);
 			var result = await userManager.RemoveFromRolesAsync(user, roles);
@@ -66,9 +82,7 @@ namespace CarsStorage.BLL.Implementations
 			{
 				result = await userManager.AddToRolesAsync(user, appUser.Roles);
 				if (result.Succeeded)
-				{
-					return new StatusCodeResult(200);
-				}
+					return new OkResult();
 			}
 			return new StatusCodeResult(500);
 		}
@@ -76,11 +90,13 @@ namespace CarsStorage.BLL.Implementations
 		public async Task<IActionResult> Delete(Guid id)
 		{
 			var user = await userManager.FindByIdAsync(id.ToString());
+			if (user is null)
+				return new NotFoundObjectResult("Не найден пользователь по id");
+
 			var result = await userManager.DeleteAsync(user);
 			if (result.Succeeded)
-			{
-				return new StatusCodeResult(200);
-			}
+				if (result.Succeeded)
+					return new OkResult();
 			return new StatusCodeResult(500);
 		}
 	}

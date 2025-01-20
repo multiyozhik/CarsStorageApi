@@ -1,26 +1,22 @@
-﻿
-using CarsStorage.BLL.Abstractions;
+﻿using CarsStorage.BLL.Abstractions;
 using CarsStorage.BLL.Config;
-using CarsStorageApi.Filters;
-using CarsStorageApi.ModelsDto;
+using CarsStorageApi.AuthModels;
+using CarsStorageApi.Config;
+using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.Options;
 
 namespace CarsStorageApi.Controllers
 {
 	[ApiController]
 	[AllowAnonymous]
 	[Route("[controller]/[action]")]
-	[ValidateModel]      //фильтр действия для возврата при Modelstate invalid - return BadRequest
-	
-	//https://learn.microsoft.com/ru-ru/aspnet/web-api/overview/formats-and-model-binding/model-validation-in-aspnet-web-api
-	
-	public class AuthenticateController(IAuthenticateService authService) : ControllerBase
+		
+	public class AuthenticateController(IAuthenticateService authService, IOptions<JwtDTOConfig> jwtDTOConfig) : ControllerBase
 	{
-		private readonly IAuthenticateService authService = authService;
 		private readonly TokenMapper tokenMapper = new();
+		private readonly JwtConfigMapper jwtConfigMapper = new();
 
 		[HttpPost]
 		public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
@@ -28,20 +24,22 @@ namespace CarsStorageApi.Controllers
 			if (string.IsNullOrWhiteSpace(registerDTO.UserName) 
 				|| string.IsNullOrWhiteSpace(registerDTO.Email)
 				|| string.IsNullOrWhiteSpace(registerDTO.Password))
-				return BadRequest();
+				return BadRequest("Ошибка ввода данных пользователя");
 
 			return await authService.Register(registerDTO.UserName, registerDTO.Email, registerDTO.Password);
 		}
 
 		[HttpPost]
-		public async Task<ActionResult<string>> LogIn([FromBody] LoginDTO loginDTO)
+		public async Task<ActionResult<TokenDTO>> LogIn([FromBody] LoginDTO loginDTO)
 		{
 			if (string.IsNullOrWhiteSpace(loginDTO.UserName) || string.IsNullOrWhiteSpace(loginDTO.Password))
-				return BadRequest();
+				return BadRequest("Ошибка ввода данных пользователя");
 
-			return await authService.LogIn(loginDTO.UserName, loginDTO.Password);
-			//var token = await authService.LogIn(loginDTO.UserName, loginDTO.Password);
-			//return tokenMapper.TokenJwtToTokenDto(token.Value);
+			var tokenJWT = await authService.LogIn(
+				loginDTO.UserName, loginDTO.Password, jwtConfigMapper.JwtDTOConfigToJwt(jwtDTOConfig.Value));
+			if (tokenJWT.Value is not null) 
+				return new OkObjectResult(tokenMapper.TokenJwtToTokenDto(tokenJWT.Value));
+			return BadRequest("Ошибка аутентификации, не получен токен");
 		}
 
 		[Authorize]

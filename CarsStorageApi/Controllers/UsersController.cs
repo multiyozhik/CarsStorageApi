@@ -1,18 +1,20 @@
 ﻿using CarsStorage.BLL.Abstractions;
-using CarsStorageApi.Filters;
+using CarsStorage.BLL.Config;
+using CarsStorageApi.Config;
+using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace CarsStorageApi.Controllers
 {
 	[ApiController]
 	[Authorize(Roles = "admin")]
 	[Route("[controller]/[action]")]
-	[ValidateModel]
-	public class UsersController(IUsersService usersService) : ControllerBase
+	
+	public class UsersController(IUsersService usersService, IOptions<RoleNamesConfig> roleNamesConfig) : ControllerBase
 	{
-		private readonly UserMapper userMapper = new UserMapper();
-		private readonly IUsersService usersService = usersService;
+		private readonly UserMapper userMapper = new();
 
 		[HttpGet]
 		public async Task<IEnumerable<UserDTO>> GetList()
@@ -25,7 +27,9 @@ namespace CarsStorageApi.Controllers
 		public async Task<ActionResult<UserDTO>> GetById([FromRoute] Guid id)
 		{
 			var appUser = await usersService.GetById(id);
-			return userMapper.AppUserToUserDto(appUser.Value);
+			if (appUser.Value is not null)
+				return userMapper.AppUserToUserDto(appUser.Value);
+			return NotFound("Пользователь не найден"); 
 		}
 
 		//ToDo: при регистрации админом сразу задавать пароль, в RegisterUserDTO добавить список ролей, по умолчанию дефолтная роль
@@ -35,9 +39,15 @@ namespace CarsStorageApi.Controllers
 			if (string.IsNullOrWhiteSpace(registerUserDTO.UserName)
 				|| string.IsNullOrWhiteSpace(registerUserDTO.Email)
 				|| string.IsNullOrWhiteSpace(registerUserDTO.Password))
-				return BadRequest();
+				return BadRequest("Ошибка ввода данных пользователя");
 
-			return await usersService.Create(userMapper.RegUserDtoToRegAppUser(registerUserDTO));
+			return await usersService.Create(
+				userMapper.RegUserDtoToRegAppUser(
+					registerUserDTO), 
+					new RoleNames() 
+					{ 
+						DefaultUserRoleName = roleNamesConfig.Value.DefaultUserRoleName }
+					);
 		}
 
 		[HttpPut]

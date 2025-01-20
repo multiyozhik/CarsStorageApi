@@ -1,5 +1,5 @@
 using CarsStorage.BLL.Interfaces;
-using CarsStorageApi.Filters;
+using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +7,7 @@ namespace CarsStorageApi.Controllers
 {
 	[ApiController]
 	[Route("[controller]/[action]")]
-	[ValidateModel]
+	
 	public class CarsController(ICarsService carsService) : ControllerBase
 	{
 		private readonly ICarsService carsService = carsService;

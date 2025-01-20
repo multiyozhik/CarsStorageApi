@@ -1,82 +1,74 @@
 ﻿using CarsStorage.BLL.Abstractions;
+using CarsStorage.BLL.AuthModels;
+using CarsStorage.BLL.Config;
 using CarsStorage.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-
-
 namespace CarsStorage.BLL.Implementations
 {
-	public class AuthenticateService(SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager, IConfiguration config) : IAuthenticateService
+	public class AuthenticateService(
+		SignInManager<IdentityAppUser> signInManager, 
+		UserManager<IdentityAppUser> userManager, 
+		IOptions<RoleNames> roleOptions) : IAuthenticateService
 	{
-		private readonly SignInManager<IdentityAppUser> signInManager = signInManager;
-		private readonly UserManager<IdentityAppUser> userManager = userManager;
-		private readonly IConfiguration config = config;
+		private readonly RoleNames roleNames = roleOptions.Value;
 
 		public async Task<IActionResult> Register(string userName, string email, string password)
 		{
 			var user = new IdentityAppUser { UserName = userName, Email = email };
 			var result = await userManager.CreateAsync(user, password);
 			if (result.Succeeded) {
-				var res = await userManager.AddToRoleAsync(user, config["RoleNamesConfig:AuthUserRoleName"]);
+				if (roleNames.DefaultUserRoleName is null)
+					return new BadRequestObjectResult("Ошибка конфигурации ролей пользователя");
+				var res = await userManager.AddToRoleAsync(user, roleNames.DefaultUserRoleName);
 				if (res.Succeeded)
-				{
 					await signInManager.SignInAsync(user, false);
-					return new StatusCodeResult(200);
-				}
-				else
-				{
-					return new StatusCodeResult(500);
-				}
+				else return new StatusCodeResult(500);
 			}
-			else
-			{
-				return new StatusCodeResult(500);
-			}
+			return new BadRequestObjectResult("Ошибка ввода данных пользователя");
 		}
 
-		public async Task<ActionResult<string>> LogIn(string userName, string password)
+		public async Task<ActionResult<TokenJWT>> LogIn(string userName, string password, JWTConfig jwtConfig)
 		{
 			var user = await userManager.FindByNameAsync(userName);
-			if (user is not null)
+			if (user is null)
+				return new BadRequestObjectResult("Пользователь не найден");
+
+			if (string.IsNullOrEmpty(jwtConfig.Key))
+				throw new Exception("Не задан секретный ключ для конфигурации jwt авторизации");
+
+			await signInManager.SignOutAsync();
+			var result = await signInManager.PasswordSignInAsync(user, password, false, false);
+			if (!result.Succeeded)
+				return new StatusCodeResult(401);
+
+			if (jwtConfig.Key is null)
+				throw new Exception("Не задан секретный ключ при конфигурации аутентификации");
+			var roles = await userManager.GetRolesAsync(user);
+			if (roles is not null && user.UserName is not null)
 			{
-				await signInManager.SignOutAsync();
-				var result = await signInManager.PasswordSignInAsync(
-					user, password, false, false);
-				var roles = await userManager.GetRolesAsync(user);
-				var claimsList = new List<Claim> { new(ClaimTypes.Name, user.UserName) };				
-				if (roles != null)
-				{
-					foreach (var role in roles)
-					{
-						claimsList.Add(new Claim(ClaimTypes.Role, role));
-					}
-				}
-
-				if (result.Succeeded)
-				{
-					var jwt = new JwtSecurityToken(
-						claims: claimsList,
-						issuer: config["JWT:Issuer"],
-						audience: config["JWT:Audience"],
-						expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(60)),
-						signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JWT:Key"])), SecurityAlgorithms.HmacSha256));
-
-					return new JwtSecurityTokenHandler().WriteToken(jwt);
-					//return new TokenJWT { Token = new JwtSecurityTokenHandler().WriteToken(jwt) };
-				}
-				return new StatusCodeResult(400);   //Bad Request, например, пароль неверный
+				var claimsList = new List<Claim> { new(ClaimTypes.Name, user.UserName) };
+				foreach (var role in roles)
+					claimsList.Add(new Claim(ClaimTypes.Role, role));
+				var jwt = new JwtSecurityToken(
+					claims: claimsList,
+					issuer: jwtConfig.Issuer,
+					audience: jwtConfig.Audience,
+					expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(jwtConfig.ExpireMinutes)),
+					signingCredentials: new SigningCredentials(new SymmetricSecurityKey(
+						Convert.FromBase64String(jwtConfig.Key)), SecurityAlgorithms.HmacSha256));
+					return new TokenJWT { Token = new JwtSecurityTokenHandler().WriteToken(jwt) };
 			}
-			return new StatusCodeResult(401);		//не авторизован, т.к. не найден в БД	
+			return new StatusCodeResult(401);	
 		}
 
-		public async Task LogOut()      //возможно httpcontext передавать?
+		public async Task LogOut() 
 		{	
 			await signInManager.SignOutAsync();
 		}

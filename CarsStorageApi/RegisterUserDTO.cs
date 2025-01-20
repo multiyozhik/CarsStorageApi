@@ -12,5 +12,6 @@ namespace CarsStorageApi
 
 		[Required(ErrorMessage = "Укажите пароль пользователя")]
 		public string? Password { get; set; }
+		public IEnumerable<string>? Roles { get; set; }
 	}
 }
