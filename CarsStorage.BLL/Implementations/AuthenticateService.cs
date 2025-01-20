@@ -14,22 +14,17 @@ namespace CarsStorage.BLL.Implementations
 {
 	public class AuthenticateService(
 		SignInManager<IdentityAppUser> signInManager, 
-		UserManager<IdentityAppUser> userManager, 
-		IOptions<RoleNames> roleOptions) : IAuthenticateService
+		UserManager<IdentityAppUser> userManager) : IAuthenticateService
 	{
-		private readonly RoleNames roleNames = roleOptions.Value;
 
-		public async Task<IActionResult> Register(string userName, string email, string password)
+		public async Task<IActionResult> Register(RegisterAppUser registerAppUser)
 		{
-			var user = new IdentityAppUser { UserName = userName, Email = email };
-			var result = await userManager.CreateAsync(user, password);
-			if (result.Succeeded) {
-				if (roleNames.DefaultUserRoleName is null)
-					return new BadRequestObjectResult("Ошибка конфигурации ролей пользователя");
-				var res = await userManager.AddToRoleAsync(user, roleNames.DefaultUserRoleName);
-				if (res.Succeeded)
-					await signInManager.SignInAsync(user, false);
-				else return new StatusCodeResult(500);
+			var user = new IdentityAppUser { UserName = registerAppUser.UserName, Email = registerAppUser.Email };
+			var result = await userManager.CreateAsync(user, registerAppUser.Password);
+			if (result.Succeeded) {				
+				foreach (var role in registerAppUser.Roles)
+					await userManager.AddToRoleAsync(user, role);
+				await signInManager.SignInAsync(user, false);
 			}
 			return new BadRequestObjectResult("Ошибка ввода данных пользователя");
 		}

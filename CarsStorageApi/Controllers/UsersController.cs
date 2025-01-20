@@ -32,7 +32,7 @@ namespace CarsStorageApi.Controllers
 			return NotFound("Пользователь не найден"); 
 		}
 
-		//ToDo: при регистрации админом сразу задавать пароль, в RegisterUserDTO добавить список ролей, по умолчанию дефолтная роль
+
 		[HttpPost]
 		public async Task<IActionResult> Create([FromBody] RegisterUserDTO registerUserDTO)			
 		{
@@ -41,14 +41,14 @@ namespace CarsStorageApi.Controllers
 				|| string.IsNullOrWhiteSpace(registerUserDTO.Password))
 				return BadRequest("Ошибка ввода данных пользователя");
 
-			return await usersService.Create(
-				userMapper.RegUserDtoToRegAppUser(
-					registerUserDTO), 
-					new RoleNames() 
-					{ 
-						DefaultUserRoleName = roleNamesConfig.Value.DefaultUserRoleName }
-					);
+			if (roleNamesConfig.Value.DefaultUserRoleNames is null)
+				throw new Exception("Не заданы конфигурации, значение роли пользователя по умолчанию");
+			else
+				registerUserDTO.Roles ??= roleNamesConfig.Value.DefaultUserRoleNames;
+
+			return await usersService.Create(userMapper.RegUserDtoToRegAppUser(registerUserDTO));
 		}
+
 
 		[HttpPut]
 		public async Task<IActionResult> Update([FromBody] UserDTO userDTO)

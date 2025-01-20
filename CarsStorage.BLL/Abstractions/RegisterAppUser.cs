@@ -14,5 +14,7 @@ namespace CarsStorage.BLL.Abstractions
 		public string? Email { get; set; }
 
 		public string? Password { get; set; }
+
+		public IEnumerable<string>? Roles { get; set; }
 	}
 }

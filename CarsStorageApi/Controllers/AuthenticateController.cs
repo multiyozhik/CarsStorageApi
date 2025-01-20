@@ -13,10 +13,11 @@ namespace CarsStorageApi.Controllers
 	[AllowAnonymous]
 	[Route("[controller]/[action]")]
 		
-	public class AuthenticateController(IAuthenticateService authService, IOptions<JwtDTOConfig> jwtDTOConfig) : ControllerBase
+	public class AuthenticateController(IAuthenticateService authService, IOptions<JwtDTOConfig> jwtDTOConfig, IOptions<RoleNamesConfig> roleNamesConfig) : ControllerBase
 	{
 		private readonly TokenMapper tokenMapper = new();
 		private readonly JwtConfigMapper jwtConfigMapper = new();
+		private readonly IOptions<RoleNamesConfig> roleNamesConfig = roleNamesConfig;
 
 		[HttpPost]
 		public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
@@ -26,7 +27,18 @@ namespace CarsStorageApi.Controllers
 				|| string.IsNullOrWhiteSpace(registerDTO.Password))
 				return BadRequest("Ошибка ввода данных пользователя");
 
-			return await authService.Register(registerDTO.UserName, registerDTO.Email, registerDTO.Password);
+			var userRoles = roleNamesConfig.Value.DefaultUserRoleNames;
+			if (userRoles is null)
+				return new BadRequestObjectResult("Ошибка конфигурации ролей пользователя");
+			else 
+				return await authService.Register(
+					new RegisterAppUser()
+					{
+						UserName = registerDTO.UserName,
+						Email = registerDTO.Email,
+						Password = registerDTO.Password,
+						Roles = userRoles
+					});
 		}
 
 		[HttpPost]

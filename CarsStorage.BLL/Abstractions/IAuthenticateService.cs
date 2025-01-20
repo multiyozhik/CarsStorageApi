@@ -6,7 +6,7 @@ namespace CarsStorage.BLL.Abstractions
 {
 	public interface IAuthenticateService
 	{
-		public Task<IActionResult> Register(string userName, string email, string password);
+		public Task<IActionResult> Register(RegisterAppUser registerAppUser);
 		public Task<ActionResult<TokenJWT>> LogIn(string userName, string password, JWTConfig jWTConfig);
 		public Task LogOut();
 	}

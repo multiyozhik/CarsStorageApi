@@ -8,7 +8,5 @@ namespace CarsStorageApi.Mappers
 	{
 		public partial Car CarDtoToCar(CarDTO carDTO);
 		public partial CarDTO CarToCarDto(Car car);
-
-		public partial Car CreaterCarDtoToCar(CreaterCarDTO createrCarDTO);
 	}
 }

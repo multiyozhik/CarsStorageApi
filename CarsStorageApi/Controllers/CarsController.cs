@@ -1,3 +1,4 @@
+using CarsStorage.BLL.Abstractions;
 using CarsStorage.BLL.Interfaces;
 using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authorization;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CarsStorageApi.Controllers
 {
 	[ApiController]
+	[Authorize]
 	[Route("[controller]/[action]")]
 	
 	public class CarsController(ICarsService carsService) : ControllerBase
@@ -21,12 +23,18 @@ namespace CarsStorageApi.Controllers
 			return carList.Select(carMapper.CarToCarDto);
 		}
 
-		[Authorize(Roles = "manager")]
+		[Authorize(Roles = "manager,user")]
 		[HttpPost]
 		public async Task Create([FromBody] CreaterCarDTO createrCarDTO)
 		{
-			var car = carMapper.CreaterCarDtoToCar(createrCarDTO);
-			car.Id = Guid.NewGuid();
+			var car = new Car()
+			{
+				Id = Guid.NewGuid(),
+				Make = createrCarDTO.Make,
+				Model = createrCarDTO.Model,
+				Color = createrCarDTO.Color,
+				Count = createrCarDTO.Count
+			};
 			await carsService.Create(car);
 		}
 

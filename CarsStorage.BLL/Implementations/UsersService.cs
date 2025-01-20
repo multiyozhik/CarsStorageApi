@@ -43,11 +43,8 @@ namespace CarsStorage.BLL.Implementations
 		}
 
 
-		public async Task<IActionResult> Create(RegisterAppUser registerAppUser, RoleNames roleNames)
-		{
-			if (string.IsNullOrEmpty(roleNames.DefaultUserRoleName))
-				throw new Exception("Не задана конфигурация ролей пользователя");
-
+		public async Task<IActionResult> Create(RegisterAppUser registerAppUser) 
+		{			
 			var user = new IdentityAppUser 
 			{ 
 				UserName = registerAppUser.UserName, 
@@ -56,11 +53,15 @@ namespace CarsStorage.BLL.Implementations
 
 			if (string.IsNullOrEmpty(registerAppUser.Password))
 				return new BadRequestObjectResult("Не задан пароль для пользователя");			
-			var result = await userManager.CreateAsync(user, registerAppUser.Password);
-			
-			if (!result.Succeeded) 
-				return new StatusCodeResult(500);			
-			await userManager.AddToRoleAsync(user, roleNames.DefaultUserRoleName);
+			await userManager.CreateAsync(user, registerAppUser.Password);
+
+			if (registerAppUser.Roles is null)
+				return new BadRequestObjectResult("Не заданы роли для пользователя");
+
+			foreach (var role in registerAppUser.Roles)
+			{
+				await userManager.AddToRoleAsync(user, role);
+			}			
 			return new OkResult();
 		}
 
