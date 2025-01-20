@@ -18,12 +18,13 @@ namespace CarsStorage.BLL.Implementations
 			return carsList.Select(carMapper.CarRowToCar);
 		}
 
-		public async Task AddAsync(Car car)
+		public async Task Create(Car car)
 		{
+
 			await dbContext.Cars.AddAsync(carMapper.CarToCarRow(car));
 			await dbContext.SaveChangesAsync();
 		}
-		public async Task UpdateAsync(Car car)
+		public async Task Update(Car car)
 		{
 			var i = await dbContext.Cars.Where(c => c.Id == car.Id)
 				.ExecuteUpdateAsync(setters => setters
@@ -32,12 +33,12 @@ namespace CarsStorage.BLL.Implementations
 				.SetProperty(c => c.Color, car.Color)
 				.SetProperty(c => c.Count, car.Count));
 		}
-		public async Task DeleteAsync(Guid id)
+		public async Task Delete(Guid id)
 		{
 			var i = await dbContext.Cars.Where(c => c.Id == id).ExecuteDeleteAsync();
 		}
 
-		public async Task ChangeCount(Guid id, int count)
+		public async Task UpdateCount(Guid id, int count)
 		{
 			await dbContext.Cars.Where(c => c.Id == id).ExecuteUpdateAsync(setters => setters.SetProperty(c => c.Count, count));
 		}

@@ -6,6 +6,6 @@ namespace CarsStorage.BLL.Interfaces
 {
 	public interface ICarsService : ICrudService<Car>
 	{
-		public Task ChangeCount(Guid id, int count);
+		public Task UpdateCount(Guid id, int count);
 	}
 }

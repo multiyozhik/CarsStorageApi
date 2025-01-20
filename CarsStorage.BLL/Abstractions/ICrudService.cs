@@ -3,8 +3,8 @@
 	public interface ICrudService<T> where T : class
 	{
 		public Task<IEnumerable<T>> GetList();
-		public Task AddAsync(T item);
-		public Task UpdateAsync(T item);
-		public Task DeleteAsync(Guid id);
+		public Task Create(T item);
+		public Task Update(T item);
+		public Task Delete(Guid id);
 	}
 }

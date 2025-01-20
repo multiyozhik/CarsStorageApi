@@ -1,14 +1,11 @@
-using Microsoft.AspNetCore.Mvc;
 using CarsStorage.BLL.Interfaces;
-using CarsStorage.BLL;
-using System.Linq;
 using CarsStorageApi.Filters;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorageApi.Controllers
 {
 	[ApiController]
-	[Authorize(Roles = "manager")]
 	[Route("[controller]/[action]")]
 	[ValidateModel]
 	public class CarsController(ICarsService carsService) : ControllerBase
@@ -16,9 +13,7 @@ namespace CarsStorageApi.Controllers
 		private readonly ICarsService carsService = carsService;
 		private readonly CarMapper carMapper = new();
 
-		[Authorize(Roles = "admin")]
-		[Authorize(Roles = "manager")]
-		[Authorize(Roles = "user")]
+		[Authorize(Roles = "manager,user")]
 		[HttpGet]
 		public async Task<IEnumerable<CarDTO>> GetCars()
 		{
@@ -26,28 +21,34 @@ namespace CarsStorageApi.Controllers
 			return carList.Select(carMapper.CarToCarDto);
 		}
 
+		[Authorize(Roles = "manager")]
 		[HttpPost]
-		public async Task Add([FromBody] CarDTO carDTO)
+		public async Task Create([FromBody] CreaterCarDTO createrCarDTO)
 		{
-			await carsService.AddAsync(carMapper.CarDtoToCar(carDTO));
+			var car = carMapper.CreaterCarDtoToCar(createrCarDTO);
+			car.Id = Guid.NewGuid();
+			await carsService.Create(car);
 		}
 
+		[Authorize(Roles = "manager")]
 		[HttpPut]
 		public async Task Update([FromBody] CarDTO carDTO)
 		{
-			await carsService.UpdateAsync(carMapper.CarDtoToCar(carDTO));
+			await carsService.Update(carMapper.CarDtoToCar(carDTO));
 		}
 
+		[Authorize(Roles = "manager")]
 		[HttpDelete("{id}")]
 		public async Task Delete([FromRoute] Guid id)
 		{
-			await carsService.DeleteAsync(id);
+			await carsService.Delete(id);
 		}
 
+		[Authorize(Roles = "manager")]
 		[HttpPut]
-		public async Task ChangeCount([FromRoute] Guid id, [FromQuery] int count)
+		public async Task UpdateCount([FromRoute] Guid id, [FromQuery] int count)
 		{
-			await carsService.ChangeCount(id, count);
+			await carsService.UpdateCount(id, count);
 		}
 	}
 }

@@ -28,6 +28,7 @@ namespace CarsStorageApi.Controllers
 			return userMapper.AppUserToUserDto(appUser.Value);
 		}
 
+		//ToDo: при регистрации админом сразу задавать пароль, в RegisterUserDTO добавить список ролей, по умолчанию дефолтная роль
 		[HttpPost]
 		public async Task<IActionResult> Create([FromBody] RegisterUserDTO registerUserDTO)			
 		{
