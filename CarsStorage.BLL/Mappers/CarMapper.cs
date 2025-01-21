@@ -7,7 +7,7 @@ namespace CarsStorage.BLL.Mappers
 	[Mapper]
 	public partial class CarMapper
 	{
-		public partial CarRow CarToCarRow(Car car);
-		public partial Car CarRowToCar(CarRow carRow);
+		public partial CarEntity CarToCarRow(Car car);
+		public partial Car CarRowToCar(CarEntity carRow);
 	}
 }
