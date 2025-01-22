@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel;
 
 namespace CarsStorage.DAL.Entities
 {
+	/// <summary>
+	/// IdentityAppUser - пользователь в Identity.
+	/// </summary>
 	public class IdentityAppUser : IdentityUser
 	{
-		public DbSet<IEnumerable<RoleEntity>> Roles { get; set; }
+		public IEnumerable<RoleEntity>? RolesList { get; set; }
 	}
 }

@@ -1,27 +1,23 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CarsStorage.DAL.Entities
 {
-	public class RoleEntity
+	/// <summary>
+	/// Сущность роли.
+	/// </summary>
+	/// <param name="name">Имя роли.</param>
+	public class RoleEntity(string name)
 	{
 		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public int Id { get; set; }
 
 		[Required]
 		[StringLength(50)]
-		public string? Name { get; set; }
+		public string? Name { get; set; } = name;
 
-		public IEnumerable<IdentityAppUser> Users { get; set; } = [];
+		public required Dictionary<RoleClaimType, bool> RoleClaims { get; init; }
 
-		[DefaultValue(false)]
-		public bool CanBrowseCars { get; set; }
-
-		[DefaultValue(false)]
-		public bool CanManageCars { get; set; }
-
-		[DefaultValue(false)]
-		public bool CanManageUsers { get; set; }
+		public IEnumerable<IdentityAppUser>? UsersList { get; set; }
 	}
 }

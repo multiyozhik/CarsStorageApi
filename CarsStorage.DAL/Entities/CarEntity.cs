@@ -1,9 +1,11 @@
-﻿
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CarsStorage.DAL.Entities
 {
+	/// <summary> 
+	/// Сущность машины с свойствами id (автоинкрементация в БД), модель, марка, цвет, количество.
+	/// </summary>
 	public class CarEntity
 	{
 		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]

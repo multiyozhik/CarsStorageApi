@@ -1,17 +1,35 @@
 ﻿using CarsStorage.DAL.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.Intrinsics.X86;
 
 namespace CarsStorage.DAL.EF
 {
+	/// <summary>
+	///  DbContext для таблицы пользователей в Identity. 
+	/// </summary>
+	/// <param name="options"></param>
 	public class IdentityAppDbContext(DbContextOptions<IdentityAppDbContext> options) : IdentityDbContext<IdentityAppUser>(options)
 	{
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			modelBuilder.Entity<IdentityAppUser>().HasData(
-					new IdentityAppUser { UserName = "user1", Email = "user1@mail.ru", Roles = [new RoleEntity() { Name = "Admin" }] },
-					new IdentityAppUser { UserName = "user2", Email = "user2@mail.ru", Roles = [new RoleEntity() { Name = "Manager" }] },
-					new IdentityAppUser { UserName = "user3", Email = "user3@mail.ru", Roles = [new RoleEntity() { Name = "User" }] };
+			var passwordHasher = new PasswordHasher<IdentityAppUser>();
+
+			var identityAppUserList = new List<IdentityAppUser>();
+
+			for (int i = 0; i < 10; i++)
+			{
+				identityAppUserList[i] = new IdentityAppUser
+				{
+					UserName = $"user{i}",
+					Email = $"user{i}@mail.ru"
+				};
+
+				identityAppUserList[i].PasswordHash = passwordHasher.HashPassword(identityAppUserList[i], "user1");
+			}
+
+			modelBuilder.Entity<IdentityAppUser>().HasData(identityAppUserList);
 		}
 	}
 }

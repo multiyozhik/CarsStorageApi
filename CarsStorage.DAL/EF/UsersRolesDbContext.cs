@@ -1,24 +1,32 @@
 ﻿using CarsStorage.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarsStorage.DAL.EF
 {
+	/// <summary>
+	/// DbContext для таблицы соотношений между пользователем и ролью. 
+	/// </summary>
 	public class UsersRolesDbContext: DbContext
 	{
-		public DbSet<IdentityAppDbContext> Users {  get; set; }
-		public DbSet<RoleEntity> Roles { get; set; }
+		private readonly Random random = new();
+		public DbSet<IdentityAppUser> UsersId {  get; set; }
+		public DbSet<RoleEntity> RolesId { get; set; }
+		public DbSet<UsersRolesEntity> UserRoles { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			modelBuilder.Entity<IdentityAppUser>()
-				.HasMany(r => r.Roles)
-				.WithMany(u => u.Users)
+				.HasMany(u => u.RolesList)
+				.WithMany(r => r.UsersList)
 				.UsingEntity("UsersRolesJoinTable");
+			
+			//1-ый пользователь будет админом, остальные - рандомная роль
+			var usersRolesEntities = new List<UsersRolesEntity>() { new UsersRolesEntity(1, 1) }; 
+			for (var i = 2; i < 10; i++)
+			{
+				usersRolesEntities.Add(new UsersRolesEntity(i, random.Next(10)));
+			}
+			modelBuilder.Entity<RoleEntity>().HasData(usersRolesEntities);
 		}
 	}
 }

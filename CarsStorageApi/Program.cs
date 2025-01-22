@@ -75,6 +75,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddDbContext<IdentityAppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
+	services.AddDbContext<RolesDbContext>(options =>
+		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
+
+	services.AddDbContext<UsersRolesDbContext>(options =>
+		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
+
 	services.AddOptions<AdminConfig>();
 	services.AddOptions<RoleNamesConfig>();
 	services.AddOptions<JwtDTOConfig>();
@@ -153,9 +159,9 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.MapControllers();
 
-	CreateAdminAccount(app).Wait();
+	//CreateAdminAccount(app).Wait();
 
-	CreateRoles(app).Wait();
+	//CreateRoles(app).Wait();
 
 	app.Run();
 }
@@ -164,6 +170,8 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 {
 	using IServiceScope scope = app.ApplicationServices.CreateScope();
 	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
+
+
 	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
 	var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminConfig>>().Value;

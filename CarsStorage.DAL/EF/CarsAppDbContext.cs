@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.DAL.EF
 {
+	/// <summary>
+	///  DbContext для таблицы автомобилей. 
+	/// </summary>
+	/// <param name="options"></param>
 	public class CarsAppDbContext(DbContextOptions<CarsAppDbContext> options) : DbContext(options)
 	{
 		public DbSet<CarEntity> Cars => Set<CarEntity>();
@@ -17,6 +21,5 @@ namespace CarsStorage.DAL.EF
 					new CarEntity { Id = 5, Model = "Cherry", Make = "Tigo 4", Color = "серый", Count = 2 }
 			);
 		}
-
 	}
 }
