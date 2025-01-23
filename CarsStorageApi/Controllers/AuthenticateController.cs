@@ -1,7 +1,7 @@
-﻿using CarsStorage.BLL.Abstractions.Interfaces;
+﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorageApi.AuthModels;
-using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,22 +11,19 @@ namespace CarsStorageApi.Controllers
 	[AllowAnonymous]
 	[Route("[controller]/[action]")]
 		
-	public class AuthenticateController(IAuthenticateService authService) : ControllerBase
+	public class AuthenticateController(IAuthenticateService authService, IMapper mapper) : ControllerBase
 	{
-		private readonly JWTTokenMapper tokenMapper = new();
-		private readonly UserMapper userMapper = new();
-
 		[HttpPost]
 		public async Task<IActionResult> Register([FromBody] RegisterUserDataRequest registerUserDataRequest)
-		{
-			return await authService.Register(userMapper.RegisterUserDataRequestToAppUserRegisterDTO(registerUserDataRequest));
+		{			
+			return await authService.Register(mapper.Map<AppUserRegisterDTO>(registerUserDataRequest));
 		}
 
 		[HttpPost]
 		public async Task<ActionResult<JWTTokenResponse>> LogIn([FromBody] LoginDataRequest loginDataRequest)
-		{
-			var JWTtokenDTO = await authService.LogIn(userMapper.LoginDataRequestToAppUserLoginDTO(loginDataRequest));
-			return new OkObjectResult(tokenMapper.JwtTokenDtoToJwtTokenResponse(JWTtokenDTO.Value));
+		{			
+			var jwtTokenDTO = await authService.LogIn(mapper.Map<AppUserLoginDTO>(loginDataRequest));
+			return mapper.Map<JWTTokenResponse>(jwtTokenDTO);
 		}
 
 		[Authorize]

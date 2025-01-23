@@ -6,6 +6,7 @@ using CarsStorage.DAL.Entities;
 using CarsStorageApi.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -152,6 +153,10 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 				policy.RequireClaim("CanBrowseCars", "true");
 			});
 	});
+
+	services.AddAutoMapper(typeof(MappingProfileApi));
+	services.AddAutoMapper(typeof(MappingProfileDTO));
+
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -194,8 +199,7 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 		|| string.IsNullOrEmpty(admin.Role))
 		throw new Exception("Не заданы конфигурации для администратора");
 
-	var usersDbContext = scope.ServiceProvider.GetService<IdentityAppDbContext>()
-		?? throw new Exception("Не зарегистрирован сервис контекста для пользователей");
+	var usersDbContext = scope.ServiceProvider.GetRequiredService<IdentityAppDbContext>();
 
 	if (await userManager.FindByNameAsync(admin.UserName) is null)
 	{
@@ -203,9 +207,10 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 		{
 			UserName = admin.UserName,
 			Email = admin.Email,
-			RolesList = [
-				new RoleEntity("admin")]
+			RolesList = [ new RoleEntity("admin")]
 		};
+		var passwordHasher = scope.ServiceProvider.GetRequiredService<PasswordHasher<IdentityAppUser>>();
+		await userManager.CreateAsync(adminUser, passwordHasher.HashPassword(adminUser, admin.Password));
 	}
 	var usersRolesDbContext = scope.ServiceProvider.GetRequiredService<UsersRolesDbContext>();
 	await usersRolesDbContext.AddAsync(new UsersRolesEntity(0, 1));

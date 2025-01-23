@@ -9,12 +9,12 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.0" />
-		<PackageReference Include="Riok.Mapperly" Version="4.1.1" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.0" />
 	</ItemGroup>
 	
   <ItemGroup>
     <ProjectReference Include="..\CarsStorage.BLL.Abstractions\CarsStorage.BLL.Abstractions.csproj" />
+    <ProjectReference Include="..\CarsStorage.BLL.Repositories\CarsStorage.BLL.Repositories.csproj" />
     <ProjectReference Include="..\CarsStorage.DAL\CarsStorage.DAL.csproj" />
   </ItemGroup>
 

@@ -1,46 +1,85 @@
-﻿using CarsStorage.BLL.Abstractions.Interfaces;
+﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
-using CarsStorage.BLL.Implementations.Mappers;
-using CarsStorage.DAL.EF;
-using Microsoft.EntityFrameworkCore;
+using CarsStorage.BLL.Repositories.Interfaces;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-    public class CarsService(CarsAppDbContext dbContext) : ICarsService
+	/// <summary>
+	/// Сервис для выполнения CRUD-операций для автомобилей.
+	/// </summary>
+	/// <param name="carsRepository"></param>
+
+	public class CarsService(ICarsRepository carsRepository, IMapper mapper) : ICarsService
 	{
-		private readonly CarMapper carMapper = new();
-
-		private readonly CarsAppDbContext dbContext = dbContext;
-
-		public async Task<IEnumerable<CarDTO>> GetList()
+		public async Task<ServiceResult<IEnumerable<CarDTO>>> GetList()
 		{
-			var carsList = await dbContext.Cars.ToListAsync();
-			return carsList.Select(carMapper.CarEntityToCarDto);
+			try
+			{
+				var carsEntityList = await carsRepository.GetList();
+				var carsDTOList = carsEntityList.Select(mapper.Map<CarDTO>);
+				return new ServiceResult<IEnumerable<CarDTO>>(carsDTOList, null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<IEnumerable<CarDTO>>(null, exception.Message);
+			}			
 		}
 
-		public async Task Create(CarCreaterDTO carCreaterDTO)
-		{
 
-			await dbContext.Cars.AddAsync(carMapper.CarToCarEntity(carCreaterDTO));
-			await dbContext.SaveChangesAsync();
-		}
-		public async Task Update(CarDTO car)
+		public async Task<ServiceResult<CarDTO>> Create(CarCreaterDTO carCreaterDTO)
 		{
-			var i = await dbContext.Cars.Where(c => c.Id == car.Id)
-				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(c => c.Model, car.Model)
-				.SetProperty(c => c.Make, car.Make)
-				.SetProperty(c => c.Color, car.Color)
-				.SetProperty(c => c.Count, car.Count));
-		}
-		public async Task Delete(Guid id)
-		{
-			var i = await dbContext.Cars.Where(c => c.Id == id).ExecuteDeleteAsync();
+			try
+			{
+				var carsDTO = await carsRepository.Create(carCreaterDTO);
+				return new ServiceResult<CarDTO>(carsDTO, null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<CarDTO>(null, exception.Message);
+			}
 		}
 
-		public async Task UpdateCount(Guid id, int count)
+
+		public async Task<ServiceResult<CarDTO>> Update(CarDTO carDTO)
 		{
-			await dbContext.Cars.Where(c => c.Id == id).ExecuteUpdateAsync(setters => setters.SetProperty(c => c.Count, count));
+			try
+			{
+				var carsDTO = await carsRepository.Update(carDTO);
+				return new ServiceResult<CarDTO>(carsDTO, null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<CarDTO>(null, exception.Message);
+			}
 		}
+
+
+		public async Task<ServiceResult<int>> Delete(int id)
+		{
+			try
+			{
+				await carsRepository.Delete(id);
+				return new ServiceResult<int>(id, null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<int>(id, exception.Message);
+			}
+		}
+
+
+		public async Task<ServiceResult<CarDTO>> UpdateCount(int id, int count)
+		{
+			try
+			{
+				var carDTO = await carsRepository.UpdateCount(id, count);
+				return new ServiceResult<CarDTO>(carDTO, null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<CarDTO>(null, exception.Message);
+			}
+		}				
 	}
 }

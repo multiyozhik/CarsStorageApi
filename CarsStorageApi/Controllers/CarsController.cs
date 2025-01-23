@@ -1,53 +1,72 @@
-using CarsStorage.BLL.Abstractions;
+using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorageApi.Mappers;
+using CarsStorage.BLL.Abstractions.Models;
 using CarsStorageApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorageApi.Controllers
 {
-    [ApiController]
+	[ApiController]
 	[Route("[controller]/[action]")]
 	
-	public class CarsController(ICarsService carsService) : ControllerBase
+	public class CarsController(ICarsService carsService, IMapper mapper) : ControllerBase
 	{
-		private readonly CarMapper carMapper = new();
-
 		[Authorize(Policy = "RequierBrowseCars")]
 		[HttpGet]
-		public async Task<IEnumerable<CarRequestResponse>> GetCars()
+		public async Task<ActionResult<IEnumerable<CarRequestResponse>>> GetCars()
 		{
-			var carList = await carsService.GetList();
-			return carList.Select(carMapper.CarDtoToCarRequestResponse);
+			var serviceResult = await carsService.GetList();
+
+			if (serviceResult.IsSuccess)
+				return serviceResult.Result.Select(mapper.Map<CarRequestResponse>).ToList();
+			else
+				return BadRequest(serviceResult.ErrorMessage);			
 		}
+
 
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPost]
-		public async Task Create([FromBody] CarRequest carRequest)
+		public async Task<ActionResult<CarDTO>> Create([FromBody] CarRequest carRequest)
 		{
-			await carsService.Create(carMapper.CarRequestToCarCreaterDTO(carRequest));
+			var serviceResult = await carsService.Create(mapper.Map<CarCreaterDTO>(carRequest));
+			return ReturnActionResult(serviceResult);
 		}
+
 
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task Update([FromBody] CarRequestResponse carRequestResponse)
+		public async Task<ActionResult<CarDTO>> Update([FromBody] CarRequestResponse carRequestResponse)
 		{
-			await carsService.Update(carMapper.CarRequestResponseToCarDTO(carRequestResponse));
+			var serviceResult = await carsService.Update(mapper.Map<CarDTO>(carRequestResponse));
+			return ReturnActionResult(serviceResult);
 		}
+
 
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpDelete("{id}")]
-		public async Task Delete([FromRoute] int id)
+		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{
-			await carsService.Delete(id);
+			var serviceResult = await carsService.Delete(id);
+			return ReturnActionResult(serviceResult);
 		}
+
 
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task UpdateCount([FromRoute] int id, [FromQuery] int count)
+		public async Task<ActionResult<CarDTO>> UpdateCount([FromBody] CarCountChangerRequest carCountChangerRequest)
 		{
-			await carsService.UpdateCount(id, count);
+			var serviceResult = await carsService.UpdateCount(carCountChangerRequest.Id, carCountChangerRequest.Count);
+			return ReturnActionResult(serviceResult);
+		}
+
+
+		private ActionResult<T> ReturnActionResult<T>(ServiceResult<T> serviceResult)
+		{
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+				return serviceResult.Result;
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 	}
 }

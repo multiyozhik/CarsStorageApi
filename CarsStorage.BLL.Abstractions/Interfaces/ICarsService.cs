@@ -4,10 +4,14 @@ namespace CarsStorage.BLL.Abstractions.Interfaces
 {
     public interface ICarsService
     {
-		public Task<IEnumerable<CarDTO>> GetList();
-		public Task Create(CarCreaterDTO carCreaterDTO);
-		public Task Update(CarDTO carDTO);
-		public Task Delete(int id);
-		public Task UpdateCount(int id, int count);
+		public Task<ServiceResult<IEnumerable<CarDTO>>> GetList();
+
+		public Task<ServiceResult<CarDTO>> Create(CarCreaterDTO carCreaterDTO);
+
+		public Task<ServiceResult<CarDTO>> Update(CarDTO carDTO);
+
+		public Task<ServiceResult<int>> Delete(int id);
+
+		public Task<ServiceResult<CarDTO>> UpdateCount(int id, int count);
     }
 }

@@ -20,6 +20,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.BLL.Abstraction
 		{ABF7EB27-5423-4C5E-8FE5-3F88BE76B278} = {ABF7EB27-5423-4C5E-8FE5-3F88BE76B278}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarsStorage.BLL.Repositories", "CarsStorage.BLL.Repositories\CarsStorage.BLL.Repositories.csproj", "{78B6B750-E784-4116-B4D9-E50CD7103EB4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ABF7EB27-5423-4C5E-8FE5-3F88BE76B278} = {ABF7EB27-5423-4C5E-8FE5-3F88BE76B278}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +47,10 @@ Global
 		{C8F1FBE3-15BA-4A0B-A94D-2167418B9D64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8F1FBE3-15BA-4A0B-A94D-2167418B9D64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8F1FBE3-15BA-4A0B-A94D-2167418B9D64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78B6B750-E784-4116-B4D9-E50CD7103EB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78B6B750-E784-4116-B4D9-E50CD7103EB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78B6B750-E784-4116-B4D9-E50CD7103EB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78B6B750-E784-4116-B4D9-E50CD7103EB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
