@@ -1,11 +1,9 @@
-﻿using CarsStorage.BLL.Abstractions;
-using CarsStorage.BLL.Config;
+﻿using CarsStorage.BLL.Abstractions.Interfaces;
+using CarsStorage.BLL.Abstractions.Models;
 using CarsStorageApi.AuthModels;
-using CarsStorageApi.Config;
 using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace CarsStorageApi.Controllers
 {
@@ -13,45 +11,22 @@ namespace CarsStorageApi.Controllers
 	[AllowAnonymous]
 	[Route("[controller]/[action]")]
 		
-	public class AuthenticateController(IAuthenticateService authService, IOptions<JwtDTOConfig> jwtDTOConfig, IOptions<RoleNamesConfig> roleNamesConfig) : ControllerBase
+	public class AuthenticateController(IAuthenticateService authService) : ControllerBase
 	{
-		private readonly TokenMapper tokenMapper = new();
-		private readonly JwtConfigMapper jwtConfigMapper = new();
-		private readonly IOptions<RoleNamesConfig> roleNamesConfig = roleNamesConfig;
+		private readonly JWTTokenMapper tokenMapper = new();
+		private readonly UserMapper userMapper = new();
 
 		[HttpPost]
-		public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
+		public async Task<IActionResult> Register([FromBody] RegisterUserDataRequest registerUserDataRequest)
 		{
-			if (string.IsNullOrWhiteSpace(registerDTO.UserName) 
-				|| string.IsNullOrWhiteSpace(registerDTO.Email)
-				|| string.IsNullOrWhiteSpace(registerDTO.Password))
-				return BadRequest("Ошибка ввода данных пользователя");
-
-			var userRoles = roleNamesConfig.Value.DefaultUserRoleNames;
-			if (userRoles is null)
-				return new BadRequestObjectResult("Ошибка конфигурации ролей пользователя");
-			else 
-				return await authService.Register(
-					new RegisterAppUser()
-					{
-						UserName = registerDTO.UserName,
-						Email = registerDTO.Email,
-						Password = registerDTO.Password,
-						Roles = userRoles
-					});
+			return await authService.Register(userMapper.RegisterUserDataRequestToAppUserRegisterDTO(registerUserDataRequest));
 		}
 
 		[HttpPost]
-		public async Task<ActionResult<TokenDTO>> LogIn([FromBody] LoginDTO loginDTO)
+		public async Task<ActionResult<JWTTokenResponse>> LogIn([FromBody] LoginDataRequest loginDataRequest)
 		{
-			if (string.IsNullOrWhiteSpace(loginDTO.UserName) || string.IsNullOrWhiteSpace(loginDTO.Password))
-				return BadRequest("Ошибка ввода данных пользователя");
-
-			var tokenJWT = await authService.LogIn(
-				loginDTO.UserName, loginDTO.Password, jwtConfigMapper.JwtDTOConfigToJwt(jwtDTOConfig.Value));
-			if (tokenJWT.Value is not null) 
-				return new OkObjectResult(tokenMapper.TokenJwtToTokenDto(tokenJWT.Value));
-			return BadRequest("Ошибка аутентификации, не получен токен");
+			var JWTtokenDTO = await authService.LogIn(userMapper.LoginDataRequestToAppUserLoginDTO(loginDataRequest));
+			return new OkObjectResult(tokenMapper.JwtTokenDtoToJwtTokenResponse(JWTtokenDTO.Value));
 		}
 
 		[Authorize]

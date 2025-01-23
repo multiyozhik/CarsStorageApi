@@ -20,11 +20,10 @@ namespace CarsStorage.DAL.EF
 				.WithMany(r => r.UsersList)
 				.UsingEntity("UsersRolesJoinTable");
 			
-			//1-ый пользователь будет админом, остальные - рандомная роль
-			var usersRolesEntities = new List<UsersRolesEntity>() { new UsersRolesEntity(1, 1) }; 
-			for (var i = 2; i < 10; i++)
+			var usersRolesEntities = new List<UsersRolesEntity>(); 
+			for (var i = 1; i < 10; i++)
 			{
-				usersRolesEntities.Add(new UsersRolesEntity(i, random.Next(10)));
+				usersRolesEntities.Add(new UsersRolesEntity(i, random.Next(1, 4)));
 			}
 			modelBuilder.Entity<RoleEntity>().HasData(usersRolesEntities);
 		}

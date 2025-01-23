@@ -1,13 +1,13 @@
-﻿using CarsStorage.BLL.Abstractions;
+﻿using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.DAL.Entities;
 using Riok.Mapperly.Abstractions;
 
-namespace CarsStorage.BLL.Mappers
+namespace CarsStorage.BLL.Implementations.Mappers
 {
-	[Mapper]
+    [Mapper]
 	public partial class CarMapper
 	{
-		public partial CarEntity CarToCarRow(Car car);
-		public partial Car CarRowToCar(CarEntity carRow);
+		public partial CarEntity CarToCarEntity(CarDTO car);
+		public partial CarDTO CarEntityToCarDto(CarEntity carRow);
 	}
 }

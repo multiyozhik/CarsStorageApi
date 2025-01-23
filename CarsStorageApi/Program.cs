@@ -1,18 +1,15 @@
-using CarsStorage.BLL.Abstractions;
-using CarsStorage.BLL.Config;
-using CarsStorage.BLL.Implementations;
-using CarsStorage.BLL.Interfaces;
+using CarsStorage.BLL.Abstractions.Interfaces;
+using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Implementations.Services;
 using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Entities;
 using CarsStorageApi.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -82,12 +79,10 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services.AddOptions<AdminConfig>();
-	services.AddOptions<RoleNamesConfig>();
-	services.AddOptions<JwtDTOConfig>();
+	services.AddOptions<JWTConfigDTO>();
 
 	services.Configure<AdminConfig>(config.GetSection("AdminConfig"));
-	services.Configure<RoleNamesConfig>(config.GetSection("RoleNamesConfig"));
-	services.Configure<JwtDTOConfig>(config.GetSection("JWTConfig"));
+	services.Configure<JWTConfigDTO>(config.GetSection("JwtConfig"));
 
 	services.AddIdentity<IdentityAppUser, IdentityRole>()
 		.AddEntityFrameworkStores<IdentityAppDbContext>()
@@ -135,7 +130,28 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		})
 		.AddBearerToken();
 
-	services.AddAuthorization();	
+	services.AddAuthorization(options => {
+		options.AddPolicy(
+			"RequierManageUsers", policy =>
+			{
+				policy.RequireClaim("CanManageUsers", "true");
+			});
+		options.AddPolicy(
+			"RequierManageUsersRoles", policy =>
+			{
+				policy.RequireClaim("CanManageUsersRoles", "true");
+			});
+		options.AddPolicy(
+			"RequierManageCars", policy =>
+			{
+				policy.RequireClaim("CanManageCars", "true");
+			});
+		options.AddPolicy(
+			"RequierBrowseCars", policy =>
+			{
+				policy.RequireClaim("CanBrowseCars", "true");
+			});
+	});
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -159,9 +175,9 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.MapControllers();
 
-	//CreateAdminAccount(app).Wait();
+	CreateDefaultRoles(app).Wait();
 
-	//CreateRoles(app).Wait();
+	CreateAdminAccount(app).Wait();
 
 	app.Run();
 }
@@ -171,9 +187,6 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 	using IServiceScope scope = app.ApplicationServices.CreateScope();
 	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
 
-
-	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
 	var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminConfig>>().Value;
 
 	if (string.IsNullOrEmpty(admin.UserName)
@@ -181,33 +194,41 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 		|| string.IsNullOrEmpty(admin.Role))
 		throw new Exception("Не заданы конфигурации для администратора");
 
+	var usersDbContext = scope.ServiceProvider.GetService<IdentityAppDbContext>()
+		?? throw new Exception("Не зарегистрирован сервис контекста для пользователей");
+
 	if (await userManager.FindByNameAsync(admin.UserName) is null)
 	{
-		await roleManager.CreateAsync(new IdentityRole(admin.Role));
 		var adminUser = new IdentityAppUser()
 		{
 			UserName = admin.UserName,
-			Email = admin.Email
+			Email = admin.Email,
+			RolesList = [
+				new RoleEntity("admin")]
 		};
-
-		if (await userManager.CreateAsync(adminUser, admin.Password) is not null)
-		{
-			await userManager.AddToRoleAsync(adminUser, admin.Role);
-		}
 	}
+	var usersRolesDbContext = scope.ServiceProvider.GetRequiredService<UsersRolesDbContext>();
+	await usersRolesDbContext.AddAsync(new UsersRolesEntity(0, 1));
 }
 
-static async Task CreateRoles(IApplicationBuilder app)
+static async Task CreateDefaultRoles(IApplicationBuilder app)
 {
 	using IServiceScope scope = app.ApplicationServices.CreateScope();
-	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-	var defaultRoleNames = scope.ServiceProvider.GetRequiredService<IOptions<RoleNamesConfig>>().Value
-		.DefaultRoleNamesList ?? throw new Exception("Не заданы конфигурации для начального списка ролей пользователей");
 
-	foreach (var roleName in defaultRoleNames)
-	{
-		var roleExist = await roleManager.RoleExistsAsync(roleName);
-		if (!roleExist)
-			await roleManager.CreateAsync(new IdentityRole(roleName));
-	}
+	var rolesDbContext = scope.ServiceProvider.GetService<RolesDbContext>() 
+		?? throw new Exception("Не зарегистрирован сервис контекста для ролей пользователей");
+	
+	await rolesDbContext.AddRangeAsync(
+		new RoleEntity("Admin")	{
+			Id = 1,
+			RoleClaims = [ RoleClaimType.CanManageUsers, RoleClaimType.CanManageRoles]},
+		new RoleEntity("Manager")
+		{
+			Id = 2,
+			RoleClaims = [ RoleClaimType.CanManageCars, RoleClaimType.CanBrowseCars ]},
+		new RoleEntity("User")
+		{
+			Id = 3,
+			RoleClaims = [ RoleClaimType.CanBrowseCars ]
+		});
 }

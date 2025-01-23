@@ -1,14 +1,17 @@
-﻿using CarsStorage.BLL.Abstractions;
+﻿using CarsStorage.BLL.Abstractions.Models;
+using CarsStorageApi.AuthModels;
+using CarsStorageApi.Models;
 using Riok.Mapperly.Abstractions;
 
 namespace CarsStorageApi.Mappers
 {
-	[Mapper]
+    [Mapper]
 	public partial class UserMapper
 	{
-		public partial AppUser UserDtoToAppUser(UserDTO userDTO);
-		public partial UserDTO AppUserToUserDto(AppUser appUser);
-
-		public partial RegisterAppUser RegUserDtoToRegAppUser(RegisterUserDTO regUserDTO);
+		public partial AppUserDTO UserRequestResponseToAppUserDto(UserRequestResponse userRequestResponse);
+		public partial UserRequestResponse AppUserDtoToUserRequestResponse(AppUserDTO appUserDTO);
+		public partial AppUserRegisterDTO RegisterUserDataRequestToAppUserRegisterDTO(RegisterUserDataRequest registerUserDataRequest);
+		public partial AppUserLoginDTO LoginDataRequestToAppUserLoginDTO(LoginDataRequest loginDataRequest);
+		public partial AppUserCreaterDTO UserRequestToAppUserCreaterDto(UserRequest userRequest);
 	}
 }

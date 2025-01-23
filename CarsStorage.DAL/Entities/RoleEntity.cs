@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Claims;
 
 namespace CarsStorage.DAL.Entities
 {
@@ -15,9 +16,7 @@ namespace CarsStorage.DAL.Entities
 		[Required]
 		[StringLength(50)]
 		public string? Name { get; set; } = name;
-
-		public required Dictionary<RoleClaimType, bool> RoleClaims { get; init; }
-
+		public IEnumerable<RoleClaimType> RoleClaims { get; set; }		
 		public IEnumerable<IdentityAppUser>? UsersList { get; set; }
 	}
 }

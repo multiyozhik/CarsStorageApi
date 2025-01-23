@@ -1,60 +1,51 @@
 using CarsStorage.BLL.Abstractions;
-using CarsStorage.BLL.Interfaces;
+using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorageApi.Mappers;
+using CarsStorageApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorageApi.Controllers
 {
-	[ApiController]
-	[Authorize]
+    [ApiController]
 	[Route("[controller]/[action]")]
 	
 	public class CarsController(ICarsService carsService) : ControllerBase
 	{
-		private readonly ICarsService carsService = carsService;
 		private readonly CarMapper carMapper = new();
 
-		[Authorize(Roles = "manager,user")]
+		[Authorize(Policy = "RequierBrowseCars")]
 		[HttpGet]
-		public async Task<IEnumerable<CarDTO>> GetCars()
+		public async Task<IEnumerable<CarRequestResponse>> GetCars()
 		{
 			var carList = await carsService.GetList();
-			return carList.Select(carMapper.CarToCarDto);
+			return carList.Select(carMapper.CarDtoToCarRequestResponse);
 		}
 
-		[Authorize(Roles = "manager,user")]
+		[Authorize(Policy = "RequierManageCars")]
 		[HttpPost]
-		public async Task Create([FromBody] CreaterCarDTO createrCarDTO)
+		public async Task Create([FromBody] CarRequest carRequest)
 		{
-			var car = new Car()
-			{
-				Id = Guid.NewGuid(),
-				Make = createrCarDTO.Make,
-				Model = createrCarDTO.Model,
-				Color = createrCarDTO.Color,
-				Count = createrCarDTO.Count
-			};
-			await carsService.Create(car);
+			await carsService.Create(carMapper.CarRequestToCarCreaterDTO(carRequest));
 		}
 
-		[Authorize(Roles = "manager")]
+		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task Update([FromBody] CarDTO carDTO)
+		public async Task Update([FromBody] CarRequestResponse carRequestResponse)
 		{
-			await carsService.Update(carMapper.CarDtoToCar(carDTO));
+			await carsService.Update(carMapper.CarRequestResponseToCarDTO(carRequestResponse));
 		}
 
-		[Authorize(Roles = "manager")]
+		[Authorize(Policy = "RequierManageCars")]
 		[HttpDelete("{id}")]
-		public async Task Delete([FromRoute] Guid id)
+		public async Task Delete([FromRoute] int id)
 		{
 			await carsService.Delete(id);
 		}
 
-		[Authorize(Roles = "manager")]
+		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task UpdateCount([FromRoute] Guid id, [FromQuery] int count)
+		public async Task UpdateCount([FromRoute] int id, [FromQuery] int count)
 		{
 			await carsService.UpdateCount(id, count);
 		}
