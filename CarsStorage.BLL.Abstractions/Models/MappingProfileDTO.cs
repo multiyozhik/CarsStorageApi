@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CarsStorage.DAL.Entities;
+using CarsStorage.DAL.Models;
 
 namespace CarsStorage.BLL.Abstractions.Models
 {
@@ -12,6 +13,12 @@ namespace CarsStorage.BLL.Abstractions.Models
 			CreateMap<CarCreaterDTO, CarEntity>();
 
 			CreateMap<CarEntity, CarDTO>();
+
+			CreateMap<IdentityAppUser, AppUserDTO>();
+
+			CreateMap<AppUserCreaterDTO, IdentityAppUser>();
+
+			CreateMap<AppUserCreaterDTO, IdentityAppUserCreater>();
 		}
 	}
 }

@@ -1,107 +1,75 @@
 ﻿using CarsStorage.BLL.Repositories.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CarsStorage.DAL.EF;
+using CarsStorage.DAL.Entities;
+using CarsStorage.DAL.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CarsStorage.BLL.Repositories.Implementations
 {
-	public class UsersRepository : IUsersRepository
+	public class UsersRepository(IdentityAppDbContext dbContext, IServiceProvider serviceProvider) : IUsersRepository
 	{
-		public async Task<IEnumerable<AppUserDTO>> GetList()
-		{
-			//ToDo: не пойму, как сделать без ToList? чтоб не выгружать, а всю работу на стороне сервера
-			//var users = userManager.Users;       //через IQyerable
-			var users = userManager.Users.ToList();
+		private readonly IdentityAppDbContext dbContext = dbContext;
+		private readonly UserManager<IdentityAppUser> userManager = serviceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
 
-			var tasks = users.Select(
-				async (u) =>
-				{
-					var roles = await userManager.GetRolesAsync(u);
-					return new AppUserDTO()
-					{
-						Id = new Guid(u.Id),
-						UserName = u.UserName,
-						Email = u.Email,
-						Roles = roles
-					};
-				}).ToList();
-			return await Task.WhenAll(tasks);
+
+		public async Task<IEnumerable<IdentityAppUser>> GetList()
+		{
+			return await dbContext.Users.ToListAsync();
 		}
 
 
-		public async Task<ActionResult<AppUserDTO>> GetById(Guid id)
+		public async Task<IdentityAppUser> GetById(int id)
 		{
-			var user = await userManager.FindByIdAsync(id.ToString());
-
-			if (user is null)
-				return new NotFoundObjectResult("Не найден пользователь по id");
-
-			var roles = await userManager.GetRolesAsync(user);
-
-			return new AppUserDTO { Id = new Guid(user.Id), UserName = user.UserName, Email = user.Email, Roles = roles };
+			return await userManager.FindByIdAsync(id.ToString());
 		}
 
 
-		public async Task<IActionResult> Create(AppUserRegixteDTO registerAppUser)
+		public async Task<IdentityAppUser> Create(IdentityAppUserCreater identityAppUserCreater)
 		{
+			var rolesList = identityAppUserCreater.Roles.Select(roleName => new RoleEntity(roleName));
+
 			var user = new IdentityAppUser
 			{
-				UserName = registerAppUser.UserName,
-				Email = registerAppUser.Email
+				UserName = identityAppUserCreater.UserName,
+				Email = identityAppUserCreater.Email,
+				RolesList = rolesList
 			};
 
-			if (string.IsNullOrEmpty(registerAppUser.Password))
-				return new BadRequestObjectResult("Не задан пароль для пользователя");
-			await userManager.CreateAsync(user, registerAppUser.Password);
-
-			if (registerAppUser.Roles is null)
-				return new BadRequestObjectResult("Не заданы роли для пользователя");
-
-			foreach (var role in registerAppUser.Roles)
-			{
-				await userManager.AddToRoleAsync(user, role);
-			}
-			return new OkResult();
+			await userManager.CreateAsync(user, identityAppUserCreater.Password);
+			return user;
 		}
 
 
-		public async Task<IActionResult> Update(AppUserDTO appUser)
+		public async Task<IdentityAppUser> Update(IdentityAppUser identityAppUser)
 		{
-			var user = await userManager.FindByIdAsync(appUser.Id.ToString());
-			if (user is null)
-				return new NotFoundObjectResult("Не найден пользователь по id");
+			var user = await userManager.FindByIdAsync(identityAppUser.Id.ToString())
+				?? throw new Exception("Не найден пользователь по id");	
 
-			if (appUser.Roles is null)
-				return new BadRequestObjectResult("Не заданы роли для пользователя");
-
-			user.UserName = appUser.UserName;
-			user.Email = appUser.Email;
-			var roles = await userManager.GetRolesAsync(user);
-			var result = await userManager.RemoveFromRolesAsync(user, roles);
-			if (result.Succeeded)
-			{
-				result = await userManager.AddToRolesAsync(user, appUser.Roles);
-				if (result.Succeeded)
-					return new OkResult();
-			}
-			return new StatusCodeResult(500);
+			user.UserName = identityAppUser.UserName;
+			user.Email = identityAppUser.Email;
+			user.RolesList = identityAppUser.RolesList;
+			await userManager.UpdateAsync(user);
+			return user;
 		}
 
-		public async Task<IActionResult> Delete(Guid id)
+		public async Task Delete(int id)
 		{
-			var user = await userManager.FindByIdAsync(id.ToString());
-			if (user is null)
-				return new NotFoundObjectResult("Не найден пользователь по id");
+			var user = await userManager.FindByIdAsync(id.ToString()) 
+				?? throw new Exception("Не найден пользователь по id");
 
-			var result = await userManager.DeleteAsync(user);
-			if (result.Succeeded)
-				if (result.Succeeded)
-					return new OkResult();
-			return new StatusCodeResult(500);
+			await userManager.DeleteAsync(user);
+			
+			//var identityAppUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id.ToString());
+			//if (identityAppUser is not null)
+			//{
+			//	dbContext.Users.Remove(identityAppUser);
+			//	await dbContext.SaveChangesAsync();
+			//}
+			//else
+			//	throw new Exception("Пользователь с заданным Id не найден");
 		}
-
 
 	}
 }

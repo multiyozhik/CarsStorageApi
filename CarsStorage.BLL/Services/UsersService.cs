@@ -1,104 +1,81 @@
-﻿using CarsStorage.BLL.Abstractions.Interfaces;
+﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+using CarsStorage.DAL.Models;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-    public class UsersService(UserManager<IdentityAppUser> userManager) : IUsersService
+	public class UsersService(IUsersRepository usersRepository, IMapper mapper) : IUsersService
 	{
-		public async Task<IEnumerable<AppUserDTO>> GetList()
+		public async Task<ServiceResult<IEnumerable<AppUserDTO>>> GetList()
 		{
-			//ToDo: не пойму, как сделать без ToList? чтоб не выгружать, а всю работу на стороне сервера
-			//var users = userManager.Users;       //через IQyerable
-			var users = userManager.Users.ToList();   
-
-			var tasks = users.Select(
-				async (u) => 
-				{
-					var roles = await userManager.GetRolesAsync(u);
-					return new AppUserDTO()
-					{
-						Id = new Guid(u.Id),
-						UserName = u.UserName,
-						Email = u.Email,
-						Roles = roles
-					};
-				}).ToList();
-			return await Task.WhenAll(tasks);
-		}
-
-
-		public async Task<ActionResult<AppUserDTO>> GetById(Guid id)
-		{
-			var user = await userManager.FindByIdAsync(id.ToString());
-
-			if (user is null) 
-				return new NotFoundObjectResult("Не найден пользователь по id");
-
-			var roles = await userManager.GetRolesAsync(user);
-
-			return new AppUserDTO { Id = new Guid(user.Id), UserName = user.UserName, Email = user.Email , Roles = roles};
-		}
-
-
-		public async Task<IActionResult> Create(AppUserRegixteDTO registerAppUser) 
-		{			
-			var user = new IdentityAppUser 
-			{ 
-				UserName = registerAppUser.UserName, 
-				Email = registerAppUser.Email 
-			};
-
-			if (string.IsNullOrEmpty(registerAppUser.Password))
-				return new BadRequestObjectResult("Не задан пароль для пользователя");			
-			await userManager.CreateAsync(user, registerAppUser.Password);
-
-			if (registerAppUser.Roles is null)
-				return new BadRequestObjectResult("Не заданы роли для пользователя");
-
-			foreach (var role in registerAppUser.Roles)
+			try
 			{
-				await userManager.AddToRoleAsync(user, role);
-			}			
-			return new OkResult();
-		}
-
-
-		public async Task<IActionResult> Update(AppUserDTO appUser)
-		{
-			var user = await userManager.FindByIdAsync(appUser.Id.ToString());
-            if (user is null)
-				return new NotFoundObjectResult("Не найден пользователь по id");
-
-			if (appUser.Roles is null)
-				return new BadRequestObjectResult("Не заданы роли для пользователя");
-
-			user.UserName = appUser.UserName;
-			user.Email = appUser.Email;
-			var roles = await userManager.GetRolesAsync(user);
-			var result = await userManager.RemoveFromRolesAsync(user, roles);
-			if (result.Succeeded)
-			{
-				result = await userManager.AddToRolesAsync(user, appUser.Roles);
-				if (result.Succeeded)
-					return new OkResult();
+				var identityAppUsersList = await usersRepository.GetList();
+				var appUserDTOList = identityAppUsersList.Select(mapper.Map<AppUserDTO>);
+				return new ServiceResult<IEnumerable<AppUserDTO>>(appUserDTOList, null);
 			}
-			return new StatusCodeResult(500);
+			catch (Exception exception)
+			{
+				return new ServiceResult<IEnumerable<AppUserDTO>>(null, exception.Message);
+			}
 		}
 
-		public async Task<IActionResult> Delete(Guid id)
-		{
-			var user = await userManager.FindByIdAsync(id.ToString());
-			if (user is null)
-				return new NotFoundObjectResult("Не найден пользователь по id");
 
-			var result = await userManager.DeleteAsync(user);
-			if (result.Succeeded)
-				if (result.Succeeded)
-					return new OkResult();
-			return new StatusCodeResult(500);
+		public async Task<ServiceResult<AppUserDTO>> GetById(int id)
+		{
+			try
+			{
+				var identityAppUser = await usersRepository.GetById(id);
+				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(identityAppUser), null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<AppUserDTO>(null, exception.Message);
+			}
+		}
+
+
+		public async Task<ServiceResult<AppUserDTO>> Create(AppUserCreaterDTO appUserCreaterDTO)
+		{
+			try
+			{
+				var identityAppUser = await usersRepository.Create(mapper.Map<IdentityAppUserCreater>(appUserCreaterDTO));
+				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(identityAppUser), null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<AppUserDTO>(null, exception.Message);
+			}
+		}
+
+
+		public async Task<ServiceResult<AppUserDTO>> Update(AppUserDTO appUserDTO)
+		{
+			try
+			{
+				var identityAppUser = await usersRepository.Update(mapper.Map<IdentityAppUser>(appUserDTO));
+				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(identityAppUser), null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<AppUserDTO>(null, exception.Message);
+			}
+		}
+
+		public async Task<ServiceResult<int>> Delete(int id)
+		{
+			try
+			{
+				await usersRepository.Delete(id);
+				return new ServiceResult<int>(id, null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<int>(id, exception.Message);
+			}
 		}
 	}
 }

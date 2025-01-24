@@ -1,14 +1,13 @@
 ﻿using CarsStorage.BLL.Abstractions.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorage.BLL.Abstractions.Interfaces
 {
-    public interface IUsersService
+	public interface IUsersService
     {
-        public Task<IEnumerable<AppUserDTO>> GetList();
-        public Task<ActionResult<AppUserDTO>> GetById(int id);
-        public Task<IActionResult> Create(AppUserCreaterDTO appUserCreaterDTO);
-        public Task<IActionResult> Update(AppUserDTO appUser);
-        public Task<IActionResult> Delete(int id);
+        public Task<ServiceResult<IEnumerable<AppUserDTO>>> GetList();
+        public Task<ServiceResult<AppUserDTO>> GetById(int id);
+        public Task<ServiceResult<AppUserDTO>> Create(AppUserCreaterDTO appUserCreaterDTO);
+        public Task<ServiceResult<AppUserDTO>> Update(AppUserDTO appUserDTO);
+        public Task<ServiceResult<int>> Delete(int id);
     }
 }

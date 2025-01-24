@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CarsStorage.DAL.Entities;
+using CarsStorage.DAL.Models;
 
 namespace CarsStorage.BLL.Repositories.Interfaces
 {
 	public interface IUsersRepository
 	{
-		public Task<IEnumerable<AppUserDTO>> GetList();
-		public Task<ActionResult<AppUserDTO>> GetById(int id);
-		public Task<IActionResult> Create(AppUserCreaterDTO appUserCreaterDTO);
-		public Task<IActionResult> Update(AppUserDTO appUser);
-		public Task<IActionResult> Delete(int id);
+		public Task<IEnumerable<IdentityAppUser>> GetList();
+		public Task<IdentityAppUser> GetById(int id);
+		public Task<IdentityAppUser> Create(IdentityAppUserCreater identityAppUserCreater);
+		public Task<IdentityAppUser> Update(IdentityAppUser identityAppUser);
+		public Task Delete(int id);
 	}
 }

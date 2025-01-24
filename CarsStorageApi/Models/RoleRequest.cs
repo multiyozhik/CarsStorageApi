@@ -1,10 +1,10 @@
-﻿using CarsStorage.DAL.Entities;
+﻿using CarsStorage.DAL.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Linq;
 
 namespace CarsStorageApi.Models
 {
-	public class RoleRequest
+    public class RoleRequest
 	{
 		[Required]
 		[StringLength(50)]

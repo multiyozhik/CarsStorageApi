@@ -1,55 +1,83 @@
-﻿using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorageApi.Config;
-using CarsStorageApi.Mappers;
+﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Interfaces;
+using CarsStorage.BLL.Abstractions.Models;
 using CarsStorageApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace CarsStorageApi.Controllers
 {
-    [ApiController]
+	[ApiController]
 	[Authorize(Policy = "RequierManageUsers")]
 	[Route("[controller]/[action]")]
 	
-	public class UsersController(IUsersService usersService) : ControllerBase
+	public class UsersController(IUsersService usersService, IMapper mapper) : ControllerBase
 	{
-		private readonly UserMapper userMapper = new();
-
 		[HttpGet]
-		public async Task<IEnumerable<UserRequestResponse>> GetList()
+		public async Task<ActionResult<IEnumerable<UserRequestResponse>>> GetList()
 		{
-			var appUsersList = await usersService.GetList();
-			return appUsersList.Select(userMapper.AppUserDtoToUserRequestResponse);
+			var serviceResult = await usersService.GetList();
+
+			if (serviceResult.IsSuccess)
+				return serviceResult.Result.Select(mapper.Map<UserRequestResponse>).ToList();
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 
 
 		[HttpGet("{id}")]
 		public async Task<ActionResult<UserRequestResponse>> GetById([FromRoute] int id)
 		{
-			var appUserDTO = await usersService.GetById(id);
-			return userMapper.AppUserDtoToUserRequestResponse(appUserDTO.Value);
+			var serviceResult = await usersService.GetById(id);
+
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 
 
 		[HttpPost]
-		public async Task<IActionResult> Create([FromBody] UserRequest userRequest)			
+		public async Task<ActionResult<UserRequestResponse>> Create([FromBody] UserRequest userRequest)			
 		{
-			return await usersService.Create(userMapper.UserRequestToAppUserCreaterDto(userRequest));
+			var serviceResult = await usersService.Create(mapper.Map<AppUserCreaterDTO>(userRequest));
+
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 
 
 		[HttpPut]
-		public async Task<IActionResult> Update([FromBody] UserRequestResponse userDTO)
+		public async Task<ActionResult<UserRequestResponse>> Update([FromBody] UserRequestResponse userDTO)
 		{
-			return await usersService.Update(userMapper.UserRequestResponseToAppUserDto(userDTO));
+			var serviceResult = await usersService.Update(mapper.Map<AppUserDTO>(userDTO));
+
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 
 
 		[HttpDelete("{id}")]
-		public async Task<IActionResult> Delete([FromRoute] int id)
+		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{
-			return await usersService.Delete(id);
+			var serviceResult = await usersService.Delete(id);
+
+			if (serviceResult.IsSuccess)
+				return serviceResult.Result;
+			else
+				return BadRequest(serviceResult.ErrorMessage);
+		}
+
+		private ActionResult<T> ReturnActionResult<T>(ServiceResult<T> serviceResult)
+		{
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+				return serviceResult.Result;
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 	}
 }

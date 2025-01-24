@@ -31,8 +31,8 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var carsDTO = await carsRepository.Create(carCreaterDTO);
-				return new ServiceResult<CarDTO>(carsDTO, null);
+				var carEntity = await carsRepository.Create(carCreaterDTO);
+				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity), null);
 			}
 			catch (Exception exception)
 			{
@@ -45,8 +45,8 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var carsDTO = await carsRepository.Update(carDTO);
-				return new ServiceResult<CarDTO>(carsDTO, null);
+				var carEntity = await carsRepository.Update(carDTO);
+				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity), null);
 			}
 			catch (Exception exception)
 			{
@@ -73,8 +73,8 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var carDTO = await carsRepository.UpdateCount(id, count);
-				return new ServiceResult<CarDTO>(carDTO, null);
+				var carEntity = await carsRepository.UpdateCount(id, count);
+				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity), null);
 			}
 			catch (Exception exception)
 			{

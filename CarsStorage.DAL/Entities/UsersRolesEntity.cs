@@ -12,7 +12,13 @@ namespace CarsStorage.DAL.Entities
 	{
 		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public int Id { get; set; }
-		public int? UserId { get; set; } = userId;
-		public int? RoleId { get; set; } = roleId;
+
+		//public int UserId { get; set; } = userId;
+
+		public IdentityAppUser IdentityAppUser { get; set; }
+
+		//public int RoleId { get; set; } = roleId;
+
+		public RoleEntity RoleEntity { get; set; }
 	}
 }

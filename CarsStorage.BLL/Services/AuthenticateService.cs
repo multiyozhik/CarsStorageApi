@@ -1,4 +1,5 @@
-﻿using CarsStorage.BLL.Abstractions.Interfaces;
+﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -13,60 +14,64 @@ namespace CarsStorage.BLL.Implementations.Services
 	public class AuthenticateService(
 		SignInManager<IdentityAppUser> signInManager, 
 		UserManager<IdentityAppUser> userManager,
-		IOptions<JWTConfigDTO> jwtConfigDTO) : IAuthenticateService
+		IOptions<JWTConfigDTO> jwtConfigDTO, IMapper mapper) : IAuthenticateService
 	{
 		private readonly JWTConfigDTO jwtConfig = jwtConfigDTO.Value;
-		public async Task<IActionResult> Register(AppUserRegisterDTO registerAppUser)
+		public async Task<ServiceResult<AppUserDTO>> Register(AppUserRegisterDTO appUserRegisterDTO)
 		{
-			var user = new IdentityAppUser { UserName = registerAppUser.UserName, Email = registerAppUser.Email };
-			var result = await userManager.CreateAsync(user, registerAppUser.Password);
-			if (result.Succeeded) {				
-				foreach (var role in registerAppUser.Roles)
-					await userManager.AddToRoleAsync(user, role);
-				await signInManager.SignInAsync(user, false);
+			try
+			{
+				var user = new IdentityAppUser { UserName = appUserRegisterDTO.UserName, Email = appUserRegisterDTO.Email };
+				var result = await userManager.CreateAsync(user, appUserRegisterDTO.Password);
+				var defaultRoles = new List<string>() { "User" };    //ToDo: добавить IOption default roles
+				if (result.Succeeded)
+				{
+					foreach (var role in defaultRoles)
+						await userManager.AddToRoleAsync(user, role);
+					await signInManager.SignInAsync(user, false);
+				}
+				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(user), null);
 			}
-			return new BadRequestObjectResult("Ошибка ввода данных пользователя");
+			catch (Exception exception)
+			{
+				return new ServiceResult<AppUserDTO>(null, exception.Message);
+			}
 		}
 
-		public async Task<ActionResult<JWTTokenDTO>> LogIn(AppUserLoginDTO appUserLoginDTO) 
+		public async Task<ServiceResult<JWTTokenDTO>> LogIn(AppUserLoginDTO appUserLoginDTO) 
 		{
-			var user = await userManager.FindByNameAsync(appUserLoginDTO.UserName);
-			if (user is null)
-				return new BadRequestObjectResult("Пользователь не найден");
-
-			if (string.IsNullOrEmpty(jwtConfig.Key))
-				throw new Exception("Не задан секретный ключ для конфигурации jwt авторизации");
-
-			await signInManager.SignOutAsync();
-			var result = await signInManager.PasswordSignInAsync(user, appUserLoginDTO.Password, false, false);
-			if (!result.Succeeded)
-				return new StatusCodeResult(401);
-
-			if (jwtConfig.Key is null)
-				throw new Exception("Не задан секретный ключ при конфигурации аутентификации");
-			var roles = await userManager.GetRolesAsync(user);
-			if (roles is not null && user.UserName is not null)
+			try
 			{
-				//rolesClaims = roles.RolesClaims  список признаков для роли
-				//var claimsList = new List<Claim> { new(ClaimTypes.Name, user.UserName) }; сразу передать claimsList из при создании роли
+				var user = await userManager.FindByNameAsync(appUserLoginDTO.UserName);
+				if (user is null) throw new Exception("Ошибка - неверный логин.");
 
-				var claimsList = new List<Claim> { new(ClaimTypes.Name, user.UserName) };
-				foreach (var role in roles)
-					claimsList.Add(new Claim(ClaimTypes.Role, role));
+				await signInManager.SignOutAsync();
+				var result = await signInManager.PasswordSignInAsync(user, appUserLoginDTO.Password, false, false);
+				if (!result.Succeeded) throw new Exception("Ошибка - неверный пароль.");
+
+				var roleClaims = user.RolesList.SelectMany(role => role.RoleClaims).Distinct();
+				var userClaims = new List<Claim> { new(ClaimTypes.Name, user.UserName) };					
+				foreach (var claim in roleClaims)
+				{
+					userClaims.Add(new Claim(ClaimTypes.Role, claim.ToString()));
+				}
 				var jwt = new JwtSecurityToken(
-					claims: claimsList,    //сюда передать список
+					claims: userClaims,
 					issuer: jwtConfig.Issuer,
 					audience: jwtConfig.Audience,
 					expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(jwtConfig.ExpireMinutes)),
 					signingCredentials: new SigningCredentials(new SymmetricSecurityKey(
 						Convert.FromBase64String(jwtConfig.Key)), SecurityAlgorithms.HmacSha256));
-
-
-
-
-					return new JWTTokenDTO { Token = new JwtSecurityTokenHandler().WriteToken(jwt) };
+				var jwtTokenDTO = new JWTTokenDTO()
+				{
+					Token = new JwtSecurityTokenHandler().WriteToken(jwt)
+				};
+				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null); 
 			}
-			return new StatusCodeResult(401);	
+			catch (Exception exception)
+			{
+				return new ServiceResult<JWTTokenDTO>(null, exception.Message);
+			}
 		}
 
 		public async Task LogOut() 

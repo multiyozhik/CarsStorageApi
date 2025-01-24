@@ -27,19 +27,27 @@ namespace CarsStorageApi.Controllers
 
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPost]
-		public async Task<ActionResult<CarDTO>> Create([FromBody] CarRequest carRequest)
+		public async Task<ActionResult<CarRequestResponse>> Create([FromBody] CarRequest carRequest)
 		{
 			var serviceResult = await carsService.Create(mapper.Map<CarCreaterDTO>(carRequest));
-			return ReturnActionResult(serviceResult);
+			
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+				return mapper.Map<CarRequestResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 
 
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task<ActionResult<CarDTO>> Update([FromBody] CarRequestResponse carRequestResponse)
+		public async Task<ActionResult<CarRequestResponse>> Update([FromBody] CarRequestResponse carRequestResponse)
 		{
 			var serviceResult = await carsService.Update(mapper.Map<CarDTO>(carRequestResponse));
-			return ReturnActionResult(serviceResult);
+
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+				return mapper.Map<CarRequestResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 
 
@@ -48,25 +56,33 @@ namespace CarsStorageApi.Controllers
 		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{
 			var serviceResult = await carsService.Delete(id);
-			return ReturnActionResult(serviceResult);
+
+			if (serviceResult.IsSuccess)
+				return mapper.Map<int>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ErrorMessage);
 		}
 
 
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task<ActionResult<CarDTO>> UpdateCount([FromBody] CarCountChangerRequest carCountChangerRequest)
+		public async Task<ActionResult<CarRequestResponse>> UpdateCount([FromBody] CarCountChangerRequest carCountChangerRequest)
 		{
 			var serviceResult = await carsService.UpdateCount(carCountChangerRequest.Id, carCountChangerRequest.Count);
-			return ReturnActionResult(serviceResult);
-		}
 
-
-		private ActionResult<T> ReturnActionResult<T>(ServiceResult<T> serviceResult)
-		{
 			if (serviceResult.IsSuccess && serviceResult.Result is not null)
-				return serviceResult.Result;
+				return mapper.Map<CarRequestResponse>(serviceResult.Result);
 			else
 				return BadRequest(serviceResult.ErrorMessage);
 		}
+
+
+		//private ActionResult<T> ReturnActionResult<T>(ServiceResult<T> serviceResult)
+		//{
+		//	if (serviceResult.IsSuccess && serviceResult.Result is not null)
+		//		return mapper.Map<T>(serviceResult.Result);
+		//	else
+		//		return BadRequest(serviceResult.ErrorMessage);
+		//}
 	}
 }

@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Claims;
+using CarsStorage.DAL.Models;
 
 namespace CarsStorage.DAL.Entities
 {
-	/// <summary>
-	/// Сущность роли.
-	/// </summary>
-	/// <param name="name">Имя роли.</param>
-	public class RoleEntity(string name)
+    /// <summary>
+    /// Сущность роли.
+    /// </summary>
+    /// <param name="name">Имя роли.</param>
+    public class RoleEntity(string name)
 	{
 		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public int Id { get; set; }

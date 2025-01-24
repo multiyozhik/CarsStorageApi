@@ -26,7 +26,8 @@ namespace CarsStorage.DAL.EF
 					Email = $"user{i}@mail.ru"
 				};
 
-				identityAppUserList[i].PasswordHash = passwordHasher.HashPassword(identityAppUserList[i], "user1");
+				identityAppUserList[i].PasswordHash = passwordHasher.HashPassword(identityAppUserList[i], $"user{i}");
+				identityAppUserList[i].RolesList = [new RoleEntity("User")];
 			}
 
 			modelBuilder.Entity<IdentityAppUser>().HasData(identityAppUserList);

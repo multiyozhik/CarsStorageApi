@@ -1,9 +1,9 @@
-﻿using CarsStorage.DAL.Entities;
+﻿using CarsStorage.DAL.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace CarsStorageApi.Models
 {
-	public class RoleRequestResponse
+    public class RoleRequestResponse
 	{
 		public int Id { get; set; }
 		public string? Name { get; set; }

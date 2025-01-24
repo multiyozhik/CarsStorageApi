@@ -4,9 +4,9 @@ using CarsStorage.BLL.Implementations.Services;
 using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Entities;
 using CarsStorageApi.Config;
+using CarsStorageApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -131,32 +131,16 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		})
 		.AddBearerToken();
 
-	services.AddAuthorization(options => {
-		options.AddPolicy(
-			"RequierManageUsers", policy =>
-			{
-				policy.RequireClaim("CanManageUsers", "true");
-			});
-		options.AddPolicy(
-			"RequierManageUsersRoles", policy =>
-			{
-				policy.RequireClaim("CanManageUsersRoles", "true");
-			});
-		options.AddPolicy(
-			"RequierManageCars", policy =>
-			{
-				policy.RequireClaim("CanManageCars", "true");
-			});
-		options.AddPolicy(
-			"RequierBrowseCars", policy =>
-			{
-				policy.RequireClaim("CanBrowseCars", "true");
-			});
+	services.AddAuthorization(options => 
+	{
+		options.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim("CanManageUsers"); });
+		options.AddPolicy("RequierManageUsersRoles", policy => { policy.RequireClaim("CanManageUsersRoles"); });
+		options.AddPolicy("RequierManageCars", policy => { policy.RequireClaim("CanManageCars"); });
+		options.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
 	});
 
 	services.AddAutoMapper(typeof(MappingProfileApi));
 	services.AddAutoMapper(typeof(MappingProfileDTO));
-
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -179,8 +163,6 @@ static void Configure(WebApplication app, IHostEnvironment env)
 	app.UseAuthorization();
 
 	app.MapControllers();
-
-	CreateDefaultRoles(app).Wait();
 
 	CreateAdminAccount(app).Wait();
 
@@ -214,26 +196,4 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 	}
 	var usersRolesDbContext = scope.ServiceProvider.GetRequiredService<UsersRolesDbContext>();
 	await usersRolesDbContext.AddAsync(new UsersRolesEntity(0, 1));
-}
-
-static async Task CreateDefaultRoles(IApplicationBuilder app)
-{
-	using IServiceScope scope = app.ApplicationServices.CreateScope();
-
-	var rolesDbContext = scope.ServiceProvider.GetService<RolesDbContext>() 
-		?? throw new Exception("Не зарегистрирован сервис контекста для ролей пользователей");
-	
-	await rolesDbContext.AddRangeAsync(
-		new RoleEntity("Admin")	{
-			Id = 1,
-			RoleClaims = [ RoleClaimType.CanManageUsers, RoleClaimType.CanManageRoles]},
-		new RoleEntity("Manager")
-		{
-			Id = 2,
-			RoleClaims = [ RoleClaimType.CanManageCars, RoleClaimType.CanBrowseCars ]},
-		new RoleEntity("User")
-		{
-			Id = 3,
-			RoleClaims = [ RoleClaimType.CanBrowseCars ]
-		});
 }

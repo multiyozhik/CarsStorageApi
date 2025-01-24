@@ -1,9 +1,9 @@
-﻿using CarsStorage.DAL.Entities;
+﻿using CarsStorage.DAL.Models;
 
 
 namespace CarsStorage.BLL.Abstractions.Models
 {
-	public class RoleDTO
+    public class RoleDTO
 	{
 		public int Id { get; set; }
 		public string? Name { get; set; }
