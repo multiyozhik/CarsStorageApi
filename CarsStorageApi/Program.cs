@@ -1,6 +1,8 @@
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Implementations.Services;
+using CarsStorage.BLL.Repositories.Implementations;
+using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Entities;
 using CarsStorageApi.Config;
@@ -66,17 +68,13 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddScoped<ICarsService, CarsService>();
 	services.AddScoped<IAuthenticateService, AuthenticateService>();
 	services.AddScoped<IUsersService, UsersService>();
+	services.AddScoped<ICarsRepository, CarsRepository>();
+	services.AddScoped<IUsersRepository, UsersRepository>();
 
 	services.AddDbContext<CarsAppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services.AddDbContext<IdentityAppDbContext>(options =>
-		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
-
-	services.AddDbContext<RolesDbContext>(options =>
-		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
-
-	services.AddDbContext<UsersRolesDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services.AddOptions<AdminConfig>();
@@ -181,19 +179,26 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 		|| string.IsNullOrEmpty(admin.Role))
 		throw new Exception("Не заданы конфигурации для администратора");
 
-	var usersDbContext = scope.ServiceProvider.GetRequiredService<IdentityAppDbContext>();
+	var appDbContext = scope.ServiceProvider.GetRequiredService<IdentityAppDbContext>();
 
 	if (await userManager.FindByNameAsync(admin.UserName) is null)
 	{
+		var adminrole = new RoleEntity("admin");
 		var adminUser = new IdentityAppUser()
 		{
 			UserName = admin.UserName,
 			Email = admin.Email,
-			RolesList = [ new RoleEntity("admin")]
+			RolesList = [adminrole]
 		};
 		var passwordHasher = scope.ServiceProvider.GetRequiredService<PasswordHasher<IdentityAppUser>>();
 		await userManager.CreateAsync(adminUser, passwordHasher.HashPassword(adminUser, admin.Password));
+		//await appDbContext.UserRoles.AddAsync(new UsersRolesEntity()
+		//{
+		//	IdentityAppUser = adminUser,
+		//	IdentityAppUserId = int.Parse(adminUser.Id),
+		//	RoleEntity = adminrole,
+		//	RoleEntityId = adminrole.Id
+		//});
+		//await appDbContext.SaveChangesAsync();
 	}
-	var usersRolesDbContext = scope.ServiceProvider.GetRequiredService<UsersRolesDbContext>();
-	await usersRolesDbContext.AddAsync(new UsersRolesEntity(0, 1));
 }

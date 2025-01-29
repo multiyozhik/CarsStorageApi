@@ -1,8 +1,7 @@
 ﻿using CarsStorage.DAL.Entities;
-using Microsoft.AspNetCore.Identity;
+using CarsStorage.DAL.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.Intrinsics.X86;
 
 namespace CarsStorage.DAL.EF
 {
@@ -12,25 +11,15 @@ namespace CarsStorage.DAL.EF
 	/// <param name="options"></param>
 	public class IdentityAppDbContext(DbContextOptions<IdentityAppDbContext> options) : IdentityDbContext<IdentityAppUser>(options)
 	{
+		public DbSet<IdentityAppUser> IdentityAppUsers { get; set; }
+		public new DbSet<RoleEntity> Roles { get; set; }
+		public new DbSet<UsersRolesEntity> UserRoles { get; set; }
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			var passwordHasher = new PasswordHasher<IdentityAppUser>();
-
-			var identityAppUserList = new List<IdentityAppUser>();
-
-			for (int i = 0; i < 10; i++)
-			{
-				identityAppUserList[i] = new IdentityAppUser
-				{
-					UserName = $"user{i}",
-					Email = $"user{i}@mail.ru"
-				};
-
-				identityAppUserList[i].PasswordHash = passwordHasher.HashPassword(identityAppUserList[i], $"user{i}");
-				identityAppUserList[i].RolesList = [new RoleEntity("User")];
-			}
-
-			modelBuilder.Entity<IdentityAppUser>().HasData(identityAppUserList);
+			var rolesConfig = new RolesConfig();
+			modelBuilder.ApplyConfiguration(rolesConfig);
+			modelBuilder.ApplyConfiguration(new UsersConfig(rolesConfig.GetRoles()));
 		}
 	}
 }

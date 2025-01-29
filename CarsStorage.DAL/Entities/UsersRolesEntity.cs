@@ -1,24 +1,20 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CarsStorage.DAL.Entities
 {
 	/// <summary>
-	/// Сущность в таблице соотношений между пользователем и ролью.
+	/// Сущность в таблице отношений между пользователем и ролью.
 	/// </summary>
-	/// <param name="userId">Id пользователя.</param>
-	/// <param name="roleId">Id роли у данного пользователя.</param>
-	public class UsersRolesEntity(int userId, int roleId)
+
+	public class UsersRolesEntity
 	{
-		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-		public int Id { get; set; }
+		public int IdentityAppUserId { get; set; }
+		public int RoleEntityId { get; set; }
 
-		//public int UserId { get; set; } = userId;
+		public IdentityAppUser? IdentityAppUser { get; set; }
 
-		public IdentityAppUser IdentityAppUser { get; set; }
-
-		//public int RoleId { get; set; } = roleId;
-
-		public RoleEntity RoleEntity { get; set; }
+		public RoleEntity? RoleEntity { get; set; }
 	}
 }
