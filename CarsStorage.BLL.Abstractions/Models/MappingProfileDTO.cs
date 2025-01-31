@@ -19,6 +19,10 @@ namespace CarsStorage.BLL.Abstractions.Models
 			CreateMap<AppUserCreaterDTO, IdentityAppUser>();
 
 			CreateMap<AppUserCreaterDTO, IdentityAppUserCreater>();
+
+			CreateMap<RoleEntity, RoleDTO>();
+
+			CreateMap<RoleDTO, RoleEntity>();
 		}
 	}
 }

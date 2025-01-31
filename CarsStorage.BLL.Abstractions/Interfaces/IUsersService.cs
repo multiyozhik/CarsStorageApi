@@ -9,5 +9,6 @@ namespace CarsStorage.BLL.Abstractions.Interfaces
         public Task<ServiceResult<AppUserDTO>> Create(AppUserCreaterDTO appUserCreaterDTO);
         public Task<ServiceResult<AppUserDTO>> Update(AppUserDTO appUserDTO);
         public Task<ServiceResult<int>> Delete(int id);
-    }
+		//public Task AddRoleToUser(string roleName);
+	}
 }

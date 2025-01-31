@@ -4,7 +4,6 @@ using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,24 +12,34 @@ using System.Security.Claims;
 namespace CarsStorage.BLL.Implementations.Services
 {
 	public class AuthenticateService(
-		SignInManager<IdentityAppUser> signInManager, 
-		UserManager<IdentityAppUser> userManager,
+		SignInManager<IdentityAppUser> signInManager,
+		UserManager<IdentityAppUser> userManager, ITokenService tokenService, IRolesService rolesService, IUsersService usersService,
 		IOptions<JWTConfigDTO> jwtConfigDTO, IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions) : IAuthenticateService
 	{
 		private readonly JWTConfigDTO jwtConfig = jwtConfigDTO.Value;
+
 		public async Task<ServiceResult<AppUserDTO>> Register(AppUserRegisterDTO appUserRegisterDTO)
 		{
 			try
 			{
 				var user = new IdentityAppUser { UserName = appUserRegisterDTO.UserName, Email = appUserRegisterDTO.Email };
 				var result = await userManager.CreateAsync(user, appUserRegisterDTO.Password);
-				var defaultRoles = new List<string>() { initialOptions.Value.DefaultRoleName }; 
-				if (result.Succeeded)
-				{
-					foreach (var role in defaultRoles)
-						await userManager.AddToRoleAsync(user, role);
-					await signInManager.SignInAsync(user, false);
-				}
+				var defaultRoles = new List<string>() { initialOptions.Value.DefaultRoleName };
+
+				//var rolesServiceResult = await rolesService.GetList();
+				//if (rolesServiceResult.IsSuccess)
+				//	var roles = rolesServiceResult.Result;
+
+
+				//var userRoles = new List<RoleDTO>();
+				//defaultRoles.Select(r => userRoles.Add());
+
+				//defaultRoles.Select(roleName => rolesService.GetRoleByName(roleName));
+				//if (result.Succeeded)
+				//{
+				//	user.RolesList = defaultRoles;
+				//	await signInManager.SignInAsync(user, false);
+				//}
 				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(user), null);
 			}
 			catch (Exception exception)
@@ -67,7 +76,22 @@ namespace CarsStorage.BLL.Implementations.Services
 				{
 					Token = new JwtSecurityTokenHandler().WriteToken(jwt)
 				};
-				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null); 
+				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null);
+
+				//var accessToken = tokenService.GetAccessToken();
+				//string tokenString = tokenService.GetAccessToken(
+				//	user.GetUserClaims(), out DateTime expires);
+				//SetUserAuthData(user, tokenString, expires, tokenService, context);
+				//return Results.Ok(
+				//	new
+				//	{
+				//		token = tokenString,
+				//		refreshToken = user.RefreshToken,
+				//		tokenExpires = expires,
+				//		user = login
+				//	});
+
+
 			}
 			catch (Exception exception)
 			{

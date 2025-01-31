@@ -2,9 +2,13 @@
 {
     public class JWTConfigDTO
     {
-        public string? Key { get; set; }
-        public string? Issuer { get; set; }
-        public string? Audience { get; set; }
-        public int ExpireMinutes { get; set; }
+        public string Key { get; } = string.Empty;
+        public string Issuer { get; } = string.Empty;
+		public string Audience { get; } = string.Empty;
+		public int ExpireMinutes { get; }
+        public bool ValidateIssuer { get; }
+        public bool ValidateAudience { get; }
+        public bool ValidateIssuerSigningKey { get; }
+        public bool ValidateLifetime { get;}
     }
 }

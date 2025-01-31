@@ -10,7 +10,6 @@ namespace CarsStorage.BLL.Repositories.Implementations
 {
 	public class UsersRepository(IdentityAppDbContext dbContext, IServiceProvider serviceProvider) : IUsersRepository
 	{
-		private readonly IdentityAppDbContext dbContext = dbContext;
 		private readonly UserManager<IdentityAppUser> userManager = serviceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
 
 

@@ -77,5 +77,18 @@ namespace CarsStorage.BLL.Implementations.Services
 				return new ServiceResult<int>(id, exception.Message);
 			}
 		}
+
+		//public async Task<ServiceResult<AppUserDTO>> AddToRole(RoleDTO roleDTO)
+		//{
+		//	try
+		//	{
+		//		await usersRepository.AddToRole(RoleDTO roleDTO);
+		//		return new ServiceResult(id, null);
+		//	}
+		//	catch (Exception exception)
+		//	{
+		//		return new ServiceResult<int>(id, exception.Message);
+		//	}
+		//}
 	}
 }

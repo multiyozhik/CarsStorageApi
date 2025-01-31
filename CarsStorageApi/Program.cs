@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Diagnostics.CodeAnalysis;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,9 +68,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		);
 	});
 
-	services.AddScoped<ICarsService, CarsService>();
-	services.AddScoped<IAuthenticateService, AuthenticateService>();
+	services.
+		AddScoped<ICarsService, CarsService>()
+		.AddScoped<IAuthenticateService, AuthenticateService>();
 	services.AddScoped<IUsersService, UsersService>();
+	services.AddScoped<IRolesService, RolesService>();
+	services.AddScoped<ITokenService, TokenService>();
 	services.AddScoped<ICarsRepository, CarsRepository>();
 	services.AddScoped<IUsersRepository, UsersRepository>();
 
@@ -113,24 +117,20 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	})
 		.AddJwtBearer(options =>
 		{
-			var jwtConfig = config.GetSection("JWTConfig");
-			if (!string.IsNullOrEmpty(jwtConfig["Key"]))
+			var jwtConfig = config.GetSection("JWTConfig") ?? throw new Exception("Не заданы конфигурации валидации для jwt-токена авторизации");
+			if (string.IsNullOrEmpty(jwtConfig["Key"]))
+				throw new Exception("Не задан секретный ключ jwt-токена авторизации");
+			options.TokenValidationParameters = new TokenValidationParameters
 			{
-				options.TokenValidationParameters = new TokenValidationParameters
-				{
-					ValidateIssuerSigningKey = true,
-					IssuerSigningKey = new SymmetricSecurityKey(
-						Convert.FromBase64String(jwtConfig["Key"])),
-					ValidateIssuer = true,
-					ValidIssuer = jwtConfig["Issuer"],
-					ValidateAudience = true,
-					ValidAudience = jwtConfig["Audience"],
-					ValidateLifetime = true,
-					RequireExpirationTime = true
-				};
-			}
-			else
-				throw new Exception("Не задан секретный ключ для конфигурации jwt авторизации");
+				ValidateIssuerSigningKey = true,
+				IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwtConfig["Key"])),
+				ValidateIssuer = bool.Parse(jwtConfig["ValidateIssuer"] ?? "true"),
+				ValidIssuer = jwtConfig["Issuer"],
+				ValidateAudience = bool.Parse(jwtConfig["ValidateAudience"] ?? "true"),
+				ValidAudience = jwtConfig["Audience"],
+				ValidateLifetime = bool.Parse(jwtConfig["ValidateLifetime"] ?? "true"),
+				RequireExpirationTime = bool.Parse(jwtConfig["RequireExpirationTime"] ?? "true")
+			};
 		})
 		.AddBearerToken();
 
@@ -154,6 +154,8 @@ static void Configure(WebApplication app, IHostEnvironment env)
 			c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
 		});
 	}
+
+	app.UseHsts();
 
 	app.UseHttpsRedirection();
 
