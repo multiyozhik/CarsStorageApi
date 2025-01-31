@@ -10,6 +10,6 @@ namespace CarsStorage.BLL.Abstractions.Models
     public class RoleCreaterDTO
 	{
 		public string? Name { get; set; }
-		public IEnumerable<RoleClaimType> RoleClaims { get; set; }
+		public IEnumerable<RoleClaimType>? RoleClaims { get; set; }
 	}
 }

@@ -34,7 +34,7 @@ namespace CarsStorage.BLL.Repositories.Implementations
 			{
 				UserName = identityAppUserCreater.UserName,
 				Email = identityAppUserCreater.Email,
-				RolesList = rolesList
+				RolesList = rolesList.ToList()
 			};
 
 			await userManager.CreateAsync(user, identityAppUserCreater.Password);

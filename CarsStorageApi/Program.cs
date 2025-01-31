@@ -5,11 +5,13 @@ using CarsStorage.BLL.Repositories.Implementations;
 using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Entities;
+using CarsStorage.DAL.Models;
 using CarsStorageApi.Config;
 using CarsStorageApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -82,10 +84,13 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.Configure<AdminConfig>(config.GetSection("AdminConfig"));
 	services.Configure<JWTConfigDTO>(config.GetSection("JwtConfig"));
+	services.Configure<InitialDbSeedConfig>(config.GetSection("InitialDbSeedConfig"));
 
 	services.AddIdentity<IdentityAppUser, IdentityRole>()
 		.AddEntityFrameworkStores<IdentityAppDbContext>()
-		.AddDefaultTokenProviders(); 
+		.AddDefaultTokenProviders();
+
+	services.AddTransient<PasswordHasher<IdentityAppUser>>();
 
 	services.Configure<IdentityOptions>(options =>
 	{
@@ -129,13 +134,11 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		})
 		.AddBearerToken();
 
-	services.AddAuthorization(options => 
-	{
-		options.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim("CanManageUsers"); });
-		options.AddPolicy("RequierManageUsersRoles", policy => { policy.RequireClaim("CanManageUsersRoles"); });
-		options.AddPolicy("RequierManageCars", policy => { policy.RequireClaim("CanManageCars"); });
-		options.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
-	});
+	services.AddAuthorizationBuilder()
+		.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim("CanManageUsers"); })
+		.AddPolicy("RequierManageUsersRoles", policy => { policy.RequireClaim("CanManageUsersRoles"); })
+		.AddPolicy("RequierManageCars", policy => { policy.RequireClaim("CanManageCars"); })
+		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
 
 	services.AddAutoMapper(typeof(MappingProfileApi));
 	services.AddAutoMapper(typeof(MappingProfileDTO));
@@ -162,16 +165,16 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.MapControllers();
 
-	CreateAdminAccount(app).Wait();
+	CreateAdminAccount(app.Services).Wait();  
 
 	app.Run();
 }
 
-static async Task CreateAdminAccount(IApplicationBuilder app)
+static async Task CreateAdminAccount(IServiceProvider serviceProvider)
 {
-	using IServiceScope scope = app.ApplicationServices.CreateScope();
+	using IServiceScope scope = serviceProvider.CreateScope();
 	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
-
+	var passwordHasher = scope.ServiceProvider.GetRequiredService<PasswordHasher<IdentityAppUser>>();
 	var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminConfig>>().Value;
 
 	if (string.IsNullOrEmpty(admin.UserName)
@@ -179,19 +182,24 @@ static async Task CreateAdminAccount(IApplicationBuilder app)
 		|| string.IsNullOrEmpty(admin.Role))
 		throw new Exception("Не заданы конфигурации для администратора");
 
-	var appDbContext = scope.ServiceProvider.GetRequiredService<IdentityAppDbContext>();
-
 	if (await userManager.FindByNameAsync(admin.UserName) is null)
 	{
-		var adminrole = new RoleEntity("admin");
 		var adminUser = new IdentityAppUser()
 		{
+			Id = "0",
 			UserName = admin.UserName,
-			Email = admin.Email,
-			RolesList = [adminrole]
+			Email = admin.Email
 		};
-		var passwordHasher = scope.ServiceProvider.GetRequiredService<PasswordHasher<IdentityAppUser>>();
-		await userManager.CreateAsync(adminUser, passwordHasher.HashPassword(adminUser, admin.Password));
+
+		var result = await userManager.CreateAsync(adminUser, passwordHasher.HashPassword(adminUser, admin.Password));
+		if (result.Succeeded)
+			adminUser.RolesList = [new RoleEntity(admin.UserName)];
+
+		//ToDo: System.AggregateException: "One or more errors occurred. (The entity type 'IdentityUserLogin<string>'
+		//requires a primary key to be defined. If you intended to use a keyless entity type, call 'HasNoKey' in 'OnModelCreating'.
+		//For more information on keyless entity types, see https://go.microsoft.com/fwlink/?linkid=2141943.)"
+
+
 		//await appDbContext.UserRoles.AddAsync(new UsersRolesEntity()
 		//{
 		//	IdentityAppUser = adminUser,

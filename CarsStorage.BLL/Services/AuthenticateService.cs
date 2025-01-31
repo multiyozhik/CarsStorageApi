@@ -2,6 +2,7 @@
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.DAL.Entities;
+using CarsStorage.DAL.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -14,7 +15,7 @@ namespace CarsStorage.BLL.Implementations.Services
 	public class AuthenticateService(
 		SignInManager<IdentityAppUser> signInManager, 
 		UserManager<IdentityAppUser> userManager,
-		IOptions<JWTConfigDTO> jwtConfigDTO, IMapper mapper) : IAuthenticateService
+		IOptions<JWTConfigDTO> jwtConfigDTO, IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions) : IAuthenticateService
 	{
 		private readonly JWTConfigDTO jwtConfig = jwtConfigDTO.Value;
 		public async Task<ServiceResult<AppUserDTO>> Register(AppUserRegisterDTO appUserRegisterDTO)
@@ -23,7 +24,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			{
 				var user = new IdentityAppUser { UserName = appUserRegisterDTO.UserName, Email = appUserRegisterDTO.Email };
 				var result = await userManager.CreateAsync(user, appUserRegisterDTO.Password);
-				var defaultRoles = new List<string>() { "User" };    //ToDo: добавить IOption default roles
+				var defaultRoles = new List<string>() { initialOptions.Value.DefaultRoleName }; 
 				if (result.Succeeded)
 				{
 					foreach (var role in defaultRoles)
