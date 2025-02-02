@@ -11,11 +11,9 @@ using CarsStorageApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Diagnostics.CodeAnalysis;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,33 +66,16 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		);
 	});
 
-	services.
-		AddScoped<ICarsService, CarsService>()
-		.AddScoped<IAuthenticateService, AuthenticateService>();
-	services.AddScoped<IUsersService, UsersService>();
-	services.AddScoped<IRolesService, RolesService>();
-	services.AddScoped<ITokenService, TokenService>();
-	services.AddScoped<ICarsRepository, CarsRepository>();
-	services.AddScoped<IUsersRepository, UsersRepository>();
-
-	services.AddDbContext<CarsAppDbContext>(options =>
-		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
-
-	services.AddDbContext<IdentityAppDbContext>(options =>
-		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
-
-	services.AddOptions<AdminConfig>();
-	services.AddOptions<JWTConfigDTO>();
-
 	services.Configure<AdminConfig>(config.GetSection("AdminConfig"));
 	services.Configure<JWTConfigDTO>(config.GetSection("JwtConfig"));
 	services.Configure<InitialDbSeedConfig>(config.GetSection("InitialDbSeedConfig"));
 
+	services.AddOptions<AdminConfig>();
+	services.AddOptions<JWTConfigDTO>();
+
 	services.AddIdentity<IdentityAppUser, IdentityRole>()
 		.AddEntityFrameworkStores<IdentityAppDbContext>()
 		.AddDefaultTokenProviders();
-
-	services.AddTransient<PasswordHasher<IdentityAppUser>>();
 
 	services.Configure<IdentityOptions>(options =>
 	{
@@ -109,6 +90,22 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 	});
 
+	services.AddDbContext<CarsAppDbContext>(options =>
+		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
+
+	services.AddDbContext<IdentityAppDbContext>(options =>
+		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
+
+	services
+		.AddScoped<ITokensService, TokensService>()
+		.AddScoped<IRolesRepository, RolesRepository>()
+		.AddScoped<IUsersRepository, UsersRepository>()
+		.AddScoped<IRolesService, RolesService>()
+		.AddScoped<IUsersService, UsersService>()
+		.AddScoped<IAuthenticateService, AuthenticateService>()
+		.AddScoped<ICarsRepository, CarsRepository>()
+		.AddScoped<ICarsService, CarsService>();
+	
 	services.AddAuthentication(options =>
 	{
 		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -131,6 +128,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 				ValidateLifetime = bool.Parse(jwtConfig["ValidateLifetime"] ?? "true"),
 				RequireExpirationTime = bool.Parse(jwtConfig["RequireExpirationTime"] ?? "true")
 			};
+			options.SaveToken = true;
+			options.IncludeErrorDetails = true;
 		})
 		.AddBearerToken();
 

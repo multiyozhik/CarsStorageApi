@@ -12,7 +12,7 @@ namespace CarsStorage.BLL.Implementations.Services
 	/// Сервис для методов токенов доступа.
 	/// </summary>
 	/// <param name="jwtConfig"></param>
-	public class TokenService(JWTConfigDTO jwtConfig) : ITokenService
+	public class TokensService(JWTConfigDTO jwtConfig) : ITokensService
 	{
 		/// <summary>
 		/// Метод генерации токена доступа.
@@ -20,15 +20,15 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// <param name="claims">Коллекция клаймов, на основе которых генерируется токен.</param>
 		/// <param name="expires">Возвращаемое значение даты и времени истечения жизни сгенерированного токена.</param>
 		/// <returns></returns>
-		public string GetAccessToken(IEnumerable<Claim> claims, out DateTime expires)
+		public string GetAccessToken(IEnumerable<Claim> claims, out DateTime accessTokenExpires)
 		{
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Key));
-			expires = DateTime.Now.AddMinutes(jwtConfig.ExpireMinutes);
+			accessTokenExpires = DateTime.Now.AddMinutes(jwtConfig.ExpireMinutes);
 			var accessToken = new JwtSecurityToken(
 				issuer: jwtConfig.Issuer,
 				audience: jwtConfig.Audience,
 				claims: claims,
-				expires: expires,
+				expires: accessTokenExpires,
 				signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
 			var tokenHandler = new JwtSecurityTokenHandler();
 			return tokenHandler.WriteToken(accessToken);
@@ -36,12 +36,25 @@ namespace CarsStorage.BLL.Implementations.Services
 
 
 		/// <summary>
-		/// Метод получения из токена доступа с истекшим сроком жизни объекта ClaimsPrincipal для получения клаймов.
+		/// Метод обновления токена доступа, генерация генератором случайных чисел с преобразованием в строку.
+		/// </summary>
+		/// <returns></returns>
+		public string GetRefreshToken()
+		{
+			var randomNumber = new byte[32];
+			using var randomNumberGenerator = RandomNumberGenerator.Create();
+			randomNumberGenerator.GetBytes(randomNumber);
+			return Convert.ToHexString(randomNumber);
+		}
+
+
+		/// <summary>
+		/// Метод получения из проверяемого токена доступа с истекшим сроком жизни объекта ClaimsPrincipal для получения клаймов.
 		/// </summary>
 		/// <param name="experedToken">Токен доступа с истекшим сроком жизни</param>
 		/// <returns></returns>
 		/// <exception cref="SecurityTokenException">Исключение о невалидноcти проверяемого токена (когда время его жизни прошло).</exception>
-		public ClaimsPrincipal GetClaimsPrincipalFromExperedToken(string experedToken)
+		public ClaimsPrincipal GetClaimsPrincipalFromExperedTokenWithValidation(string experedToken)
 		{
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Key));
 			var tokenHandler = new JwtSecurityTokenHandler();
@@ -60,19 +73,6 @@ namespace CarsStorage.BLL.Implementations.Services
 			if (jwtSecurityToken is null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
 				throw new SecurityTokenException("Неверный токен");
 			return claimsPrincipal;
-		}
-
-
-		/// <summary>
-		/// Метод обновления токена доступа, генерация генератором случайных чисел с преобразованием в строку.
-		/// </summary>
-		/// <returns></returns>
-		public string GetRefreshToken()
-		{
-			var randomNumber = new byte[32];
-			using var randomNumberGenerator = RandomNumberGenerator.Create();
-			randomNumberGenerator.GetBytes(randomNumber);
-			return Convert.ToHexString(randomNumber);
 		}
 	}
 }

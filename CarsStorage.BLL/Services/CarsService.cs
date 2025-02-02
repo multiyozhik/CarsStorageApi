@@ -12,17 +12,17 @@ namespace CarsStorage.BLL.Implementations.Services
 
 	public class CarsService(ICarsRepository carsRepository, IMapper mapper) : ICarsService
 	{
-		public async Task<ServiceResult<IEnumerable<CarDTO>>> GetList()
+		public async Task<ServiceResult<List<CarDTO>>> GetList()
 		{
 			try
 			{
 				var carsEntityList = await carsRepository.GetList();
-				var carsDTOList = carsEntityList.Select(mapper.Map<CarDTO>);
-				return new ServiceResult<IEnumerable<CarDTO>>(carsDTOList, null);
+				var carsDTOList = carsEntityList.Select(mapper.Map<CarDTO>).ToList();
+				return new ServiceResult<List<CarDTO>>(carsDTOList, null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<IEnumerable<CarDTO>>(null, exception.Message);
+				return new ServiceResult<List<CarDTO>>(null, exception.Message);
 			}			
 		}
 

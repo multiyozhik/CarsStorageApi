@@ -5,7 +5,7 @@ namespace CarsStorage.BLL.Repositories.Interfaces
 {
 	public interface ICarsRepository
 	{
-		public Task<IEnumerable<CarEntity>> GetList();
+		public Task<List<CarEntity>> GetList();
 		public Task<CarEntity> Create(CarCreaterDTO carCreaterDTO);
 		public Task<CarEntity> Update(CarDTO carDTO);
 		public Task Delete(int id);

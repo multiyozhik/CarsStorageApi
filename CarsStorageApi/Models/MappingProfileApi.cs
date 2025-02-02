@@ -14,7 +14,7 @@ namespace CarsStorageApi.Models
 
 			CreateMap<CarRequest, CarCreaterDTO>();
 
-			CreateMap<JWTTokenDTO, JWTTokenResponse>();
+			CreateMap<JWTTokenDTO, JWTTokenRequestResponse>();
 
 			CreateMap<UserRequestResponse, UserRequestResponse>();
 

@@ -1,45 +1,47 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-	public class AuthenticateService(
-		SignInManager<IdentityAppUser> signInManager,
-		UserManager<IdentityAppUser> userManager, ITokenService tokenService, IRolesService rolesService, IUsersService usersService,
-		IOptions<JWTConfigDTO> jwtConfigDTO, IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions) : IAuthenticateService
-	{
-		private readonly JWTConfigDTO jwtConfig = jwtConfigDTO.Value;
+	/// <summary>
+	/// Сервис для аутентификации.
+	/// </summary>
+	/// <param name="signInManager">Объект Identity - API для входа пользователей.</param>
+	/// <param name="userManager">Объект Identity - API для управления пользователями.</param>
+	/// <param name="tokenService">Объект сервиса для генерации и обновления токена.</param>
+	/// <param name="roleRepository">Объект репозитория для ролей пользователя.</param>
+	/// <param name="mapper">Объект меппера для сопоставления объектов.</param>
+	/// <param name="initialOptions">Объект для настроек заполнения БД с названием роли при регистрации нового пользователя.</param>
 
+	public class AuthenticateService(
+		SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager, 
+		ITokensService tokenService, IUsersRepository usersRepository, IRolesRepository roleRepository, 
+		IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions, JWTConfigDTO jWTConfigDTO) : IAuthenticateService
+	{
+		/// <summary>
+		/// Метод для регистрации пользователя в приложении.
+		/// </summary>
+		/// <param name="appUserRegisterDTO">Объект пользователя с UserName, Email, Password.</param>
+		/// <returns></returns>
 		public async Task<ServiceResult<AppUserDTO>> Register(AppUserRegisterDTO appUserRegisterDTO)
 		{
 			try
 			{
-				var user = new IdentityAppUser { UserName = appUserRegisterDTO.UserName, Email = appUserRegisterDTO.Email };
-				var result = await userManager.CreateAsync(user, appUserRegisterDTO.Password);
-				var defaultRoles = new List<string>() { initialOptions.Value.DefaultRoleName };
-
-				//var rolesServiceResult = await rolesService.GetList();
-				//if (rolesServiceResult.IsSuccess)
-				//	var roles = rolesServiceResult.Result;
-
-
-				//var userRoles = new List<RoleDTO>();
-				//defaultRoles.Select(r => userRoles.Add());
-
-				//defaultRoles.Select(roleName => rolesService.GetRoleByName(roleName));
-				//if (result.Succeeded)
-				//{
-				//	user.RolesList = defaultRoles;
-				//	await signInManager.SignInAsync(user, false);
-				//}
+				var user = new IdentityAppUser 
+				{ 
+					UserName = appUserRegisterDTO.UserName, 
+					Email = appUserRegisterDTO.Email 
+				};
+				await userManager.CreateAsync(user, appUserRegisterDTO.Password);
+				var defaultRolesNamesList = new List<string>() { initialOptions.Value.DefaultRoleName };
+				user.RolesList = await roleRepository.GetRolesByNamesList(defaultRolesNamesList);
 				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(user), null);
 			}
 			catch (Exception exception)
@@ -48,50 +50,31 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
+
+		/// <summary>
+		/// Метод для логирования пользователя в приложении.
+		/// </summary>
+		/// <param name="appUserLoginDTO">Объект пользователя с UserName и Password.</param>
+		/// <returns></returns>
 		public async Task<ServiceResult<JWTTokenDTO>> LogIn(AppUserLoginDTO appUserLoginDTO) 
 		{
 			try
-			{
-				var user = await userManager.FindByNameAsync(appUserLoginDTO.UserName);
-				if (user is null) throw new Exception("Ошибка - неверный логин.");
+			{				
+				var user = await userManager.FindByNameAsync(appUserLoginDTO.UserName)
+					?? throw new Exception("Ошибка - неверный логин.");
+				var signinResult = await signInManager.PasswordSignInAsync(user, appUserLoginDTO.Password, false, false);
+				if (!signinResult.Succeeded) 
+					throw new Exception("Ошибка - неверный пароль.");
 
-				await signInManager.SignOutAsync();
-				var result = await signInManager.PasswordSignInAsync(user, appUserLoginDTO.Password, false, false);
-				if (!result.Succeeded) throw new Exception("Ошибка - неверный пароль.");
-
-				var roleClaims = user.RolesList.SelectMany(role => role.RoleClaims).Distinct();
-				var userClaims = new List<Claim> { new(ClaimTypes.Name, user.UserName) };					
-				foreach (var claim in roleClaims)
-				{
-					userClaims.Add(new Claim(ClaimTypes.Role, claim.ToString()));
-				}
-				var jwt = new JwtSecurityToken(
-					claims: userClaims,
-					issuer: jwtConfig.Issuer,
-					audience: jwtConfig.Audience,
-					expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(jwtConfig.ExpireMinutes)),
-					signingCredentials: new SigningCredentials(new SymmetricSecurityKey(
-						Convert.FromBase64String(jwtConfig.Key)), SecurityAlgorithms.HmacSha256));
+				var claimsList = roleRepository.GetClaimsByUser(mapper.Map<IdentityAppUser>(appUserLoginDTO));
 				var jwtTokenDTO = new JWTTokenDTO()
 				{
-					Token = new JwtSecurityTokenHandler().WriteToken(jwt)
+					AccessToken = tokenService.GetAccessToken(claimsList, out DateTime accessTokenExpires),
+					RefreshToken = tokenService.GetRefreshToken()
 				};
-				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null);
 
-				//var accessToken = tokenService.GetAccessToken();
-				//string tokenString = tokenService.GetAccessToken(
-				//	user.GetUserClaims(), out DateTime expires);
-				//SetUserAuthData(user, tokenString, expires, tokenService, context);
-				//return Results.Ok(
-				//	new
-				//	{
-				//		token = tokenString,
-				//		refreshToken = user.RefreshToken,
-				//		tokenExpires = expires,
-				//		user = login
-				//	});
-
-
+				await usersRepository.UpdateToken(user.Id, jwtTokenDTO);
+				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null);				
 			}
 			catch (Exception exception)
 			{
@@ -99,9 +82,39 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-		public async Task LogOut() 
-		{	
-			await signInManager.SignOutAsync();
+
+		public async Task<ServiceResult<JWTTokenDTO>> RefreshToken(JWTTokenDTO jwtTokenDTO)
+		{
+			var refreshingToken = jwtTokenDTO;
+			try
+			{
+				var user = await usersRepository.GetUserByRefreshToken(refreshingToken.RefreshToken)
+					?? throw new Exception("Пользователь с таким refresh_token не найден");
+
+				var principal = tokenService.GetClaimsPrincipalFromExperedTokenWithValidation(user.AccessToken);
+
+				refreshingToken = new JWTTokenDTO()
+				{
+					AccessToken = tokenService.GetAccessToken(principal.Claims.ToList(), out DateTime expires),
+					RefreshToken = tokenService.GetRefreshToken()
+				};
+				await usersRepository.UpdateToken(user.Id.ToString(), refreshingToken);
+				return new ServiceResult<JWTTokenDTO>(refreshingToken, null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<JWTTokenDTO>(null, exception.Message);
+			}
+		}
+
+
+		/// <summary>
+		/// Метод для разлогинивания пользователя.
+		/// </summary>
+		/// <returns></returns>
+		public async Task<AppUserDTO> LogOut(JWTTokenDTO jwtTokenDTO) 
+		{
+			return await usersRepository.ClearToken(jwtTokenDTO);
 		}
 	}
 }

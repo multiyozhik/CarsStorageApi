@@ -8,6 +8,8 @@ namespace CarsStorage.DAL.Entities
 
     public class IdentityAppUser : IdentityUser
 	{
+		public string? AccessToken { get; set; }
+		public string? RefreshToken { get; set; }
 		public List<RoleEntity>? RolesList { get; set; } = [];
 		public List<UsersRolesEntity> UserRolesList { get; set; } = [];
 	}

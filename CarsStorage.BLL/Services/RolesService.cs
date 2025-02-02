@@ -3,22 +3,23 @@ using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Entities;
+using System.Security.Claims;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-	public class RolesService(IRoleRepository rolesRepository, IMapper mapper) : IRolesService
+	public class RolesService(IRolesRepository rolesRepository, IMapper mapper) : IRolesService
 	{
-		public async Task<ServiceResult<IEnumerable<RoleDTO>>> GetList()
+		public async Task<ServiceResult<List<RoleDTO>>> GetList()
 		{
 			try
 			{
 				var roleEntityList = await rolesRepository.GetList();
-				var rolesDTOList = roleEntityList.Select(mapper.Map<RoleDTO>);
-				return new ServiceResult<IEnumerable<RoleDTO>>(rolesDTOList, null);
+				var rolesDTOList = roleEntityList.Select(mapper.Map<RoleDTO>).ToList();
+				return new ServiceResult<List<RoleDTO>>(rolesDTOList, null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<IEnumerable<RoleDTO>>(null, exception.Message);
+				return new ServiceResult<List<RoleDTO>>(null, exception.Message);
 			}
 		}
 
@@ -35,19 +36,23 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-		public async Task<ServiceResult<IEnumerable<RoleDTO>>> GetRolesByNamesList(IEnumerable<string> roleNamesList)
+		public async Task<ServiceResult<List<RoleDTO>>> GetRolesByNamesList(IEnumerable<string> roleNamesList)
 		{
 			try
 			{
 				var roleEntityList = await rolesRepository.GetRolesByNamesList(roleNamesList);
-				return new ServiceResult<IEnumerable<RoleDTO>>(roleEntityList.Select(mapper.Map<RoleDTO>), null);
+				var roleDtoList = roleEntityList.Select(mapper.Map<RoleDTO>).ToList();
+				return new ServiceResult<List<RoleDTO>>(roleDtoList, null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<IEnumerable<RoleDTO>>(null, exception.Message);
+				return new ServiceResult<List<RoleDTO>>(null, exception.Message);
 			}
 		}
 
-
+		public List<Claim> GetClaimsByUser(AppUserDTO appUserDTO)
+		{
+			return rolesRepository.GetClaimsByUser(mapper.Map<IdentityAppUser>(appUserDTO)).ToList();
+		}
 	}
 }

@@ -1,4 +1,6 @@
-﻿using CarsStorage.BLL.Repositories.Interfaces;
+﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
@@ -8,12 +10,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CarsStorage.BLL.Repositories.Implementations
 {
-	public class UsersRepository(IdentityAppDbContext dbContext, IServiceProvider serviceProvider) : IUsersRepository
+	public class UsersRepository(IdentityAppDbContext dbContext, IServiceProvider serviceProvider, IMapper mapper) : IUsersRepository
 	{
 		private readonly UserManager<IdentityAppUser> userManager = serviceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
 
 
-		public async Task<IEnumerable<IdentityAppUser>> GetList()
+		public async Task<List<IdentityAppUser>> GetList()
 		{
 			return await dbContext.Users.ToListAsync();
 		}
@@ -70,5 +72,31 @@ namespace CarsStorage.BLL.Repositories.Implementations
 			//	throw new Exception("Пользователь с заданным Id не найден");
 		}
 
+		public async Task UpdateToken(string id, JWTTokenDTO jwtTokenDTO)
+		{
+			var user = await userManager.FindByIdAsync(id)
+				?? throw new Exception("Не найден пользователь по id");
+			user.RefreshToken = jwtTokenDTO.RefreshToken;
+			user.AccessToken = jwtTokenDTO.AccessToken;
+			dbContext.Update(user);
+			await dbContext.SaveChangesAsync();
+		}
+
+		public async Task<AppUserDTO> GetUserByRefreshToken(string refreshToken)
+		{
+			var user = await dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+			return mapper.Map<AppUserDTO>(user);
+		}
+
+		public async Task<AppUserDTO> ClearToken(JWTTokenDTO jwtTokenDTO)
+		{
+			var user = await GetUserByRefreshToken(jwtTokenDTO.RefreshToken)
+				?? throw new Exception("Не найден пользователь по id");
+			user.RefreshToken = string.Empty;
+			user.AccessToken = string.Empty;
+			dbContext.Update(user);
+			await dbContext.SaveChangesAsync();
+			return user;
+		}
 	}
 }

@@ -1,17 +1,13 @@
 ﻿using CarsStorage.BLL.Abstractions.Models;
-using CarsStorage.DAL.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace CarsStorage.BLL.Abstractions.Interfaces
 {
 	public interface IRolesService
 	{
-		public Task<ServiceResult<IEnumerable<RoleDTO>>> GetList();
+		public Task<ServiceResult<List<RoleDTO>>> GetList();
 		public Task<ServiceResult<RoleDTO>> GetRoleById(int id);
-		public Task<ServiceResult<IEnumerable<RoleEntity>>> GetRolesByNamesList(IEnumerable<string> roleNamesList);
+		public Task<ServiceResult<List<RoleDTO>>> GetRolesByNamesList(IEnumerable<string> roleNamesList);
+		public List<Claim> GetClaimsByUser(AppUserDTO appUserDTO);
 	}
 }

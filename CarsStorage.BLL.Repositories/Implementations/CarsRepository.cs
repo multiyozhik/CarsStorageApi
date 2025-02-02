@@ -11,7 +11,7 @@ namespace CarsStorage.BLL.Repositories.Implementations
 	{
 		private readonly CarsAppDbContext dbContext = dbContext;
 
-		public async Task<IEnumerable<CarEntity>> GetList()
+		public async Task<List<CarEntity>> GetList()
 		{
 			return await dbContext.Cars.ToListAsync();
 		}

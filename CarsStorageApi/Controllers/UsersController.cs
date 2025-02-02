@@ -71,14 +71,6 @@ namespace CarsStorageApi.Controllers
 			else
 				return BadRequest(serviceResult.ErrorMessage);
 		}
-
-		private ActionResult<T> ReturnActionResult<T>(ServiceResult<T> serviceResult)
-		{
-			if (serviceResult.IsSuccess && serviceResult.Result is not null)
-				return serviceResult.Result;
-			else
-				return BadRequest(serviceResult.ErrorMessage);
-		}
 	}
 }
 
