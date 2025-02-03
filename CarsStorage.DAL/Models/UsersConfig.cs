@@ -5,18 +5,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CarsStorage.DAL.Models
 {
-	public class UsersConfig(IEnumerable<RoleEntity> rolesList, InitialDbSeedConfig initialDbSeedConfig, IPasswordHasher<IdentityAppUser> passwordHasher) : IEntityTypeConfiguration<IdentityAppUser>
+	public class UsersConfig(IEnumerable<RoleEntity> rolesList, InitialDbSeedConfig initialDbSeedConfig, IPasswordHasher<AppUserEntity> passwordHasher) : IEntityTypeConfiguration<AppUserEntity>
 	{
 		private readonly List<RoleEntity> rolesList = rolesList.ToList();
-		//private readonly PasswordHasher<IdentityAppUser> passwordHasher = new();
 		private readonly Random random = new();
 
-		public void Configure(EntityTypeBuilder<IdentityAppUser> builder)
+		public void Configure(EntityTypeBuilder<AppUserEntity> builder)
 		{
 			var usersList = Enumerable.Range(1, initialDbSeedConfig.InitialUsersCount)
 				.Select(index =>
 				{
-					var user = new IdentityAppUser()
+					var user = new AppUserEntity()
 					{
 						UserName = $"user{index}",
 						Email = $"user{index}@mail.ru",
@@ -29,8 +28,6 @@ namespace CarsStorage.DAL.Models
 
 			builder.HasKey(u => u.Id);
 			builder.ToTable("Users");
-			
-			//builder.Property(u => u.Roles).IsRequired();  //после удаления этой строки ошибка про уже существование RolesList ушла
 
 			builder
 				.HasMany(u => u.RolesList)

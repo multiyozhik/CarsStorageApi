@@ -73,8 +73,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddOptions<AdminConfig>();
 	services.AddOptions<JWTConfig>();
 
-	services.AddIdentity<IdentityAppUser, IdentityRole>()
-		.AddEntityFrameworkStores<IdentityAppDbContext>()
+	services.AddIdentity<AppUserEntity, IdentityRole>()
+		.AddEntityFrameworkStores<UsersRolesDbContext>()
 		.AddDefaultTokenProviders();
 
 	services.Configure<IdentityOptions>(options =>
@@ -93,7 +93,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddDbContext<CarsAppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
-	services.AddDbContext<IdentityAppDbContext>(options =>
+	services.AddDbContext<UsersRolesDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services
@@ -103,7 +103,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IRolesService, RolesService>()
 		.AddScoped<IUsersService, UsersService>()
 		.AddScoped<ITokensService, TokensService>()
-		.AddScoped<IPasswordHasher<IdentityAppUser>, PasswordHasher<IdentityAppUser>>()
+		.AddScoped<IPasswordHasher<AppUserEntity>, PasswordHasher<AppUserEntity>>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>();
 	
@@ -175,8 +175,8 @@ static void Configure(WebApplication app, IHostEnvironment env)
 static async Task CreateAdminAccount(IServiceProvider serviceProvider)
 {
 	using IServiceScope scope = serviceProvider.CreateScope();
-	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
-	var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<IdentityAppUser>>();
+	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUserEntity>>();
+	var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AppUserEntity>>();
 	var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminConfig>>().Value;
 
 	if (string.IsNullOrEmpty(admin.UserName)
@@ -186,7 +186,7 @@ static async Task CreateAdminAccount(IServiceProvider serviceProvider)
 
 	if (await userManager.FindByNameAsync(admin.UserName) is null)
 	{
-		var adminUser = new IdentityAppUser()
+		var adminUser = new AppUserEntity()
 		{
 			Id = "0",
 			UserName = admin.UserName,
@@ -204,7 +204,7 @@ static async Task CreateAdminAccount(IServiceProvider serviceProvider)
 
 		//await appDbContext.UserRoles.AddAsync(new UsersRolesEntity()
 		//{
-		//	IdentityAppUser = adminUser,
+		//	AppUserEntity = adminUser,
 		//	IdentityAppUserId = int.Parse(adminUser.Id),
 		//	RoleEntity = adminrole,
 		//	RoleEntityId = adminrole.Id

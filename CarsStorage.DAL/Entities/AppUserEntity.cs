@@ -3,11 +3,14 @@
 namespace CarsStorage.DAL.Entities
 {
     /// <summary>
-    /// IdentityAppUser - пользователь в Identity.
+    /// AppUserEntity - пользователь в Identity.
     /// </summary>
 
-    public class IdentityAppUser : IdentityUser
+    public class AppUserEntity
 	{
+		public int Id { get; set; }
+		public string? UserName { get; set; }
+		public string? Email { get; set; }
 		public string? AccessToken { get; set; }
 		public string? RefreshToken { get; set; }
 		public List<RoleEntity>? RolesList { get; set; } = [];

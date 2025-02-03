@@ -6,10 +6,10 @@ namespace CarsStorage.BLL.Repositories.Interfaces
 {
 	public interface IUsersRepository
 	{
-		public Task<List<IdentityAppUser>> GetList();
-		public Task<IdentityAppUser> GetById(int id);
-		public Task<IdentityAppUser> Create(IdentityAppUserCreater identityAppUserCreater);
-		public Task<IdentityAppUser> Update(IdentityAppUser identityAppUser);
+		public Task<List<AppUserEntity>> GetList();
+		public Task<AppUserEntity> GetById(int id);
+		public Task<AppUserEntity> Create(IdentityAppUserCreater identityAppUserCreater);
+		public Task<AppUserEntity> Update(AppUserEntity identityAppUser);
 		public Task Delete(int id);
 		public Task UpdateToken(string id, JWTTokenDTO jwtTokenDTO);
 		public Task<AppUserDTO> GetUserByRefreshToken(string refreshToken);

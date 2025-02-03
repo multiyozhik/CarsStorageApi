@@ -11,9 +11,9 @@ namespace CarsStorage.DAL.EF
 	///  DbContext для таблицы пользователей в Identity. 
 	/// </summary>
 	/// <param name="options"></param>
-	public class IdentityAppDbContext(DbContextOptions<IdentityAppDbContext> options, IOptions<InitialDbSeedConfig> initialOptions, IPasswordHasher<IdentityAppUser> passwordHasher) : IdentityDbContext<IdentityAppUser>(options)
+	public class UsersRolesDbContext(DbContextOptions<UsersRolesDbContext> options, IOptions<InitialDbSeedConfig> initialOptions, IPasswordHasher<AppUserEntity> passwordHasher) : IdentityDbContext<AppUserEntity>(options)
 	{
-		public DbSet<IdentityAppUser> IdentityAppUsers { get; set; }
+		public DbSet<AppUserEntity> IdentityAppUsers { get; set; }
 		public new DbSet<RoleEntity> Roles { get; set; }
 		public new DbSet<UsersRolesEntity> UserRoles { get; set; }
 

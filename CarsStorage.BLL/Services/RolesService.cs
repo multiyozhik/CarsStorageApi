@@ -52,7 +52,7 @@ namespace CarsStorage.BLL.Implementations.Services
 
 		public List<Claim> GetClaimsByUser(AppUserDTO appUserDTO)
 		{
-			return rolesRepository.GetClaimsByUser(mapper.Map<IdentityAppUser>(appUserDTO)).ToList();
+			return rolesRepository.GetClaimsByUser(mapper.Map<AppUserEntity>(appUserDTO)).ToList();
 		}
 	}
 }

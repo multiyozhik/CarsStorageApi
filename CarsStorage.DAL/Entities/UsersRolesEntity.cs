@@ -10,7 +10,7 @@
 
         public int RoleEntityId { get; set; }
 
-        public IdentityAppUser? IdentityAppUser { get; set; }
+        public AppUserEntity? IdentityAppUser { get; set; }
 
         public RoleEntity? RoleEntity { get; set; }
     }

@@ -58,7 +58,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var identityAppUser = await usersRepository.Update(mapper.Map<IdentityAppUser>(appUserDTO));
+				var identityAppUser = await usersRepository.Update(mapper.Map<AppUserEntity>(appUserDTO));
 				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(identityAppUser), null);
 			}
 			catch (Exception exception)

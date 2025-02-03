@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace CarsStorage.DAL.Migrations.IdentityAppDb
 {
-    [DbContext(typeof(IdentityAppDbContext))]
+    [DbContext(typeof(UsersRolesDbContext))]
     partial class IdentityAppDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -22,7 +22,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("CarsStorage.DAL.Entities.IdentityAppUser", b =>
+            modelBuilder.Entity("CarsStorage.DAL.Entities.AppUserEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -282,7 +282,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("CarsStorage.DAL.Entities.UsersRolesEntity", b =>
                 {
-                    b.HasOne("CarsStorage.DAL.Entities.IdentityAppUser", "IdentityAppUser")
+                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", "AppUserEntity")
                         .WithMany("UserRolesList")
                         .HasForeignKey("IdentityAppUserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -294,7 +294,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("IdentityAppUser");
+                    b.Navigation("AppUserEntity");
 
                     b.Navigation("RoleEntity");
                 });
@@ -310,7 +310,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("CarsStorage.DAL.Entities.IdentityAppUser", null)
+                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -319,7 +319,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("CarsStorage.DAL.Entities.IdentityAppUser", null)
+                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -334,7 +334,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CarsStorage.DAL.Entities.IdentityAppUser", null)
+                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -343,14 +343,14 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("CarsStorage.DAL.Entities.IdentityAppUser", null)
+                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CarsStorage.DAL.Entities.IdentityAppUser", b =>
+            modelBuilder.Entity("CarsStorage.DAL.Entities.AppUserEntity", b =>
                 {
                     b.Navigation("UserRolesList");
                 });

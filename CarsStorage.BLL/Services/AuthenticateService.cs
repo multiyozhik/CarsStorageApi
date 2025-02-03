@@ -21,7 +21,7 @@ namespace CarsStorage.BLL.Implementations.Services
 	/// <param name="initialOptions">Объект для настроек заполнения БД с названием роли при регистрации нового пользователя.</param>
 
 	public class AuthenticateService(
-		SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager, 
+		SignInManager<AppUserEntity> signInManager, UserManager<AppUserEntity> userManager, 
 		ITokensService tokenService, IUsersRepository usersRepository, IRolesRepository roleRepository, 
 		IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions) : IAuthenticateService
 	{
@@ -34,7 +34,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var user = new IdentityAppUser 
+				var user = new AppUserEntity 
 				{ 
 					UserName = appUserRegisterDTO.UserName, 
 					Email = appUserRegisterDTO.Email 
@@ -66,7 +66,7 @@ namespace CarsStorage.BLL.Implementations.Services
 				if (!signinResult.Succeeded) 
 					throw new Exception("Ошибка - неверный пароль.");
 
-				var claimsList = roleRepository.GetClaimsByUser(mapper.Map<IdentityAppUser>(appUserLoginDTO));
+				var claimsList = roleRepository.GetClaimsByUser(mapper.Map<AppUserEntity>(appUserLoginDTO));
 				var jwtTokenDTO = new JWTTokenDTO()
 				{
 					AccessToken = tokenService.GetAccessToken(claimsList, out DateTime accessTokenExpires),

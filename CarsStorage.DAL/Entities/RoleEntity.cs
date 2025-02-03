@@ -15,7 +15,7 @@ namespace CarsStorage.DAL.Entities
 
 		public List<RoleClaimType> RoleClaims { get; set; } = [];
 
-		public List<IdentityAppUser> UsersList { get; set; } = [];
+		public List<AppUserEntity> UsersList { get; set; } = [];
 
 		public List<UsersRolesEntity> UserRolesList { get; set; } = [];
 	}

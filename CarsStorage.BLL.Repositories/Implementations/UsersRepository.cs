@@ -10,28 +10,28 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CarsStorage.BLL.Repositories.Implementations
 {
-	public class UsersRepository(IdentityAppDbContext dbContext, IServiceProvider serviceProvider, IMapper mapper) : IUsersRepository
+	public class UsersRepository(UsersRolesDbContext dbContext, IServiceProvider serviceProvider, IMapper mapper) : IUsersRepository
 	{
-		private readonly UserManager<IdentityAppUser> userManager = serviceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
+		private readonly UserManager<AppUserEntity> userManager = serviceProvider.GetRequiredService<UserManager<AppUserEntity>>();
 
 
-		public async Task<List<IdentityAppUser>> GetList()
+		public async Task<List<AppUserEntity>> GetList()
 		{
 			return await dbContext.Users.ToListAsync();
 		}
 
 
-		public async Task<IdentityAppUser> GetById(int id)
+		public async Task<AppUserEntity> GetById(int id)
 		{
 			return await userManager.FindByIdAsync(id.ToString());
 		}
 
 
-		public async Task<IdentityAppUser> Create(IdentityAppUserCreater identityAppUserCreater)
+		public async Task<AppUserEntity> Create(IdentityAppUserCreater identityAppUserCreater)
 		{
 			var rolesList = identityAppUserCreater.Roles.Select(roleName => new RoleEntity(roleName));
 
-			var user = new IdentityAppUser
+			var user = new AppUserEntity
 			{
 				UserName = identityAppUserCreater.UserName,
 				Email = identityAppUserCreater.Email,
@@ -43,8 +43,21 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 
-		public async Task<IdentityAppUser> Update(IdentityAppUser identityAppUser)
+		public async Task<AppUserEntity> Update(AppUserEntity appUserEntity)
 		{
+			var appUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == appUserEntity.Id);
+			if (appUser is not null)
+			{
+				appUser.UserName = appUserEntity.UserName;
+				appUser.Email = appUserEntity.Email;
+				appUser.RolesList = appUserEntity.RolesList;
+				
+				dbContext.Users.Update(appUser);
+				await dbContext.SaveChangesAsync();
+			}
+			else
+				throw new Exception("Пользователь с заданным Id не найден");
+
 			var user = await userManager.FindByIdAsync(identityAppUser.Id.ToString())
 				?? throw new Exception("Не найден пользователь по id");	
 
@@ -57,19 +70,14 @@ namespace CarsStorage.BLL.Repositories.Implementations
 
 		public async Task Delete(int id)
 		{
-			var user = await userManager.FindByIdAsync(id.ToString()) 
-				?? throw new Exception("Не найден пользователь по id");
-
-			await userManager.DeleteAsync(user);
-			
-			//var identityAppUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id.ToString());
-			//if (identityAppUser is not null)
-			//{
-			//	dbContext.Users.Remove(identityAppUser);
-			//	await dbContext.SaveChangesAsync();
-			//}
-			//else
-			//	throw new Exception("Пользователь с заданным Id не найден");
+			var appUserEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+			if (appUserEntity is not null)
+			{
+				dbContext.Users.Remove(appUserEntity);
+				await dbContext.SaveChangesAsync();
+			}
+			else
+				throw new Exception("Пользователь с заданным Id не найден");
 		}
 
 		public async Task UpdateToken(string id, JWTTokenDTO jwtTokenDTO)

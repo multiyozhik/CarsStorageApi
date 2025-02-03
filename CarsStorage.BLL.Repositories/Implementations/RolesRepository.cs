@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace CarsStorage.BLL.Repositories.Implementations
 {
-	public class RolesRepository(IdentityAppDbContext dbContext) : IRolesRepository
+	public class RolesRepository(UsersRolesDbContext dbContext) : IRolesRepository
 	{
 		public async Task<List<RoleEntity>> GetList()
 		{
@@ -25,7 +25,7 @@ namespace CarsStorage.BLL.Repositories.Implementations
 			return roleNamesList.Select(roleName => rolesList.FirstOrDefault(r => r.Name == roleName)).ToList();	
 		}
 
-		public List<Claim> GetClaimsByUser(IdentityAppUser identityAppUser)
+		public List<Claim> GetClaimsByUser(AppUserEntity identityAppUser)
 		{
 			var roleEntityList = identityAppUser.RolesList;
 			var roleClaims = roleEntityList.SelectMany(role => role.RoleClaims).Distinct().ToList();
