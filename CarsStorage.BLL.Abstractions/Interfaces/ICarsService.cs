@@ -1,4 +1,5 @@
 ﻿using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Abstractions.Interfaces
 {
@@ -13,5 +14,7 @@ namespace CarsStorage.BLL.Abstractions.Interfaces
 		public Task<ServiceResult<int>> Delete(int id);
 
 		public Task<ServiceResult<CarDTO>> UpdateCount(int id, int count);
-    }
+
+		public Task<ServiceResult<CarDTO>> MakeInaccessible(int id);
+	}
 }

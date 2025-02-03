@@ -76,13 +76,16 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
+		[Authorize(Policy = "RequierManageCars")]
+		[HttpPut]
+		public async Task<ActionResult<CarRequestResponse>> MakeInaccessible([FromRoute]int id)
+		{
+			var serviceResult = await carsService.MakeInaccessible(id);
 
-		//private ActionResult<T> ReturnActionResult<T>(ServiceResult<T> serviceResult)
-		//{
-		//	if (serviceResult.IsSuccess && serviceResult.Result is not null)
-		//		return mapper.Map<T>(serviceResult.Result);
-		//	else
-		//		return BadRequest(serviceResult.ErrorMessage);
-		//}
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+				return mapper.Map<CarRequestResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ErrorMessage);
+		}
 	}
 }

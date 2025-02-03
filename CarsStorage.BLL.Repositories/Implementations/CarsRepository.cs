@@ -68,5 +68,18 @@ namespace CarsStorage.BLL.Repositories.Implementations
 			else
 				throw new Exception("Автомобиль с заданным Id не найден");
 		}
+
+		public async Task<CarEntity> MakeInaccessible(int id)
+		{
+			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id);
+			if (carEntity is not null)
+			{
+				carEntity.IsAccassible = false;
+				await dbContext.SaveChangesAsync();
+				return carEntity;
+			}
+			else
+				throw new Exception("Автомобиль с заданным Id не найден");
+		}
 	}
 }

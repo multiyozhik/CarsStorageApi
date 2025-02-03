@@ -80,6 +80,19 @@ namespace CarsStorage.BLL.Implementations.Services
 			{
 				return new ServiceResult<CarDTO>(null, exception.Message);
 			}
-		}				
+		}
+
+		public async Task<ServiceResult<CarDTO>> MakeInaccessible(int id)
+		{
+			try
+			{
+				var carEntity = await carsRepository.MakeInaccessible(id);
+				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity), null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<CarDTO>(null, exception.Message);
+			}
+		}
 	}
 }

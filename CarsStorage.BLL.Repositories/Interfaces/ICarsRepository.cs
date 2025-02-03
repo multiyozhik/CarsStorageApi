@@ -10,5 +10,6 @@ namespace CarsStorage.BLL.Repositories.Interfaces
 		public Task<CarEntity> Update(CarDTO carDTO);
 		public Task Delete(int id);
 		public Task<CarEntity> UpdateCount(int id, int count);
+		public Task<CarEntity> MakeInaccessible(int id);
 	}
 }
