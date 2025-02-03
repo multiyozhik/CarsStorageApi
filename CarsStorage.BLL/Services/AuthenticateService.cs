@@ -52,7 +52,7 @@ namespace CarsStorage.BLL.Implementations.Services
 
 
 		/// <summary>
-		/// Метод для логирования пользователя в приложении.
+		/// Метод для входа пользователя в приложении.
 		/// </summary>
 		/// <param name="appUserLoginDTO">Объект пользователя с UserName и Password.</param>
 		/// <returns></returns>
@@ -109,7 +109,7 @@ namespace CarsStorage.BLL.Implementations.Services
 
 
 		/// <summary>
-		/// Метод для разлогинивания пользователя.
+		/// Метод для выхода пользователя из приложения.
 		/// </summary>
 		/// <returns></returns>
 		public async Task<AppUserDTO> LogOut(JWTTokenDTO jwtTokenDTO) 

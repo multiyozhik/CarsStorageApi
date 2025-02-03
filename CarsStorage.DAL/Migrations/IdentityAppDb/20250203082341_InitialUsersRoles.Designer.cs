@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarsStorage.DAL.Migrations.IdentityAppDb
 {
     [DbContext(typeof(IdentityAppDbContext))]
-    [Migration("20250203053725_InitialUsersRoles")]
+    [Migration("20250203082341_InitialUsersRoles")]
     partial class InitialUsersRoles
     {
         /// <inheritdoc />

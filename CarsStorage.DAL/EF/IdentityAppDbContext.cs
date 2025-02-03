@@ -1,5 +1,6 @@
 ﻿using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -10,7 +11,7 @@ namespace CarsStorage.DAL.EF
 	///  DbContext для таблицы пользователей в Identity. 
 	/// </summary>
 	/// <param name="options"></param>
-	public class IdentityAppDbContext(DbContextOptions<IdentityAppDbContext> options, IOptions<InitialDbSeedConfig> initialOptions) : IdentityDbContext<IdentityAppUser>(options)
+	public class IdentityAppDbContext(DbContextOptions<IdentityAppDbContext> options, IOptions<InitialDbSeedConfig> initialOptions, IPasswordHasher<IdentityAppUser> passwordHasher) : IdentityDbContext<IdentityAppUser>(options)
 	{
 		public DbSet<IdentityAppUser> IdentityAppUsers { get; set; }
 		public new DbSet<RoleEntity> Roles { get; set; }
@@ -23,7 +24,7 @@ namespace CarsStorage.DAL.EF
 			base.OnModelCreating(modelBuilder);
 			var rolesConfig = new RolesConfig();
 			modelBuilder.ApplyConfiguration(rolesConfig);
-			modelBuilder.ApplyConfiguration(new UsersConfig(rolesConfig.GetRoles(), initialDbSeedConfig));
+			modelBuilder.ApplyConfiguration(new UsersConfig(rolesConfig.GetRoles(), initialDbSeedConfig, passwordHasher));
 		}
 	}
 }

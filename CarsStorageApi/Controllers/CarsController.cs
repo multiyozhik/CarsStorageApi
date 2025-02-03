@@ -14,7 +14,7 @@ namespace CarsStorageApi.Controllers
 	{
 		[Authorize(Policy = "RequierBrowseCars")]
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<CarRequestResponse>>> GetCars()
+		public async Task<ActionResult<List<CarRequestResponse>>> GetCars()
 		{
 			var serviceResult = await carsService.GetList();
 

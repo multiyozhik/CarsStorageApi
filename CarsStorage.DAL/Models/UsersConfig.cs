@@ -2,15 +2,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.Extensions.Options;
-using System.Reflection.Emit;
 
 namespace CarsStorage.DAL.Models
 {
-    public class UsersConfig(IEnumerable<RoleEntity> rolesList, InitialDbSeedConfig initialDbSeedConfig) : IEntityTypeConfiguration<IdentityAppUser>
+	public class UsersConfig(IEnumerable<RoleEntity> rolesList, InitialDbSeedConfig initialDbSeedConfig, IPasswordHasher<IdentityAppUser> passwordHasher) : IEntityTypeConfiguration<IdentityAppUser>
 	{
 		private readonly List<RoleEntity> rolesList = rolesList.ToList();
-		private readonly PasswordHasher<IdentityAppUser> passwordHasher = new();
+		//private readonly PasswordHasher<IdentityAppUser> passwordHasher = new();
 		private readonly Random random = new();
 
 		public void Configure(EntityTypeBuilder<IdentityAppUser> builder)
