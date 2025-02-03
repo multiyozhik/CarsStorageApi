@@ -15,5 +15,7 @@ namespace CarsStorageApi.Models
 
 		[Required(ErrorMessage = "Укажите количество автомобилей")]
 		public int Count { get; set; }
-    }
+
+		public bool IsAccassible { get; set; }
+	}
 }

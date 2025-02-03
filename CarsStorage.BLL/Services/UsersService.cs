@@ -92,28 +92,5 @@ namespace CarsStorage.BLL.Implementations.Services
 				return new ServiceResult<AppUserDTO>(null, exception.Message);
 			}			
 		}
-
-		//public async Task<Claim> GetClaims(AppUserDTO appUserDTO)
-		//{
-		//	//составляем общий список клаймов userClaims, имеющийся от всех его ролей (неповторяющийся)
-		//	var roleClaims = appUserDTO.Roles.SelectMany(role => role.RoleClaims).Distinct().ToList();
-		//	var userClaims = new List<Claim> { new(ClaimTypes.Name, user.UserName) };
-		//	roleClaims.ForEach(roleClaim => userClaims.Add(new Claim(ClaimTypes.Role, roleClaim.ToString())));
-		//}
-
-
-
-		//public async Task<ServiceResult<AppUserDTO>> AddToRole(RoleDTO roleDTO)
-		//{
-		//	try
-		//	{
-		//		await usersRepository.AddToRole(RoleDTO roleDTO);
-		//		return new ServiceResult(id, null);
-		//	}
-		//	catch (Exception exception)
-		//	{
-		//		return new ServiceResult<int>(id, exception.Message);
-		//	}
-		//}
 	}
 }

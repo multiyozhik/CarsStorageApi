@@ -4,25 +4,32 @@ using CarsStorage.BLL.Abstractions.Models;
 using CarsStorageApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CarsStorageApi.Controllers
 {
 	[ApiController]
 	[Route("[controller]/[action]")]
 	
-	public class CarsController(ICarsService carsService, IMapper mapper) : ControllerBase
+	public class CarsController(ICarsService carsService, IMapper mapper, HttpContext httpContext) : ControllerBase
 	{
 		[Authorize(Policy = "RequierBrowseCars")]
+		[Authorize(Policy = "RequierManageCars")]
 		[HttpGet]
-		public async Task<ActionResult<List<CarRequestResponse>>> GetCars()
+		public async Task<ActionResult<List<CarRequestResponse>>> GetCars(HttpContext httpContext)
 		{
 			var serviceResult = await carsService.GetList();
-
-			if (serviceResult.IsSuccess)
-				return serviceResult.Result.Select(mapper.Map<CarRequestResponse>).ToList();
+			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+			{
+				var carsList = serviceResult.Result.Select(mapper.Map<CarRequestResponse>).ToList();
+				return (httpContext.User.HasClaim(c => c.Value == "RequierBrowseCars"))
+					? carsList.Where(c => c.IsAccassible).ToList()
+					: carsList;
+			}
 			else
 				return BadRequest(serviceResult.ErrorMessage);			
 		}
+
 
 
 		[Authorize(Policy = "RequierManageCars")]
