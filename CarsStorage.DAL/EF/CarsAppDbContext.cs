@@ -13,6 +13,7 @@ namespace CarsStorage.DAL.EF
 		public DbSet<CarEntity> Cars => Set<CarEntity>();
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
+			base.OnModelCreating(modelBuilder);
 			modelBuilder.Entity<CarEntity>().HasData(
 					new CarEntity { Id = 1, Model = "Lada", Make = "Kalina", Color = "красный", Count = 4 },
 					new CarEntity { Id = 2, Model = "JAC", Make = "J7", Color = "белый", Count = 8 },

@@ -23,7 +23,7 @@ namespace CarsStorage.BLL.Implementations.Services
 	public class AuthenticateService(
 		SignInManager<IdentityAppUser> signInManager, UserManager<IdentityAppUser> userManager, 
 		ITokensService tokenService, IUsersRepository usersRepository, IRolesRepository roleRepository, 
-		IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions, JWTConfigDTO jWTConfigDTO) : IAuthenticateService
+		IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions) : IAuthenticateService
 	{
 		/// <summary>
 		/// Метод для регистрации пользователя в приложении.

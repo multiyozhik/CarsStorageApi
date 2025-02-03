@@ -6,7 +6,7 @@
     
     public class UsersRolesEntity
     {
-        public int IdentityAppUserId { get; set; }
+        public string IdentityAppUserId { get; set; }
 
         public int RoleEntityId { get; set; }
 

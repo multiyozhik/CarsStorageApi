@@ -9,9 +9,9 @@ namespace CarsStorage.DAL.Models
 		private IEnumerable<RoleEntity> rolesList = [];
 		public void Configure(EntityTypeBuilder<RoleEntity> builder)
 		{
-			rolesList = rolesList.Append(new RoleEntity("admin") { RoleClaims = [RoleClaimType.CanManageUsers, RoleClaimType.CanManageRoles] });
-			rolesList = rolesList.Append(new RoleEntity("manager") { RoleClaims = [RoleClaimType.CanManageCars, RoleClaimType.CanBrowseCars] });
-			rolesList = rolesList.Append(new RoleEntity("user") { RoleClaims = [RoleClaimType.CanBrowseCars] });
+			rolesList = rolesList.Append(new RoleEntity("admin") { Id = 1, RoleClaims = [RoleClaimType.CanManageUsers, RoleClaimType.CanManageRoles] });
+			rolesList = rolesList.Append(new RoleEntity("manager") { Id = 2, RoleClaims = [RoleClaimType.CanManageCars, RoleClaimType.CanBrowseCars] });
+			rolesList = rolesList.Append(new RoleEntity("user") { Id = 3, RoleClaims = [RoleClaimType.CanBrowseCars] });
 
 			builder.HasData(rolesList);
 

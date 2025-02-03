@@ -21,7 +21,7 @@ namespace CarsStorage.BLL.Repositories.Implementations
 
 		public async Task<List<RoleEntity>> GetRolesByNamesList(IEnumerable<string> roleNamesList)
 		{
-			var rolesList = (await GetList()).ToList();
+			var rolesList = await GetList();
 			return roleNamesList.Select(roleName => rolesList.FirstOrDefault(r => r.Name == roleName)).ToList();	
 		}
 

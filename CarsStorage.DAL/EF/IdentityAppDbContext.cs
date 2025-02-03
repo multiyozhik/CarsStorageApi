@@ -20,6 +20,7 @@ namespace CarsStorage.DAL.EF
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
+			base.OnModelCreating(modelBuilder);
 			var rolesConfig = new RolesConfig();
 			modelBuilder.ApplyConfiguration(rolesConfig);
 			modelBuilder.ApplyConfiguration(new UsersConfig(rolesConfig.GetRoles(), initialDbSeedConfig));

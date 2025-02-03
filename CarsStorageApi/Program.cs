@@ -67,11 +67,11 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	});
 
 	services.Configure<AdminConfig>(config.GetSection("AdminConfig"));
-	services.Configure<JWTConfigDTO>(config.GetSection("JwtConfig"));
+	services.Configure<JWTConfig>(config.GetSection("JwtConfig"));
 	services.Configure<InitialDbSeedConfig>(config.GetSection("InitialDbSeedConfig"));
 
 	services.AddOptions<AdminConfig>();
-	services.AddOptions<JWTConfigDTO>();
+	services.AddOptions<JWTConfig>();
 
 	services.AddIdentity<IdentityAppUser, IdentityRole>()
 		.AddEntityFrameworkStores<IdentityAppDbContext>()
@@ -97,13 +97,14 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services
-		.AddScoped<ITokensService, TokensService>()
 		.AddScoped<IRolesRepository, RolesRepository>()
 		.AddScoped<IUsersRepository, UsersRepository>()
+		.AddScoped<ICarsRepository, CarsRepository>()
 		.AddScoped<IRolesService, RolesService>()
 		.AddScoped<IUsersService, UsersService>()
+		.AddScoped<ITokensService, TokensService>()
+		.AddScoped<IPasswordHasher<IdentityAppUser>, PasswordHasher<IdentityAppUser>>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
-		.AddScoped<ICarsRepository, CarsRepository>()
 		.AddScoped<ICarsService, CarsService>();
 	
 	services.AddAuthentication(options =>
@@ -175,7 +176,7 @@ static async Task CreateAdminAccount(IServiceProvider serviceProvider)
 {
 	using IServiceScope scope = serviceProvider.CreateScope();
 	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityAppUser>>();
-	var passwordHasher = scope.ServiceProvider.GetRequiredService<PasswordHasher<IdentityAppUser>>();
+	var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<IdentityAppUser>>();
 	var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminConfig>>().Value;
 
 	if (string.IsNullOrEmpty(admin.UserName)

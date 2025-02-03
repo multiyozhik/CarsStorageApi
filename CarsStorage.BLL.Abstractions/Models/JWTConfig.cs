@@ -1,6 +1,6 @@
 ﻿namespace CarsStorage.BLL.Abstractions.Models
 {
-    public class JWTConfigDTO
+    public class JWTConfig
     {
         public string Key { get; } = string.Empty;
         public string Issuer { get; } = string.Empty;

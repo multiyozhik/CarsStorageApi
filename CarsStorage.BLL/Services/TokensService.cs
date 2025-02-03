@@ -1,5 +1,6 @@
 ﻿using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -12,7 +13,7 @@ namespace CarsStorage.BLL.Implementations.Services
 	/// Сервис для методов токенов доступа.
 	/// </summary>
 	/// <param name="jwtConfig"></param>
-	public class TokensService(JWTConfigDTO jwtConfig) : ITokensService
+	public class TokensService(IOptions<JWTConfig> jwtOptions) : ITokensService
 	{
 		/// <summary>
 		/// Метод генерации токена доступа.
@@ -22,6 +23,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// <returns></returns>
 		public string GetAccessToken(IEnumerable<Claim> claims, out DateTime accessTokenExpires)
 		{
+			var jwtConfig = jwtOptions.Value;
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Key));
 			accessTokenExpires = DateTime.Now.AddMinutes(jwtConfig.ExpireMinutes);
 			var accessToken = new JwtSecurityToken(
@@ -56,6 +58,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// <exception cref="SecurityTokenException">Исключение о невалидноcти проверяемого токена (когда время его жизни прошло).</exception>
 		public ClaimsPrincipal GetClaimsPrincipalFromExperedTokenWithValidation(string experedToken)
 		{
+			var jwtConfig = jwtOptions.Value;
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Key));
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var validationParameters = new TokenValidationParameters()
