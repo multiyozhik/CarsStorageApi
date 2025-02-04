@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CarsStorage.DAL.Config
 {
+    /// <summary>
+    /// Класс для конфигураций администратора из appsettings.json.
+    /// </summary>
     public class AdminConfig
     {
         [Required]

@@ -5,7 +5,10 @@ using CarsStorage.DAL.Models;
 
 namespace CarsStorage.BLL.Repositories.Interfaces
 {
-    public interface IUsersRepository
+	/// <summary>
+	/// Интерфейс для репозитория пользователей.
+	/// </summary>
+	public interface IUsersRepository
 	{
 		public Task<List<UserEntity>> GetList();
 		public Task<UserEntity> GetById(int id);

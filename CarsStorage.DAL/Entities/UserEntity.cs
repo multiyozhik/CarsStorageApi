@@ -3,7 +3,7 @@
 namespace CarsStorage.DAL.Entities
 {
     /// <summary>
-    /// UserEntity - пользователь в Identity.
+    /// Класс сущности пользователя.
     /// </summary>
 
     public class UserEntity

@@ -3,6 +3,9 @@ using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 
 namespace CarsStorage.BLL.Abstractions.Interfaces
 {
+	/// <summary>
+	/// Интерфейс для сервиса автомобилей.
+	/// </summary>
 	public interface ICarsService
 	{
 		public Task<ServiceResult<List<CarDTO>>> GetList();

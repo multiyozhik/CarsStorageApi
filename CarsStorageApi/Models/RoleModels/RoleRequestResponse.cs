@@ -3,7 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CarsStorageApi.Models.RoleModels
 {
-    public class RoleRequestResponse
+	/// <summary>
+	/// Класс роли c id.
+	/// </summary>
+	public class RoleRequestResponse
     {
         public int Id { get; set; }
         public string? Name { get; set; }

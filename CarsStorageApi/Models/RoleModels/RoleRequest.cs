@@ -4,6 +4,9 @@ using System.Xml.Linq;
 
 namespace CarsStorageApi.Models.RoleModels
 {
+    /// <summary>
+    /// Класс роли для ее создания пользователем (без id).
+    /// </summary>
     public class RoleRequest
     {
         [Required]

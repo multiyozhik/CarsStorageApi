@@ -3,6 +3,9 @@ using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 
 namespace CarsStorage.BLL.Abstractions.Interfaces
 {
+	/// <summary>
+	/// Интерфейс для сервиса пользователей.
+	/// </summary>
 	public interface IUsersService
 	{
 		public Task<ServiceResult<List<UserDTO>>> GetList();

@@ -1,5 +1,8 @@
 ﻿namespace CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO
 {
+	/// <summary>
+	/// Класс пользователя с id, ролями и токенами.
+	/// </summary>
 	public class UserDTO
 	{
 		public int Id { get; set; }

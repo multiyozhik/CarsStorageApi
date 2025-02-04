@@ -1,5 +1,8 @@
 ﻿namespace CarsStorage.BLL.Abstractions.Models
 {
+	/// <summary>
+	/// Класс результата работы сервиса.
+	/// </summary>
 	public class ServiceResult<T>(T? result, string? errorMessage)
 	{
 		public T? Result { get; set; } = result;

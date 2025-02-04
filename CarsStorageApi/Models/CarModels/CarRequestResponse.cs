@@ -1,6 +1,9 @@
 namespace CarsStorageApi.Models.CarModels
 {
-    public class CarRequestResponse
+	/// <summary>
+	/// Класс для данных автомобиля с id.
+	/// </summary>
+	public class CarRequestResponse
     {
         public int Id { get; set; }
         public string? Model { get; set; }

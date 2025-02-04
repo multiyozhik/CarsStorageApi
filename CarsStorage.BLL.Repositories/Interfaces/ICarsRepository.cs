@@ -3,6 +3,9 @@ using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Repositories.Interfaces
 {
+	/// <summary>
+	/// Интерфейс для репозитория автомобилей.
+	/// </summary>
     public interface ICarsRepository
 	{
 		public Task<List<CarEntity>> GetList();

@@ -7,12 +7,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorageApi.Controllers
 {
+	/// <summary>
+	/// Класс контролллера пользователей.
+	/// </summary>
     [ApiController]
 	[Authorize(Policy = "RequierManageUsers")]
-	[Route("[controller]/[action]")]
-	
+	[Route("[controller]/[action]")]	
 	public class UsersController(IUsersService usersService, IMapper mapper) : ControllerBase
 	{
+		/// <summary>
+		/// Метод возвращает задачу с списком всех пользователей.
+		/// </summary>
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<UserRequestResponse>>> GetList()
 		{
@@ -24,7 +29,9 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с пользователем по его id.
+		/// </summary>
 		[HttpGet("{id}")]
 		public async Task<ActionResult<UserRequestResponse>> GetById([FromRoute] int id)
 		{
@@ -36,7 +43,9 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с созданным пользователем.
+		/// </summary>
 		[HttpPost]
 		public async Task<ActionResult<UserRequestResponse>> Create([FromBody] UserRequest userRequest)			
 		{
@@ -48,7 +57,9 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с измененным пользователем.
+		/// </summary>
 		[HttpPut]
 		public async Task<ActionResult<UserRequestResponse>> Update([FromBody] UserRequestResponse userRequestResponse)
 		{
@@ -60,7 +71,9 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с id удаленного пользователя.
+		/// </summary>
 		[HttpDelete("{id}")]
 		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{

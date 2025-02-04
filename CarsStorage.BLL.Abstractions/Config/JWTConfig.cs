@@ -1,5 +1,8 @@
 ﻿namespace CarsStorage.BLL.Abstractions.Config
 {
+	/// <summary>
+	/// Класс конфигураций токена для его генерации и валидации.
+	/// </summary>
 	public class JWTConfig
 	{
 		public string Key { get; } = string.Empty;

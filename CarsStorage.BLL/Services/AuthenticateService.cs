@@ -3,26 +3,20 @@ using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.AuthModels;
 using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
-using CarsStorage.BLL.Repositories.Implementations;
 using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Config;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
-using Microsoft.AspNetCore.Identity;
+using CarsStorage.DAL.Utils;
 using Microsoft.Extensions.Options;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-    /// <summary>
-    /// Сервис для аутентификации.
-    /// </summary>
-    /// <param name="tokenService">Объект сервиса для генерации и обновления токена.</param>
-    /// <param name="roleRepository">Объект репозитория для ролей пользователя.</param>
-    /// <param name="mapper">Объект меппера для сопоставления объектов.</param>
-    /// <param name="initialOptions">Объект для настроек заполнения БД с названием роли при регистрации нового пользователя.</param>
-
-    public class AuthenticateService(IUsersRepository usersRepository, IRolesRepository rolesRepository, ITokensService tokenService, 
-		IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions) : IAuthenticateService
+	/// <summary>
+	/// Сервис для аутентификации.
+	/// </summary>
+	public class AuthenticateService(IUsersRepository usersRepository, IRolesRepository rolesRepository, ITokensService tokenService, 
+		IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions, IPasswordHasher passwordHasher) : IAuthenticateService
 	{
 		/// <summary>
 		/// Метод для регистрации пользователя в приложении.
@@ -55,23 +49,18 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{				
 				var userEntity = await usersRepository.FindByName(userLoginDTO.UserName)
-					?? throw new Exception("Ошибка - неверный логин.");
+					?? throw new Exception("Неверный логин.");
+				if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.PasswordHash.hash, userEntity.PasswordHash.salt))
+					throw new Exception("Неверный пароль.");
 
-
-				//var user = await userManager.FindByNameAsync(userLoginDTO.UserName)
-				//	?? throw new Exception("Ошибка - неверный логин.");
-				//var signinResult = await signInManager.PasswordSignInAsync(user, userLoginDTO.Password, false, false);
-				//if (!signinResult.Succeeded)
-				//	throw new Exception("Ошибка - неверный пароль.");
-
-				var claimsList = roleRepository.GetClaimsByUser(mapper.Map<UserEntity>(userLoginDTO));
+				var claimsList = rolesRepository.GetClaimsByUser(mapper.Map<UserEntity>(userLoginDTO));
 				var jwtTokenDTO = new JWTTokenDTO()
 				{
 					AccessToken = tokenService.GetAccessToken(claimsList, out DateTime accessTokenExpires),
 					RefreshToken = tokenService.GetRefreshToken()
 				};
 
-				await usersRepository.UpdateToken(user.Id, jwtTokenDTO);
+				await usersRepository.UpdateToken(userEntity.Id, jwtTokenDTO);
 				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null);				
 			}
 			catch (Exception exception)
@@ -80,7 +69,11 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-
+		/// <summary>
+		/// Метод возвращает как результат обновленный объект токена.
+		/// </summary>
+		/// <param name="jwtTokenDTO">Объект токена (токен доступа и токен обновления).</param>
+		/// <returns></returns>
 		public async Task<ServiceResult<JWTTokenDTO>> RefreshToken(JWTTokenDTO jwtTokenDTO)
 		{
 			var refreshingToken = jwtTokenDTO;
@@ -107,9 +100,8 @@ namespace CarsStorage.BLL.Implementations.Services
 
 
 		/// <summary>
-		/// Метод для выхода пользователя из приложения.
+		/// Метод для выхода пользователя из приложения, возвращает как результат вышедшего пользователя.
 		/// </summary>
-		/// <returns></returns>
 		public async Task<UserDTO> LogOut(JWTTokenDTO jwtTokenDTO) 
 		{
 			return await usersRepository.ClearToken(jwtTokenDTO);

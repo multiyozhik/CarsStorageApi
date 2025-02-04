@@ -4,9 +4,12 @@ using CarsStorageApi.Models.AuthModels;
 
 namespace CarsStorageApi.Mappers
 {
-	public class AuthMapper: Profile
+	/// <summary>
+	/// Класс меппера при аутентификации пользователя.
+	/// </summary>
+	public class AuthMapperApi: Profile
 	{
-		public AuthMapper() 
+		public AuthMapperApi() 
 		{
 			CreateMap<RegisterUserDataRequest, UserRegisterDTO>();
 

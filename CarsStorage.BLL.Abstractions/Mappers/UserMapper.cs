@@ -6,6 +6,9 @@ using CarsStorage.DAL.Models;
 
 namespace CarsStorage.BLL.Abstractions.Mappers
 {
+	/// <summary>
+	/// Класс меппера для пользователей.
+	/// </summary>
 	public class UserMapper : Profile
 	{
 		public UserMapper()
@@ -13,8 +16,6 @@ namespace CarsStorage.BLL.Abstractions.Mappers
 			CreateMap<UserEntity, UserDTO>();
 
 			CreateMap<UserCreaterDTO, UserEntity>();
-
-			//CreateMap<UserCreaterDTO, UserCreater>();
 
 			CreateMap<UserRegisterDTO, UserRegister>();
 		}

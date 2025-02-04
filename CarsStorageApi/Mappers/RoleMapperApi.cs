@@ -4,9 +4,12 @@ using CarsStorageApi.Models.RoleModels;
 
 namespace CarsStorageApi.Mappers
 {
-	public class RoleMapper: Profile
+	/// <summary>
+	/// Класс меппера для ролей.
+	/// </summary>
+	public class RoleMapperApi: Profile
 	{
-		public RoleMapper() 
+		public RoleMapperApi() 
 		{
 			CreateMap<RoleRequest, RoleCreaterDTO>();
 

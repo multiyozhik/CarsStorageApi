@@ -10,14 +10,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.BLL.Repositories.Implementations
 {
+	/// <summary>
+	/// Класс репозитория для пользователей.
+	/// </summary>
 	public class UsersRepository(UsersRolesDbContext dbContext, IPasswordHasher passwordHasher, IMapper mapper) : IUsersRepository
 	{
+		/// <summary>
+		/// Метод возвращает список всех сущностей пользователей.
 		public async Task<List<UserEntity>> GetList()
 		{
 			return await dbContext.Users.ToListAsync();
 		}
 
 
+		/// <summary>
+		/// Метод возвращает сущность пользователя по полученному id пользователя.
+		/// </summary>
 		public async Task<UserEntity> GetById(int id)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
@@ -25,6 +33,9 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 
+		/// <summary>
+		/// Метод возвращает сущность пользователя по полученному имени пользователя.
+		/// </summary>
 		public async Task<UserEntity> FindByName(string userName)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == userName);
@@ -32,6 +43,9 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 
+		/// <summary>
+		/// Метод создает сущность пользователя и возвращает данные пользователя с ролями без пароля.
+		/// </summary>
 		public async Task<UserRegister> Create(UserCreater userCreater)
 		{
 			var rolesListNames = userCreater.Roles.ToList();
@@ -53,6 +67,9 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 
+		/// <summary>
+		/// Метод изменяет сущность пользователя и возвращает ее.
+		/// </summary>
 		public async Task<UserEntity> Update(UserEntity user)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == user.Id)
@@ -67,6 +84,9 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 
+		/// <summary>
+		/// Метод удаляет сущность пользователя по id.
+		/// </summary>
 		public async Task Delete(int id)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id)
@@ -76,6 +96,9 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 
+		/// <summary>
+		/// Метод изменяет токен для пользователя с id.
+		/// </summary>
 		public async Task UpdateToken(int id, JWTTokenDTO jwtTokenDTO)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id)
@@ -86,13 +109,18 @@ namespace CarsStorage.BLL.Repositories.Implementations
 			await dbContext.SaveChangesAsync();
 		}
 
-
+		/// <summary>
+		/// Метод возвращает пользователя по полученному refresh-токену.
+		/// </summary>
 		public async Task<UserDTO> GetUserByRefreshToken(string refreshToken)
 		{
 			var user = await dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 			return mapper.Map<UserDTO>(user);
 		}
 
+		/// <summary>
+		/// Метод очищает токен в БД и возвращает пользователя, который вышел из системы.
+		/// </summary>
 		public async Task<UserDTO> ClearToken(JWTTokenDTO jwtTokenDTO)
 		{
 			var user = await GetUserByRefreshToken(jwtTokenDTO.RefreshToken)

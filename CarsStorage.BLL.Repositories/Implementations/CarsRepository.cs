@@ -7,16 +7,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.BLL.Repositories.Implementations
 {
-    public class CarsRepository(CarsDbContext dbContext, IMapper mapper) : ICarsRepository
+	/// <summary>
+	/// Класс репозитория автомобилей.
+	/// </summary>
+	public class CarsRepository(CarsDbContext dbContext, IMapper mapper) : ICarsRepository
 	{
 		private readonly CarsDbContext dbContext = dbContext;
 
+		/// <summary>
+		/// Метод получения всего списка автомобилей.
+		/// </summary>
 		public async Task<List<CarEntity>> GetList()
 		{
 			return await dbContext.Cars.ToListAsync();
 		}
 
 
+		/// <summary>
+		/// Метод создания новой записи автомобиля в БД.
+		/// </summary>
 		public async Task<CarEntity> Create(CarCreaterDTO carCreaterDTO)
 		{
 			var carEntity = await dbContext.Cars.AddAsync(mapper.Map<CarEntity>(carCreaterDTO));
@@ -25,6 +34,9 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 
+		/// <summary>
+		/// Метод изменения записи данных автомобиля в БД.
+		/// </summary>
 		public async Task<CarEntity> Update(CarDTO carDTO)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == carDTO.Id)
@@ -39,7 +51,9 @@ namespace CarsStorage.BLL.Repositories.Implementations
 	
 		}
 
-
+		/// <summary>
+		/// Метод удаления записи автомобиля по id.
+		/// </summary>
 		public async Task Delete(int id)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id)
@@ -49,6 +63,9 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 
+		/// <summary>
+		/// Метод для изменения количества автомобилей.
+		/// </summary>
 		public async Task<CarEntity> UpdateCount(int id, int count)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id)
@@ -58,6 +75,10 @@ namespace CarsStorage.BLL.Repositories.Implementations
 			return carEntity;
 		}
 
+
+		/// <summary>
+		/// Метод для того, чтобы сделать запись об автомобиле с id недоступным для просмотра.
+		/// </summary>
 		public async Task<CarEntity> MakeInaccessible(int id)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id)

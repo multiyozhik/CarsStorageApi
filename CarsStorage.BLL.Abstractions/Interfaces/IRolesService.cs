@@ -5,6 +5,9 @@ using System.Security.Claims;
 
 namespace CarsStorage.BLL.Abstractions.Interfaces
 {
+	/// <summary>
+	/// Интерфейс для сервиса ролей.
+	/// </summary>
 	public interface IRolesService
 	{
 		public Task<ServiceResult<List<RoleDTO>>> GetList();

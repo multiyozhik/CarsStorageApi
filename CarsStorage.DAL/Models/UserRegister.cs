@@ -1,12 +1,8 @@
-﻿using CarsStorage.DAL.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CarsStorage.DAL.Models
+﻿namespace CarsStorage.DAL.Models
 {
+	/// <summary>
+	/// Класс для возврата данных пользователя с его ролями (не показываем пароль) после регистрации и создании записис в БД.
+	/// </summary>
 	public class UserRegister
 	{
 		public int Id { get; set; }

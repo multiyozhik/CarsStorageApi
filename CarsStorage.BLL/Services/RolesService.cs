@@ -9,8 +9,14 @@ using System.Security.Claims;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
+	/// <summary>
+	/// Класс сервиса ролей пользователей.
+	/// </summary>
     public class RolesService(IRolesRepository rolesRepository, IMapper mapper) : IRolesService
 	{
+		/// <summary>
+		/// Метод возвращает как результат список всех ролей.
+		/// </summary>
 		public async Task<ServiceResult<List<RoleDTO>>> GetList()
 		{
 			try
@@ -25,6 +31,9 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
+		/// <summary>
+		/// Метод возвращает как результат роль по полученному id роли.
+		/// </summary>
 		public async Task<ServiceResult<RoleDTO>> GetRoleById(int id)
 		{
 			try
@@ -38,6 +47,9 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
+		/// <summary>
+		/// Метод возвращает как результат список объектов ролей по полученному списку имен ролей.
+		/// </summary>
 		public async Task<ServiceResult<List<RoleDTO>>> GetRolesByNamesList(IEnumerable<string> roleNamesList)
 		{
 			try
@@ -52,9 +64,12 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-		public List<Claim> GetClaimsByUser(UserDTO appUserDTO)
+		/// <summary>
+		/// Метод возвращает как результат список клаймов для пользователя.
+		/// </summary>
+		public List<Claim> GetClaimsByUser(UserDTO userDTO)
 		{
-			return rolesRepository.GetClaimsByUser(mapper.Map<UserEntity>(appUserDTO)).ToList();
+			return rolesRepository.GetClaimsByUser(mapper.Map<UserEntity>(userDTO));
 		}
 	}
 }

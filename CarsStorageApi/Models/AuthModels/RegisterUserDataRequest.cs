@@ -2,7 +2,10 @@
 
 namespace CarsStorageApi.Models.AuthModels
 {
-    public class RegisterUserDataRequest
+	/// <summary>
+	/// Класс для данных пользователя при регистрации его в приложении.
+	/// </summary>
+	public class RegisterUserDataRequest
     {
         [Required(ErrorMessage = "Укажите имя пользователя")]
         public string? UserName { get; set; }

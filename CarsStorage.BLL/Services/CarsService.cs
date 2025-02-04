@@ -3,17 +3,17 @@ using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
-using Microsoft.AspNetCore.Http;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-    /// <summary>
-    /// Сервис для выполнения CRUD-операций для автомобилей.
-    /// </summary>
-    /// <param name="carsRepository"></param>
-
-    public class CarsService(ICarsRepository carsRepository, IMapper mapper) : ICarsService
+	/// <summary>
+	/// Класс сервиса автомобилей.
+	/// </summary>
+	public class CarsService(ICarsRepository carsRepository, IMapper mapper) : ICarsService
 	{
+		/// <summary>
+		/// Метод возвращает как результат список всех автомобилей.
+		/// </summary>
 		public async Task<ServiceResult<List<CarDTO>>> GetList()
 		{
 			try
@@ -28,7 +28,9 @@ namespace CarsStorage.BLL.Implementations.Services
 			}			
 		}
 
-
+		/// <summary>
+		/// Метод создает новую запись автомобиля и возвращает как результат созданный объект автомобиля.
+		/// </summary>
 		public async Task<ServiceResult<CarDTO>> Create(CarCreaterDTO carCreaterDTO)
 		{
 			try
@@ -42,7 +44,9 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-
+		/// <summary>
+		/// Метод изменяет данные об автомобиле и возвращает как результат измененный объект автомобиля.
+		/// </summary>
 		public async Task<ServiceResult<CarDTO>> Update(CarDTO carDTO)
 		{
 			try
@@ -56,7 +60,9 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-
+		/// <summary>
+		/// Метод удаляет запись об автомобиле по его id и возвращает как результат этот id.
+		/// </summary>
 		public async Task<ServiceResult<int>> Delete(int id)
 		{
 			try
@@ -70,7 +76,9 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-
+		/// <summary>
+		/// Метод изменяет количество автомобилей и возвращает как результат измененный объект автомобиля.
+		/// </summary>
 		public async Task<ServiceResult<CarDTO>> UpdateCount(int id, int count)
 		{
 			try
@@ -84,6 +92,9 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
+		/// <summary>
+		/// Метод делает запись об автомобиле недоступной по id автомобиля и возвращает как результат измененный объект автомобиля.
+		/// </summary>
 		public async Task<ServiceResult<CarDTO>> MakeInaccessible(int id)
 		{
 			try

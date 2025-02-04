@@ -4,14 +4,19 @@ using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorageApi.Models.CarModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CarsStorageApi.Controllers
 {
-    [ApiController]
+	/// <summary>
+	/// Класс контроллера для автмобилей.
+	/// </summary>
+	[ApiController]
 	[Route("[controller]/[action]")]	
 	public class CarsController(ICarsService carsService, IMapper mapper, HttpContext httpContext) : ControllerBase
 	{
+		/// <summary>
+		/// Метод возвращает задачу с списком всех автомобилей.
+		/// </summary>
 		[Authorize(Policy = "RequierBrowseCars")]
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpGet]
@@ -30,7 +35,9 @@ namespace CarsStorageApi.Controllers
 		}
 
 
-
+		/// <summary>
+		/// Метод возвращает задачу с созданной записью автомобиля.
+		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPost]
 		public async Task<ActionResult<CarRequestResponse>> Create([FromBody] CarRequest carRequest)
@@ -43,7 +50,9 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с измененной записью автомобиля.
+		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
 		public async Task<ActionResult<CarRequestResponse>> Update([FromBody] CarRequestResponse carRequestResponse)
@@ -56,7 +65,9 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с id удаленной записи автомобиля.
+		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpDelete("{id}")]
 		public async Task<ActionResult<int>> Delete([FromRoute] int id)
@@ -69,7 +80,9 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с измененной записью автомобиля (изменено количество автомобилей).
+		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
 		public async Task<ActionResult<CarRequestResponse>> UpdateCount([FromBody] CarCountChangerRequest carCountChangerRequest)
@@ -82,6 +95,9 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ErrorMessage);
 		}
 
+		/// <summary>
+		/// Метод возвращает задачу с измененной записью автомобиля (запись сделана недоступной для просмотра обычным пользователем).
+		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
 		public async Task<ActionResult<CarRequestResponse>> MakeInaccessible([FromRoute]int id)

@@ -3,7 +3,7 @@
 namespace CarsStorage.DAL.Entities
 {
     /// <summary>
-    /// Сущность роли.
+    /// Класс сущности роли.
     /// </summary>
     /// <param name="name">Имя роли.</param>
 

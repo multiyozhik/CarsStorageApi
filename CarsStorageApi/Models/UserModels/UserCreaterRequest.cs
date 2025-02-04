@@ -2,7 +2,10 @@
 
 namespace CarsStorageApi.Models.UserModels
 {
-    public class UserCreaterRequest
+	/// <summary>
+	/// Класс данных пользователя при регистрации в приложении (без id и ролей, с паролем).
+	/// </summary>
+	public class UserCreaterRequest
     {
         [Required(ErrorMessage = "Укажите имя пользователя")]
         public string? UserName { get; set; }

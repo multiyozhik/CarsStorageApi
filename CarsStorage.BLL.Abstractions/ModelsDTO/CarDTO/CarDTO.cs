@@ -1,5 +1,8 @@
 ﻿namespace CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO
 {
+	/// <summary>
+	/// Класс с данными об автомобиле с id.
+	/// </summary>
 	public class CarDTO
 	{
 		public int Id { get; set; }

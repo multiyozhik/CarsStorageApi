@@ -2,7 +2,10 @@
 
 namespace CarsStorageApi.Models.UserModels
 {
-    public class UserRequestResponse
+	/// <summary>
+	/// Класс данных пользователя при регистрации в приложении (с id и ролями, без пароля).
+	/// </summary>
+	public class UserRequestResponse
     {
         public int Id { get; set; }
         public string? UserName { get; set; }

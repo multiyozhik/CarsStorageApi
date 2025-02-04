@@ -4,6 +4,9 @@ using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Abstractions.Mappers
 {
+	/// <summary>
+	/// Класс меппера для автомобилей.
+	/// </summary>
 	public class CarMapper : Profile
 	{
 		public CarMapper()

@@ -6,45 +6,17 @@ using Microsoft.Extensions.Options;
 
 namespace CarsStorage.DAL.Config
 {
-    public class UsersConfig(IEnumerable<RoleEntity> rolesList, IPasswordHasher passwordHasher, 
-        IOptions<InitialDbSeedConfig> initialDbSeedOptions, IOptions<AdminConfig> adminOptions) : IEntityTypeConfiguration<UserEntity>
+	/// <summary>
+	/// Класс определяет конфигурацию для UserEntity сущности. 
+	/// </summary>
+	public class UsersConfig(IPasswordHasher passwordHasher, InitialDbSeedConfig initialDbSeedConfig, 
+        IOptions<AdminConfig> adminOptions) : IEntityTypeConfiguration<UserEntity>
     {
-		private readonly Random random = new();
-		private readonly List<RoleEntity> rolesList = rolesList.ToList();
-        private readonly AdminConfig adminConfig = adminOptions.Value;
-        private readonly InitialDbSeedConfig initialDbSeedConfig = initialDbSeedOptions.Value;
-
+        private readonly List<UserEntity> usersList = GetUserEntities(passwordHasher, initialDbSeedConfig, adminOptions.Value);
 
 		public void Configure(EntityTypeBuilder<UserEntity> builder)
-        {
-            var usersList = Enumerable.Range(1, initialDbSeedConfig.InitialUsersCount)
-                .Select(index =>
-                {
-                    var user = new UserEntity
-                    {
-                        UserName = $"user{index}",
-                        Email = $"user{index}@mail.ru",
-                        RolesList = [rolesList[random.Next(rolesList.Count)]],
-                        PasswordHash = passwordHasher.HashPassword($"user{index}")
-                    };
-                    return user;
-                });
-
-			if (string.IsNullOrEmpty(adminConfig.UserName)
-                || string.IsNullOrEmpty(adminConfig.Password)
-                || string.IsNullOrEmpty(adminConfig.Role))
-                throw new Exception("Не заданы конфигурации для администратора");
-
-			usersList = usersList.Append(new UserEntity
-            {
-                UserName = adminConfig.UserName,
-                Email = adminConfig.Email,
-                RolesList = [new RoleEntity(adminConfig.Role)],
-                PasswordHash = passwordHasher.HashPassword(adminConfig.Password)
-            });
-
+        {           
             builder.HasData(usersList);
-
             builder.HasKey(u => u.Id);
             builder.ToTable("Users");
 
@@ -68,5 +40,36 @@ namespace CarsStorage.DAL.Config
                         ur.ToTable("UserRoles");
                     });
         }
+
+        private static List<UserEntity> GetUserEntities(IPasswordHasher passwordHasher, InitialDbSeedConfig initialDbSeedConfig, 
+            AdminConfig adminConfig)
+        {
+			var usersList = Enumerable.Range(2, initialDbSeedConfig.InitialUsersCount)
+				.Select(index =>
+				{
+					var user = new UserEntity
+					{
+						Id = index,
+						UserName = $"user{index}",
+						Email = $"user{index}@mail.ru",
+						PasswordHash = passwordHasher.HashPassword($"user{index}")
+					};
+					return user;
+				}).ToList();
+
+			if (string.IsNullOrEmpty(adminConfig.UserName)
+				|| string.IsNullOrEmpty(adminConfig.Password)
+				|| string.IsNullOrEmpty(adminConfig.Role))
+				throw new Exception("Не заданы конфигурации для администратора");
+
+			usersList.Add(new UserEntity
+			{
+				Id = 1,
+				UserName = adminConfig.UserName,
+				Email = adminConfig.Email,
+				PasswordHash = passwordHasher.HashPassword(adminConfig.Password)
+			});
+            return usersList;
+		}			
     }
 }

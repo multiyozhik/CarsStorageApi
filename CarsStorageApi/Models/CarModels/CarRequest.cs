@@ -2,6 +2,9 @@
 
 namespace CarsStorageApi.Models.CarModels
 {
+    /// <summary>
+    /// Класс для данных автомобиля без id.
+    /// </summary>
     public class CarRequest
     {
         [Required(ErrorMessage = "Укажите модель автомобиля")]

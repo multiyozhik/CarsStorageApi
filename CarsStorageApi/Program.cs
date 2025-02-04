@@ -6,7 +6,6 @@ using CarsStorage.BLL.Repositories.Implementations;
 using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Config;
 using CarsStorage.DAL.EF;
-using CarsStorage.DAL.Interfaces;
 using CarsStorage.DAL.Utils;
 using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -72,10 +71,6 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddOptions<AdminConfig>();
 	services.AddOptions<JWTConfig>();
 
-	//services.AddIdentity<UserEntity, IdentityRole>()
-	//	.AddEntityFrameworkStores<UsersRolesDbContext>()
-	//	.AddDefaultTokenProviders();
-
 	services.Configure<IdentityOptions>(options =>
 	{
 		options.User.RequireUniqueEmail = true;
@@ -139,8 +134,9 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddPolicy("RequierManageCars", policy => { policy.RequireClaim("CanManageCars"); })
 		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
 
-	services.AddAutoMapper(typeof(MappingProfileApi));
-	services.AddAutoMapper(typeof(MappingProfile));
+	services.AddAutoMapper(typeof(AuthMapperApi), typeof(CarMapperApi), typeof(RoleMapperApi), typeof(UserMapperApi));
+	services.AddAutoMapper(typeof(CarMapper), typeof(RoleMapper), typeof(UserMapper));
+	//services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); //не подключилось автоматически
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -168,8 +164,4 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.Run();
 }
-
-
-//ToDo: UseHandlerException - может собирать разного типа ошибки или в фильтры.
-//ToDo: в 10 вечера скинуть PullRequest. ¬се аннотации написать, хот€ бы без параметров.
 

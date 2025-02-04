@@ -1,7 +1,6 @@
-﻿using CarsStorage.DAL.Utils;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
-namespace CarsStorage.DAL.Interfaces
+namespace CarsStorage.DAL.Utils
 {
     /// <summary>
     /// Класс для  хеширования пароля с использованием Rfc2898DeriveBytes и рандомной соли с помощью RandomNumberGenerator. 
