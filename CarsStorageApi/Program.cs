@@ -1,17 +1,17 @@
+using CarsStorage.BLL.Abstractions.Config;
 using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Abstractions.Mappers;
 using CarsStorage.BLL.Implementations.Services;
 using CarsStorage.BLL.Repositories.Implementations;
 using CarsStorage.BLL.Repositories.Interfaces;
+using CarsStorage.DAL.Config;
 using CarsStorage.DAL.EF;
-using CarsStorage.DAL.Entities;
-using CarsStorage.DAL.Models;
-using CarsStorageApi.Config;
-using CarsStorageApi.Models;
+using CarsStorage.DAL.Interfaces;
+using CarsStorage.DAL.Utils;
+using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -30,9 +30,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddControllers();
 
 	services.AddEndpointsApiExplorer();
-	services.AddSwaggerGen();
 
-	//чтобы появилась кнопка Authorize в Swagger
+	services.AddSwaggerGen();
 	services.AddSwaggerGen(option =>
 	{
 		option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
@@ -73,9 +72,9 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddOptions<AdminConfig>();
 	services.AddOptions<JWTConfig>();
 
-	services.AddIdentity<AppUserEntity, IdentityRole>()
-		.AddEntityFrameworkStores<UsersRolesDbContext>()
-		.AddDefaultTokenProviders();
+	//services.AddIdentity<UserEntity, IdentityRole>()
+	//	.AddEntityFrameworkStores<UsersRolesDbContext>()
+	//	.AddDefaultTokenProviders();
 
 	services.Configure<IdentityOptions>(options =>
 	{
@@ -90,7 +89,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 	});
 
-	services.AddDbContext<CarsAppDbContext>(options =>
+	services.AddDbContext<CarsDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services.AddDbContext<UsersRolesDbContext>(options =>
@@ -103,7 +102,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IRolesService, RolesService>()
 		.AddScoped<IUsersService, UsersService>()
 		.AddScoped<ITokensService, TokensService>()
-		.AddScoped<IPasswordHasher<AppUserEntity>, PasswordHasher<AppUserEntity>>()
+		.AddScoped<IPasswordHasher, PasswordHasher>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>();
 	
@@ -141,7 +140,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
 
 	services.AddAutoMapper(typeof(MappingProfileApi));
-	services.AddAutoMapper(typeof(MappingProfileDTO));
+	services.AddAutoMapper(typeof(MappingProfile));
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -167,48 +166,10 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.MapControllers();
 
-	CreateAdminAccount(app.Services).Wait();  
-
 	app.Run();
 }
 
-static async Task CreateAdminAccount(IServiceProvider serviceProvider)
-{
-	using IServiceScope scope = serviceProvider.CreateScope();
-	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUserEntity>>();
-	var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AppUserEntity>>();
-	var admin = scope.ServiceProvider.GetRequiredService<IOptions<AdminConfig>>().Value;
 
-	if (string.IsNullOrEmpty(admin.UserName)
-		|| string.IsNullOrEmpty(admin.Password)
-		|| string.IsNullOrEmpty(admin.Role))
-		throw new Exception("Не заданы конфигурации для администратора");
+//ToDo: UseHandlerException - может собирать разного типа ошибки или в фильтры.
+//ToDo: в 10 вечера скинуть PullRequest. Все аннотации написать, хотя бы без параметров.
 
-	if (await userManager.FindByNameAsync(admin.UserName) is null)
-	{
-		var adminUser = new AppUserEntity()
-		{
-			Id = "0",
-			UserName = admin.UserName,
-			Email = admin.Email
-		};
-
-		var result = await userManager.CreateAsync(adminUser, passwordHasher.HashPassword(adminUser, admin.Password));
-		if (result.Succeeded)
-			adminUser.RolesList = [new RoleEntity(admin.UserName)];
-
-		//ToDo: System.AggregateException: "One or more errors occurred. (The entity type 'IdentityUserLogin<string>'
-		//requires a primary key to be defined. If you intended to use a keyless entity type, call 'HasNoKey' in 'OnModelCreating'.
-		//For more information on keyless entity types, see https://go.microsoft.com/fwlink/?linkid=2141943.)"
-
-
-		//await appDbContext.UserRoles.AddAsync(new UsersRolesEntity()
-		//{
-		//	AppUserEntity = adminUser,
-		//	IdentityAppUserId = int.Parse(adminUser.Id),
-		//	RoleEntity = adminrole,
-		//	RoleEntityId = adminrole.Id
-		//});
-		//await appDbContext.SaveChangesAsync();
-	}
-}

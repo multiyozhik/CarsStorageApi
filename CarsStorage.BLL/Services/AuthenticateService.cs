@@ -1,52 +1,46 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Abstractions.ModelsDTO.AuthModels;
+using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
+using CarsStorage.BLL.Repositories.Implementations;
 using CarsStorage.BLL.Repositories.Interfaces;
+using CarsStorage.DAL.Config;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-	/// <summary>
-	/// Сервис для аутентификации.
-	/// </summary>
-	/// <param name="signInManager">Объект Identity - API для входа пользователей.</param>
-	/// <param name="userManager">Объект Identity - API для управления пользователями.</param>
-	/// <param name="tokenService">Объект сервиса для генерации и обновления токена.</param>
-	/// <param name="roleRepository">Объект репозитория для ролей пользователя.</param>
-	/// <param name="mapper">Объект меппера для сопоставления объектов.</param>
-	/// <param name="initialOptions">Объект для настроек заполнения БД с названием роли при регистрации нового пользователя.</param>
+    /// <summary>
+    /// Сервис для аутентификации.
+    /// </summary>
+    /// <param name="tokenService">Объект сервиса для генерации и обновления токена.</param>
+    /// <param name="roleRepository">Объект репозитория для ролей пользователя.</param>
+    /// <param name="mapper">Объект меппера для сопоставления объектов.</param>
+    /// <param name="initialOptions">Объект для настроек заполнения БД с названием роли при регистрации нового пользователя.</param>
 
-	public class AuthenticateService(
-		SignInManager<AppUserEntity> signInManager, UserManager<AppUserEntity> userManager, 
-		ITokensService tokenService, IUsersRepository usersRepository, IRolesRepository roleRepository, 
+    public class AuthenticateService(IUsersRepository usersRepository, IRolesRepository rolesRepository, ITokensService tokenService, 
 		IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions) : IAuthenticateService
 	{
 		/// <summary>
 		/// Метод для регистрации пользователя в приложении.
 		/// </summary>
-		/// <param name="appUserRegisterDTO">Объект пользователя с UserName, Email, Password.</param>
+		/// <param name="userRegisterDTO">Объект пользователя с UserName, Email, Password.</param>
 		/// <returns></returns>
-		public async Task<ServiceResult<AppUserDTO>> Register(AppUserRegisterDTO appUserRegisterDTO)
+		public async Task<ServiceResult<UserCreaterWithRolesDTO>> Register(UserRegisterDTO userRegisterDTO)
 		{
 			try
 			{
-				var user = new AppUserEntity 
-				{ 
-					UserName = appUserRegisterDTO.UserName, 
-					Email = appUserRegisterDTO.Email 
-				};
-				await userManager.CreateAsync(user, appUserRegisterDTO.Password);
-				var defaultRolesNamesList = new List<string>() { initialOptions.Value.DefaultRoleName };
-				user.RolesList = await roleRepository.GetRolesByNamesList(defaultRolesNamesList);
-				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(user), null);
+				var userCreater = mapper.Map<UserCreater>(userRegisterDTO);
+				userCreater.Roles = [initialOptions.Value.DefaultRoleName];
+				var userRegister = await usersRepository.Create(userCreater);
+				return new ServiceResult<UserCreaterWithRolesDTO>(mapper.Map<UserCreaterWithRolesDTO>(userRegister), null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<AppUserDTO>(null, exception.Message);
+				return new ServiceResult<UserCreaterWithRolesDTO>(null, exception.Message);
 			}
 		}
 
@@ -54,19 +48,23 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// <summary>
 		/// Метод для входа пользователя в приложении.
 		/// </summary>
-		/// <param name="appUserLoginDTO">Объект пользователя с UserName и Password.</param>
+		/// <param name="userLoginDTO">Объект пользователя с UserName и Password.</param>
 		/// <returns></returns>
-		public async Task<ServiceResult<JWTTokenDTO>> LogIn(AppUserLoginDTO appUserLoginDTO) 
+		public async Task<ServiceResult<JWTTokenDTO>> LogIn(UserLoginDTO userLoginDTO) 
 		{
 			try
 			{				
-				var user = await userManager.FindByNameAsync(appUserLoginDTO.UserName)
+				var userEntity = await usersRepository.FindByName(userLoginDTO.UserName)
 					?? throw new Exception("Ошибка - неверный логин.");
-				var signinResult = await signInManager.PasswordSignInAsync(user, appUserLoginDTO.Password, false, false);
-				if (!signinResult.Succeeded) 
-					throw new Exception("Ошибка - неверный пароль.");
 
-				var claimsList = roleRepository.GetClaimsByUser(mapper.Map<AppUserEntity>(appUserLoginDTO));
+
+				//var user = await userManager.FindByNameAsync(userLoginDTO.UserName)
+				//	?? throw new Exception("Ошибка - неверный логин.");
+				//var signinResult = await signInManager.PasswordSignInAsync(user, userLoginDTO.Password, false, false);
+				//if (!signinResult.Succeeded)
+				//	throw new Exception("Ошибка - неверный пароль.");
+
+				var claimsList = roleRepository.GetClaimsByUser(mapper.Map<UserEntity>(userLoginDTO));
 				var jwtTokenDTO = new JWTTokenDTO()
 				{
 					AccessToken = tokenService.GetAccessToken(claimsList, out DateTime accessTokenExpires),
@@ -98,7 +96,7 @@ namespace CarsStorage.BLL.Implementations.Services
 					AccessToken = tokenService.GetAccessToken(principal.Claims.ToList(), out DateTime expires),
 					RefreshToken = tokenService.GetRefreshToken()
 				};
-				await usersRepository.UpdateToken(user.Id.ToString(), refreshingToken);
+				await usersRepository.UpdateToken(user.Id, refreshingToken);
 				return new ServiceResult<JWTTokenDTO>(refreshingToken, null);
 			}
 			catch (Exception exception)
@@ -112,7 +110,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// Метод для выхода пользователя из приложения.
 		/// </summary>
 		/// <returns></returns>
-		public async Task<AppUserDTO> LogOut(JWTTokenDTO jwtTokenDTO) 
+		public async Task<UserDTO> LogOut(JWTTokenDTO jwtTokenDTO) 
 		{
 			return await usersRepository.ClearToken(jwtTokenDTO);
 		}

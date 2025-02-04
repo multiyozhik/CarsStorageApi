@@ -22,7 +22,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("CarsStorage.DAL.Entities.AppUserEntity", b =>
+            modelBuilder.Entity("CarsStorage.DAL.Entities.UserEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -135,13 +135,13 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("CarsStorage.DAL.Entities.UsersRolesEntity", b =>
                 {
-                    b.Property<string>("IdentityAppUserId")
+                    b.Property<string>("UserEntityId")
                         .HasColumnType("text");
 
                     b.Property<int>("RoleEntityId")
                         .HasColumnType("integer");
 
-                    b.HasKey("IdentityAppUserId", "RoleEntityId");
+                    b.HasKey("UserEntityId", "RoleEntityId");
 
                     b.HasIndex("RoleEntityId");
 
@@ -282,9 +282,9 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("CarsStorage.DAL.Entities.UsersRolesEntity", b =>
                 {
-                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", "AppUserEntity")
+                    b.HasOne("CarsStorage.DAL.Entities.UserEntity", "UserEntity")
                         .WithMany("UserRolesList")
-                        .HasForeignKey("IdentityAppUserId")
+                        .HasForeignKey("UserEntityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -294,7 +294,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AppUserEntity");
+                    b.Navigation("UserEntity");
 
                     b.Navigation("RoleEntity");
                 });
@@ -310,7 +310,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", null)
+                    b.HasOne("CarsStorage.DAL.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -319,7 +319,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", null)
+                    b.HasOne("CarsStorage.DAL.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -334,7 +334,7 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", null)
+                    b.HasOne("CarsStorage.DAL.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -343,14 +343,14 @@ namespace CarsStorage.DAL.Migrations.IdentityAppDb
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("CarsStorage.DAL.Entities.AppUserEntity", null)
+                    b.HasOne("CarsStorage.DAL.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CarsStorage.DAL.Entities.AppUserEntity", b =>
+            modelBuilder.Entity("CarsStorage.DAL.Entities.UserEntity", b =>
                 {
                     b.Navigation("UserRolesList");
                 });

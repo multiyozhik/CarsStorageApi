@@ -1,13 +1,13 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.Models;
-using CarsStorageApi.Models;
+using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
+using CarsStorageApi.Models.UserModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorageApi.Controllers
 {
-	[ApiController]
+    [ApiController]
 	[Authorize(Policy = "RequierManageUsers")]
 	[Route("[controller]/[action]")]
 	
@@ -30,7 +30,7 @@ namespace CarsStorageApi.Controllers
 		{
 			var serviceResult = await usersService.GetById(id);
 
-			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+			if (serviceResult.IsSuccess)
 				return mapper.Map<UserRequestResponse>(serviceResult.Result);
 			else
 				return BadRequest(serviceResult.ErrorMessage);
@@ -40,9 +40,9 @@ namespace CarsStorageApi.Controllers
 		[HttpPost]
 		public async Task<ActionResult<UserRequestResponse>> Create([FromBody] UserRequest userRequest)			
 		{
-			var serviceResult = await usersService.Create(mapper.Map<AppUserCreaterDTO>(userRequest));
+			var serviceResult = await usersService.Create(mapper.Map<UserCreaterDTO>(userRequest));
 
-			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+			if (serviceResult.IsSuccess)
 				return mapper.Map<UserRequestResponse>(serviceResult.Result);
 			else
 				return BadRequest(serviceResult.ErrorMessage);
@@ -50,11 +50,11 @@ namespace CarsStorageApi.Controllers
 
 
 		[HttpPut]
-		public async Task<ActionResult<UserRequestResponse>> Update([FromBody] UserRequestResponse userDTO)
+		public async Task<ActionResult<UserRequestResponse>> Update([FromBody] UserRequestResponse userRequestResponse)
 		{
-			var serviceResult = await usersService.Update(mapper.Map<AppUserDTO>(userDTO));
+			var serviceResult = await usersService.Update(mapper.Map<UserDTO>(userRequestResponse));
 
-			if (serviceResult.IsSuccess && serviceResult.Result is not null)
+			if (serviceResult.IsSuccess)
 				return mapper.Map<UserRequestResponse>(serviceResult.Result);
 			else
 				return BadRequest(serviceResult.ErrorMessage);

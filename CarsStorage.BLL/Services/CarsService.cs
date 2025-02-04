@@ -1,17 +1,18 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-	/// <summary>
-	/// Сервис для выполнения CRUD-операций для автомобилей.
-	/// </summary>
-	/// <param name="carsRepository"></param>
+    /// <summary>
+    /// Сервис для выполнения CRUD-операций для автомобилей.
+    /// </summary>
+    /// <param name="carsRepository"></param>
 
-	public class CarsService(ICarsRepository carsRepository, IMapper mapper) : ICarsService
+    public class CarsService(ICarsRepository carsRepository, IMapper mapper) : ICarsService
 	{
 		public async Task<ServiceResult<List<CarDTO>>> GetList()
 		{

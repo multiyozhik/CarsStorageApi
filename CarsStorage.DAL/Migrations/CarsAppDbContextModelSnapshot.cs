@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace CarsStorage.DAL.Migrations
 {
-    [DbContext(typeof(CarsAppDbContext))]
+    [DbContext(typeof(CarsDbContext))]
     partial class CarsAppDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

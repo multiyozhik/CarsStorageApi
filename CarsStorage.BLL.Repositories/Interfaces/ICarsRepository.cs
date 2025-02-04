@@ -1,9 +1,9 @@
-﻿using CarsStorage.BLL.Abstractions.Models;
+﻿using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Repositories.Interfaces
 {
-	public interface ICarsRepository
+    public interface ICarsRepository
 	{
 		public Task<List<CarEntity>> GetList();
 		public Task<CarEntity> Create(CarCreaterDTO carCreaterDTO);

@@ -1,5 +1,5 @@
-﻿using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.Models;
+﻿using CarsStorage.BLL.Abstractions.Config;
+using CarsStorage.BLL.Abstractions.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -9,11 +9,11 @@ using System.Text;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-	/// <summary>
-	/// Сервис для методов токенов доступа.
-	/// </summary>
-	/// <param name="jwtConfig"></param>
-	public class TokensService(IOptions<JWTConfig> jwtOptions) : ITokensService
+    /// <summary>
+    /// Сервис для методов токенов доступа.
+    /// </summary>
+    /// <param name="jwtConfig"></param>
+    public class TokensService(IOptions<JWTConfig> jwtOptions) : ITokensService
 	{
 		/// <summary>
 		/// Метод генерации токена доступа.

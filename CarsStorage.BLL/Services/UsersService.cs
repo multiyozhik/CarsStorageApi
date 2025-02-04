@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
@@ -8,62 +9,61 @@ using System.Security.Claims;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-	public class UsersService(IUsersRepository usersRepository, IMapper mapper) : IUsersService
+    public class UsersService(IUsersRepository usersRepository, IRolesRepository rolesRepository,  IMapper mapper) : IUsersService
 	{
-		private List<Claim> claims = [];
-		public async Task<ServiceResult<List<AppUserDTO>>> GetList()
+		public async Task<ServiceResult<List<UserDTO>>> GetList()
 		{
 			try
 			{
 				var identityAppUsersList = await usersRepository.GetList();
-				var appUserDTOList = identityAppUsersList.Select(mapper.Map<AppUserDTO>).ToList();
-				return new ServiceResult<List<AppUserDTO>>(appUserDTOList, null);
+				var appUserDTOList = identityAppUsersList.Select(mapper.Map<UserDTO>).ToList();
+				return new ServiceResult<List<UserDTO>>(appUserDTOList, null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<List<AppUserDTO>>(null, exception.Message);
+				return new ServiceResult<List<UserDTO>>(null, exception.Message);
 			}
 		}
 
 
-		public async Task<ServiceResult<AppUserDTO>> GetById(int id)
+		public async Task<ServiceResult<UserDTO>> GetById(int id)
 		{
 			try
 			{
 				var identityAppUser = await usersRepository.GetById(id);
-				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(identityAppUser), null);
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(identityAppUser), null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<AppUserDTO>(null, exception.Message);
+				return new ServiceResult<UserDTO>(null, exception.Message);
 			}
 		}
 
 
-		public async Task<ServiceResult<AppUserDTO>> Create(AppUserCreaterDTO appUserCreaterDTO)
+		public async Task<ServiceResult<UserDTO>> Create(UserCreaterDTO userCreaterDTO)
 		{
 			try
 			{
-				var identityAppUser = await usersRepository.Create(mapper.Map<IdentityAppUserCreater>(appUserCreaterDTO));
-				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(identityAppUser), null);
+				var userEntity = await usersRepository.Create(mapper.Map<UserCreater>(userCreaterDTO));
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(userEntity), null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<AppUserDTO>(null, exception.Message);
+				return new ServiceResult<UserDTO>(null, exception.Message);
 			}
 		}
 
 
-		public async Task<ServiceResult<AppUserDTO>> Update(AppUserDTO appUserDTO)
+		public async Task<ServiceResult<UserDTO>> Update(UserDTO userDTO)
 		{
 			try
 			{
-				var identityAppUser = await usersRepository.Update(mapper.Map<AppUserEntity>(appUserDTO));
-				return new ServiceResult<AppUserDTO>(mapper.Map<AppUserDTO>(identityAppUser), null);
+				var userEntity = await usersRepository.Update(mapper.Map<UserEntity>(userDTO));
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(userEntity), null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<AppUserDTO>(null, exception.Message);
+				return new ServiceResult<UserDTO>(null, exception.Message);
 			}
 		}
 
@@ -80,16 +80,16 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-		public async Task<ServiceResult<AppUserDTO>> GetUserByRefreshToken(string refreshToken)
+		public async Task<ServiceResult<UserDTO>> GetUserByRefreshToken(string refreshToken)
 		{
 			try
 			{
 				var user = await usersRepository.GetUserByRefreshToken(refreshToken);
-				return new ServiceResult<AppUserDTO>(user, null);
+				return new ServiceResult<UserDTO>(user, null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<AppUserDTO>(null, exception.Message);
+				return new ServiceResult<UserDTO>(null, exception.Message);
 			}			
 		}
 	}

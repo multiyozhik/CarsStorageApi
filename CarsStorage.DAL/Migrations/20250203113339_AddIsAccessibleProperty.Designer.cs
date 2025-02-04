@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace CarsStorage.DAL.Migrations
 {
-    [DbContext(typeof(CarsAppDbContext))]
+    [DbContext(typeof(CarsDbContext))]
     [Migration("20250203113339_AddIsAccessibleProperty")]
     partial class AddIsAccessibleProperty
     {

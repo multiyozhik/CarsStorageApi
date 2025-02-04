@@ -1,13 +1,15 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
+using CarsStorage.BLL.Abstractions.ModelsDTO.RoleDTO;
+using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Entities;
 using System.Security.Claims;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
-	public class RolesService(IRolesRepository rolesRepository, IMapper mapper) : IRolesService
+    public class RolesService(IRolesRepository rolesRepository, IMapper mapper) : IRolesService
 	{
 		public async Task<ServiceResult<List<RoleDTO>>> GetList()
 		{
@@ -50,9 +52,9 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-		public List<Claim> GetClaimsByUser(AppUserDTO appUserDTO)
+		public List<Claim> GetClaimsByUser(UserDTO appUserDTO)
 		{
-			return rolesRepository.GetClaimsByUser(mapper.Map<AppUserEntity>(appUserDTO)).ToList();
+			return rolesRepository.GetClaimsByUser(mapper.Map<UserEntity>(appUserDTO)).ToList();
 		}
 	}
 }
