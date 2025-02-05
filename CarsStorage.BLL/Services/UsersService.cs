@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Exceptions;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
@@ -20,13 +21,13 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var identityAppUsersList = await usersRepository.GetList();
-				var appUserDTOList = identityAppUsersList.Select(mapper.Map<UserDTO>).ToList();
-				return new ServiceResult<List<UserDTO>>(appUserDTOList, null);
+				var userEntityList = await usersRepository.GetList();
+				var userDTOList = userEntityList.Select(mapper.Map<UserDTO>).ToList();
+				return new ServiceResult<List<UserDTO>>(userDTOList, null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<List<UserDTO>>(null, exception.Message);
+				return new ServiceResult<List<UserDTO>>(null, new NotFoundException(exception.Message));
 			}
 		}
 
@@ -43,7 +44,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<UserDTO>(null, exception.Message);
+				return new ServiceResult<UserDTO>(null, new NotFoundException(exception.Message));
 			}
 		}
 
@@ -60,7 +61,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<UserDTO>(null, exception.Message);
+				return new ServiceResult<UserDTO>(null, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -77,7 +78,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<UserDTO>(null, exception.Message);
+				return new ServiceResult<UserDTO>(null, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -93,7 +94,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<int>(id, exception.Message);
+				return new ServiceResult<int>(id, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -109,7 +110,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<UserDTO>(null, exception.Message);
+				return new ServiceResult<UserDTO>(null, new UnauthorizedException(exception.Message));
 			}			
 		}
 	}

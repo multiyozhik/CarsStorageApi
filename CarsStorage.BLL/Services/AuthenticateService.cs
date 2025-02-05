@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Exceptions;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.AuthModels;
@@ -34,7 +35,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<UserCreaterWithRolesDTO>(null, exception.Message);
+				return new ServiceResult<UserCreaterWithRolesDTO>(null, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -47,17 +48,22 @@ namespace CarsStorage.BLL.Implementations.Services
 		public async Task<ServiceResult<JWTTokenDTO>> LogIn(UserLoginDTO userLoginDTO) 
 		{
 			try
-			{				
-				var userEntity = await usersRepository.FindByName(userLoginDTO.UserName)
-					?? throw new Exception("Неверный логин.");
+			{
+				var userEntity = await usersRepository.FindByName(userLoginDTO.UserName);
+				if (userEntity is null)
+					return new ServiceResult<JWTTokenDTO>(null, new ForbiddenException("Неверный логин."));
 				if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.PasswordHash.hash, userEntity.PasswordHash.salt))
-					throw new Exception("Неверный пароль.");
+					return new ServiceResult<JWTTokenDTO>(null, new ForbiddenException("Неверный пароль."));
 
 				var claimsList = rolesRepository.GetClaimsByUser(mapper.Map<UserEntity>(userLoginDTO));
+
+				var accessToken = await tokenService.GetAccessToken(claimsList);
+				var refreshToken = await tokenService.GetRefreshToken();
+
 				var jwtTokenDTO = new JWTTokenDTO()
 				{
-					AccessToken = tokenService.GetAccessToken(claimsList, out DateTime accessTokenExpires),
-					RefreshToken = tokenService.GetRefreshToken()
+					AccessToken = accessToken.Result,
+					RefreshToken = refreshToken.Result
 				};
 
 				await usersRepository.UpdateToken(userEntity.Id, jwtTokenDTO);
@@ -65,7 +71,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<JWTTokenDTO>(null, exception.Message);
+				return new ServiceResult<JWTTokenDTO>(null, new UnauthorizedAccessException(exception.Message));
 			}
 		}
 
@@ -79,22 +85,26 @@ namespace CarsStorage.BLL.Implementations.Services
 			var refreshingToken = jwtTokenDTO;
 			try
 			{
-				var user = await usersRepository.GetUserByRefreshToken(refreshingToken.RefreshToken)
-					?? throw new Exception("Пользователь с таким refresh_token не найден");
+				var user = await usersRepository.GetUserByRefreshToken(refreshingToken.RefreshToken);
+				if (user is null)
+					return new ServiceResult<JWTTokenDTO>(null, new BadRequestException("Пользователь с таким refresh_token не найден"));
 
-				var principal = tokenService.GetClaimsPrincipalFromExperedTokenWithValidation(user.AccessToken);
+				var principal = await tokenService.GetClaimsPrincipalFromExperedTokenWithValidation(user.AccessToken);
+
+				var accessToken = await tokenService.GetAccessToken(principal.Result.Claims.ToList());
+				var refreshToken = await tokenService.GetRefreshToken();
 
 				refreshingToken = new JWTTokenDTO()
 				{
-					AccessToken = tokenService.GetAccessToken(principal.Claims.ToList(), out DateTime expires),
-					RefreshToken = tokenService.GetRefreshToken()
+					AccessToken = accessToken.Result,
+					RefreshToken = refreshToken.Result
 				};
 				await usersRepository.UpdateToken(user.Id, refreshingToken);
 				return new ServiceResult<JWTTokenDTO>(refreshingToken, null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<JWTTokenDTO>(null, exception.Message);
+				return new ServiceResult<JWTTokenDTO>(null, new UnauthorizedAccessException(exception.Message));
 			}
 		}
 
@@ -102,9 +112,17 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// <summary>
 		/// Метод для выхода пользователя из приложения, возвращает как результат вышедшего пользователя.
 		/// </summary>
-		public async Task<UserDTO> LogOut(JWTTokenDTO jwtTokenDTO) 
+		public async Task<ServiceResult<UserDTO>> LogOut(JWTTokenDTO jwtTokenDTO) 
 		{
-			return await usersRepository.ClearToken(jwtTokenDTO);
+			try
+			{
+				var user = await usersRepository.ClearToken(jwtTokenDTO);
+				return new ServiceResult<UserDTO>(user, null);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<UserDTO>(null, new BadRequestException(exception.Message));
+			}
 		}
 	}
 }

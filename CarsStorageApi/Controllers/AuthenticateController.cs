@@ -3,19 +3,20 @@ using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.ModelsDTO.AuthModels;
 using CarsStorageApi.Models.AuthModels;
 using CarsStorageApi.Models.UserModels;
+using CarsStorageApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorageApi.Controllers
 {
-    /// <summary>
-    /// Класс контроллер для аутентификации пользователя.
-    /// </summary>
-    /// <param name="authService"></param>
-    /// <param name="mapper"></param>
-    [ApiController]
+	/// <summary>
+	/// Класс контроллер для аутентификации пользователя.
+	/// </summary>
+	/// <param name="authService"></param>
+	/// <param name="mapper"></param>
+	[ApiController]
 	[Route("[controller]/[action]")]		
-	public class AuthenticateController(IAuthenticateService authService, IMapper mapper) : ControllerBase
+	public class AuthenticateController(IAuthenticateService authService, HttpContext httpContext, IMapper mapper) : ControllerBase
 	{
 		/// <summary>
 		/// Метод контроллера регистрации пользователя.
@@ -29,10 +30,8 @@ namespace CarsStorageApi.Controllers
 			var serviceResult = await authService.Register(mapper.Map<UserRegisterDTO>(registerUserDataRequest));
 			if (serviceResult.IsSuccess)
 				return mapper.Map<UserRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
-
 
 		/// <summary>
 		/// Метод контроллера для входа пользователя в приложение.
@@ -46,8 +45,7 @@ namespace CarsStorageApi.Controllers
 			var serviceResult = await authService.LogIn(mapper.Map<UserLoginDTO>(loginDataRequest));
 			if (serviceResult.IsSuccess)
 				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 
@@ -66,8 +64,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 
@@ -81,8 +78,10 @@ namespace CarsStorageApi.Controllers
 		{
 			if (jwtTokenRequestResponse is null || string.IsNullOrEmpty(jwtTokenRequestResponse.RefreshToken))
 				return Unauthorized();
-			var appUserDto = await authService.LogOut(mapper.Map<JWTTokenDTO>(jwtTokenRequestResponse));
-			return mapper.Map<UserRequestResponse>(appUserDto);
+			var serviceResult = await authService.LogOut(mapper.Map<JWTTokenDTO>(jwtTokenRequestResponse));
+			if (serviceResult.IsSuccess)				
+				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 	}
 }

@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Exceptions;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
+using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
 
 namespace CarsStorage.BLL.Implementations.Services
@@ -24,7 +26,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<List<CarDTO>>(null, exception.Message);
+				return new ServiceResult<List<CarDTO>>(null, new NotFoundException(exception.Message));
 			}			
 		}
 
@@ -40,7 +42,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<CarDTO>(null, exception.Message);
+				return new ServiceResult<CarDTO>(null, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -56,7 +58,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<CarDTO>(null, exception.Message);
+				return new ServiceResult<CarDTO>(null, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -72,7 +74,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<int>(id, exception.Message);
+				return new ServiceResult<int>(id, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -88,7 +90,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<CarDTO>(null, exception.Message);
+				return new ServiceResult<CarDTO>(null, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -104,7 +106,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<CarDTO>(null, exception.Message);
+				return new ServiceResult<CarDTO>(null, new BadRequestException(exception.Message));
 			}
 		}
 	}

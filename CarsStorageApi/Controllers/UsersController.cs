@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
+using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorageApi.Models.UserModels;
+using CarsStorageApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,8 +27,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return serviceResult.Result.Select(mapper.Map<UserRequestResponse>).ToList();
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -39,8 +40,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<UserRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -53,8 +53,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<UserRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -67,8 +66,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<UserRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -81,8 +79,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return serviceResult.Result;
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 	}
 }

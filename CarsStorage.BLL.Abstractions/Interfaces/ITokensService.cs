@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using CarsStorage.BLL.Abstractions.Models;
+using System.Security.Claims;
 
 namespace CarsStorage.BLL.Abstractions.Interfaces
 {
@@ -7,8 +8,8 @@ namespace CarsStorage.BLL.Abstractions.Interfaces
 	/// </summary>
 	public interface ITokensService
 	{
-		public string GetAccessToken(IEnumerable<Claim> claims, out DateTime accessTokenExpires);
-		public string GetRefreshToken();
-		public ClaimsPrincipal GetClaimsPrincipalFromExperedTokenWithValidation(string experedToken);
+		public Task<ServiceResult<string>> GetAccessToken(IEnumerable<Claim> claims);
+		public Task<ServiceResult<string>> GetRefreshToken();
+		public Task<ServiceResult<ClaimsPrincipal>> GetClaimsPrincipalFromExperedTokenWithValidation(string experedToken);
 	}
 }

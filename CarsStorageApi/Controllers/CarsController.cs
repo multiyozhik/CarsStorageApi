@@ -2,6 +2,7 @@ using AutoMapper;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorageApi.Models.CarModels;
+using CarsStorageApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,8 +31,7 @@ namespace CarsStorageApi.Controllers
 					? carsList.Where(c => c.IsAccassible).ToList()
 					: carsList;
 			}
-			else
-				return BadRequest(serviceResult.ErrorMessage);			
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 
@@ -46,8 +46,7 @@ namespace CarsStorageApi.Controllers
 			
 			if (serviceResult.IsSuccess)
 				return mapper.Map<CarRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -61,8 +60,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<CarRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -76,8 +74,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<int>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -91,8 +88,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<CarRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -106,8 +102,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<CarRequestResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ErrorMessage);
+			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 	}
 }

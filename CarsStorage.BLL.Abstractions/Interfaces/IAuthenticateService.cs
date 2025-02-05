@@ -12,6 +12,6 @@ namespace CarsStorage.BLL.Abstractions.Interfaces
 		public Task<ServiceResult<UserCreaterWithRolesDTO>> Register(UserRegisterDTO userRegisterDTO);
 		public Task<ServiceResult<JWTTokenDTO>> LogIn(UserLoginDTO userLoginDTO);
 		public Task<ServiceResult<JWTTokenDTO>> RefreshToken(JWTTokenDTO jwtTokenDTO);
-		public Task<UserDTO> LogOut(JWTTokenDTO jwtTokenDTO);
+		public Task<ServiceResult<UserDTO>> LogOut(JWTTokenDTO jwtTokenDTO);
 	}
 }

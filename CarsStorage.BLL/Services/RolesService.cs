@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.Exceptions;
 using CarsStorage.BLL.Abstractions.Interfaces;
 using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.RoleDTO;
 using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Entities;
+using System;
 using System.Security.Claims;
 
 namespace CarsStorage.BLL.Implementations.Services
@@ -27,7 +29,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<List<RoleDTO>>(null, exception.Message);
+				return new ServiceResult<List<RoleDTO>>(null, new NotFoundException(exception.Message));
 			}
 		}
 
@@ -43,7 +45,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<RoleDTO>(null, exception.Message);
+				return new ServiceResult<RoleDTO>(null, new BadRequestException(exception.Message));
 			}
 		}
 
@@ -60,16 +62,24 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<List<RoleDTO>>(null, exception.Message);
+				return new ServiceResult<List<RoleDTO>>(null, new BadRequestException(exception.Message));
 			}
 		}
 
 		/// <summary>
 		/// Метод возвращает как результат список клаймов для пользователя.
 		/// </summary>
-		public List<Claim> GetClaimsByUser(UserDTO userDTO)
+		public async Task<ServiceResult<List<Claim>>> GetClaimsByUser(UserDTO userDTO)
 		{
-			return rolesRepository.GetClaimsByUser(mapper.Map<UserEntity>(userDTO));
+			try
+			{
+				var claimsList = rolesRepository.GetClaimsByUser(mapper.Map<UserEntity>(userDTO));
+				return new ServiceResult<List<Claim>>(claimsList, null);
+			}
+			catch(Exception exception)
+			{
+				return new ServiceResult<List<Claim>>(null, new BadRequestException(exception.Message));
+			}
 		}
 	}
 }

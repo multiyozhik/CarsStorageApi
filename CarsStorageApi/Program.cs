@@ -7,7 +7,9 @@ using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.Config;
 using CarsStorage.DAL.EF;
 using CarsStorage.DAL.Utils;
+using CarsStorageApi.Filters;
 using CarsStorageApi.Mappers;
+using CarsStorageApi.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -100,7 +102,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IPasswordHasher, PasswordHasher>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>();
-	
+
+	services.AddControllers(options =>
+	{
+		options.Filters.Add<GlobalExceptionFilter>();
+	});
+
 	services.AddAuthentication(options =>
 	{
 		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -150,11 +157,15 @@ static void Configure(WebApplication app, IHostEnvironment env)
 		});
 	}
 
+	//app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 	app.UseHsts();
 
 	app.UseHttpsRedirection();
 
 	app.UseRouting();
+
+	app.UseStatusCodePages();
 
 	app.UseAuthentication();
 
