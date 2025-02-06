@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
-using CarsStorage.DAL.EF;
+using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,17 +10,15 @@ namespace CarsStorage.BLL.Repositories.Implementations
 	/// <summary>
 	/// Класс репозитория автомобилей.
 	/// </summary>
-	public class CarsRepository(CarsDbContext dbContext, IMapper mapper) : ICarsRepository
+	public class CarsRepository(AppDbContext dbContext, IMapper mapper) : ICarsRepository
 	{
-		private readonly CarsDbContext dbContext = dbContext;
+		private readonly AppDbContext dbContext = dbContext;
 
 		/// <summary>
 		/// Метод получения всего списка автомобилей.
 		/// </summary>
 		public async Task<List<CarEntity>> GetList()
-		{
-			return await dbContext.Cars.ToListAsync();
-		}
+			=> await dbContext.Cars.ToListAsync();
 
 
 		/// <summary>

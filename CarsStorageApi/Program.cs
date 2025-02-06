@@ -4,12 +4,10 @@ using CarsStorage.BLL.Abstractions.Mappers;
 using CarsStorage.BLL.Implementations.Services;
 using CarsStorage.BLL.Repositories.Implementations;
 using CarsStorage.BLL.Repositories.Interfaces;
+using CarsStorage.BLL.Repositories.Utils;
 using CarsStorage.DAL.Config;
-using CarsStorage.DAL.EF;
-using CarsStorage.DAL.Utils;
-using CarsStorageApi.Filters;
+using CarsStorage.DAL.DbContexts;
 using CarsStorageApi.Mappers;
-using CarsStorageApi.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -66,11 +64,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		);
 	});
 
-	services.Configure<AdminConfig>(config.GetSection("AdminConfig"));
+	services.Configure<InitialConfig>(config.GetSection("InitialConfig"));
 	services.Configure<JWTConfig>(config.GetSection("JwtConfig"));
-	services.Configure<InitialDbSeedConfig>(config.GetSection("InitialDbSeedConfig"));
-
-	services.AddOptions<AdminConfig>();
 	services.AddOptions<JWTConfig>();
 
 	services.Configure<IdentityOptions>(options =>
@@ -86,10 +81,10 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 	});
 
-	services.AddDbContext<CarsDbContext>(options =>
+	services.AddDbContext<AppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
-	services.AddDbContext<UsersRolesDbContext>(options =>
+	services.AddDbContext<AppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services
@@ -103,10 +98,11 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>();
 
-	services.AddControllers(options =>
-	{
-		options.Filters.Add<GlobalExceptionFilter>();
-	});
+	//подключение фильтра
+	//services.AddControllers(options =>
+	//{
+	//	options.Filters.Add<GlobalExceptionFilter>();
+	//});
 
 	services.AddAuthentication(options =>
 	{
@@ -157,6 +153,7 @@ static void Configure(WebApplication app, IHostEnvironment env)
 		});
 	}
 
+	//подключение middleware исключений
 	//app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 	app.UseHsts();

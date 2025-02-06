@@ -5,10 +5,10 @@ using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.AuthModels;
 using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
+using CarsStorage.BLL.Repositories.Utils;
 using CarsStorage.DAL.Config;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
-using CarsStorage.DAL.Utils;
 using Microsoft.Extensions.Options;
 
 namespace CarsStorage.BLL.Implementations.Services
@@ -17,7 +17,7 @@ namespace CarsStorage.BLL.Implementations.Services
 	/// Сервис для аутентификации.
 	/// </summary>
 	public class AuthenticateService(IUsersRepository usersRepository, IRolesRepository rolesRepository, ITokensService tokenService, 
-		IMapper mapper, IOptions<InitialDbSeedConfig> initialOptions, IPasswordHasher passwordHasher) : IAuthenticateService
+		IMapper mapper, IOptions<InitialConfig> initialOptions, IPasswordHasher passwordHasher) : IAuthenticateService
 	{
 		/// <summary>
 		/// Метод для регистрации пользователя в приложении.
@@ -52,7 +52,7 @@ namespace CarsStorage.BLL.Implementations.Services
 				var userEntity = await usersRepository.FindByName(userLoginDTO.UserName);
 				if (userEntity is null)
 					return new ServiceResult<JWTTokenDTO>(null, new ForbiddenException("Неверный логин."));
-				if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.PasswordHash.hash, userEntity.PasswordHash.salt))
+				if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.Hash, userEntity.Salt))
 					return new ServiceResult<JWTTokenDTO>(null, new ForbiddenException("Неверный пароль."));
 
 				var claimsList = rolesRepository.GetClaimsByUser(mapper.Map<UserEntity>(userLoginDTO));
@@ -66,7 +66,7 @@ namespace CarsStorage.BLL.Implementations.Services
 					RefreshToken = refreshToken.Result
 				};
 
-				await usersRepository.UpdateToken(userEntity.Id, jwtTokenDTO);
+				await usersRepository.UpdateToken(userEntity.UserEntityId, jwtTokenDTO);
 				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null);				
 			}
 			catch (Exception exception)
@@ -99,7 +99,7 @@ namespace CarsStorage.BLL.Implementations.Services
 					AccessToken = accessToken.Result,
 					RefreshToken = refreshToken.Result
 				};
-				await usersRepository.UpdateToken(user.Id, refreshingToken);
+				await usersRepository.UpdateToken(user.UserEntityId, refreshingToken);
 				return new ServiceResult<JWTTokenDTO>(refreshingToken, null);
 			}
 			catch (Exception exception)
@@ -117,7 +117,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var user = await usersRepository.ClearToken(jwtTokenDTO);
-				return new ServiceResult<UserDTO>(user, null);
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(user), null);
 			}
 			catch (Exception exception)
 			{

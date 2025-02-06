@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.ModelsDTO.AuthModels;
-using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
-using CarsStorage.DAL.EF;
+using CarsStorage.BLL.Repositories.Utils;
+using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
-using CarsStorage.DAL.Utils;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.BLL.Repositories.Implementations
@@ -13,14 +13,12 @@ namespace CarsStorage.BLL.Repositories.Implementations
 	/// <summary>
 	/// Класс репозитория для пользователей.
 	/// </summary>
-	public class UsersRepository(UsersRolesDbContext dbContext, IPasswordHasher passwordHasher, IMapper mapper) : IUsersRepository
+	public class UsersRepository(AppDbContext dbContext, IPasswordHasher passwordHasher, IMapper mapper) : IUsersRepository
 	{
 		/// <summary>
 		/// Метод возвращает список всех сущностей пользователей.
 		public async Task<List<UserEntity>> GetList()
-		{
-			return await dbContext.Users.ToListAsync();
-		}
+			=> await dbContext.Users.ToListAsync();
 
 
 		/// <summary>
@@ -28,7 +26,7 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		/// </summary>
 		public async Task<UserEntity> GetById(int id)
 		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == id);
 			return userEntity is not null ? userEntity : throw new Exception("Не найден пользователь по id");
 		}
 
@@ -49,14 +47,16 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		public async Task<UserRegister> Create(UserCreater userCreater)
 		{
 			var rolesListNames = userCreater.Roles.ToList();
-
 			var rolesList = rolesListNames.Select(roleName => new RoleEntity(roleName)).ToList();
+
+			var password = passwordHasher.HashPassword(userCreater.Password);
 
 			var userEntity = new UserEntity
 			{
 				UserName = userCreater.UserName,
 				Email = userCreater.Email,
-				PasswordHash = passwordHasher.HashPassword(userCreater.Password),
+				Hash = password.Hash,
+				Salt = password.Salt,
 				RolesList = rolesList
 			};
 
@@ -72,7 +72,7 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		/// </summary>
 		public async Task<UserEntity> Update(UserEntity user)
 		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == user.Id)
+			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == user.UserEntityId)
 				?? throw new Exception("Пользователь с заданным Id не найден");
 			userEntity.UserName = user.UserName;
 			userEntity.Email = user.Email;
@@ -89,7 +89,7 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		/// </summary>
 		public async Task Delete(int id)
 		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id)
+			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == id)
 				?? throw new Exception("Пользователь с заданным Id не найден");
 			dbContext.Users.Remove(userEntity);
 			await dbContext.SaveChangesAsync();
@@ -101,7 +101,7 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		/// </summary>
 		public async Task UpdateToken(int id, JWTTokenDTO jwtTokenDTO)
 		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id)
+			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == id)
 				?? throw new Exception("Пользователь с заданным Id не найден");
 			userEntity.RefreshToken = jwtTokenDTO.RefreshToken;
 			userEntity.AccessToken = jwtTokenDTO.AccessToken;
@@ -112,16 +112,13 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		/// <summary>
 		/// Метод возвращает пользователя по полученному refresh-токену.
 		/// </summary>
-		public async Task<UserDTO> GetUserByRefreshToken(string refreshToken)
-		{
-			var user = await dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
-			return mapper.Map<UserDTO>(user);
-		}
+		public async Task<UserEntity> GetUserByRefreshToken(string refreshToken)
+			=> await dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
 		/// <summary>
 		/// Метод очищает токен в БД и возвращает пользователя, который вышел из системы.
 		/// </summary>
-		public async Task<UserDTO> ClearToken(JWTTokenDTO jwtTokenDTO)
+		public async Task<UserEntity> ClearToken(JWTTokenDTO jwtTokenDTO)
 		{
 			var user = await GetUserByRefreshToken(jwtTokenDTO.RefreshToken)
 				?? throw new Exception("Не найден пользователь по id");

@@ -17,7 +17,7 @@ namespace CarsStorage.BLL.Repositories.Interfaces
 		public Task<UserEntity> Update(UserEntity userEntity);
 		public Task Delete(int id);
 		public Task UpdateToken(int id, JWTTokenDTO jwtTokenDTO);
-		public Task<UserDTO> GetUserByRefreshToken(string refreshToken);
-		public Task<UserDTO> ClearToken(JWTTokenDTO jwtTokenDTO);
+		public Task<UserEntity> GetUserByRefreshToken(string refreshToken);
+		public Task<UserEntity> ClearToken(JWTTokenDTO jwtTokenDTO);
 	}
 }

@@ -1,22 +1,31 @@
 ﻿using System.Security.Cryptography;
 
-namespace CarsStorage.DAL.Utils
+namespace CarsStorage.BLL.Repositories.Utils
 {
     /// <summary>
-    /// Класс для  хеширования пароля с использованием Rfc2898DeriveBytes и рандомной соли с помощью RandomNumberGenerator. 
+    /// Класс пароля (свойства хеш и соль) используется в БД как свойство сущности пользователя.
     /// </summary>
-    public class PasswordHasher : IPasswordHasher
+    public class Password(string hash, string salt)
+	{
+        public string Hash { get; set; } = hash;
+        public string Salt { get; set; } = salt;
+    }
+
+
+	/// <summary>
+	/// Класс для  хеширования пароля с использованием Rfc2898DeriveBytes и рандомной соли с помощью RandomNumberGenerator. 
+	/// </summary>
+	public class PasswordHasher : IPasswordHasher
     {
         /// <summary>
         /// Метод хеширования пароля с использованием Rfc2898DeriveBytes и рандомной соли с помощью RandomNumberGenerator.
         /// </summary>
-        /// <param name="password"></param>
         /// <returns>Возвращает хеш и соль пароля.</returns>
-        public (string hash, string salt) HashPassword(string password)
+        public Password HashPassword(string password)
         {
             var salt = GenerateSalt();
             var hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 32);
-            return (Convert.ToBase64String(hash), Convert.ToBase64String(salt));
+            return new Password(Convert.ToBase64String(hash), Convert.ToBase64String(salt));
         }
 
 
@@ -39,7 +48,6 @@ namespace CarsStorage.DAL.Utils
         /// <summary>
         /// Метод генерации соли с помощью генератора рандомных чисел (побайтно).
         /// </summary>
-        /// <param name="size"></param>
         /// <returns>Возвращает соль в виде массива байтов.</returns>
         private static byte[] GenerateSalt(int size = 16)
         {

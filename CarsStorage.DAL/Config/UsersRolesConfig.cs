@@ -7,25 +7,29 @@ namespace CarsStorage.DAL.Config
 	/// <summary>
 	/// Класс определяет конфигурацию для UsersRolesEntity сущности. 
 	/// </summary>
-	public class UsersRolesConfig(InitialDbSeedConfig initialDbSeedConfig) : IEntityTypeConfiguration<UsersRolesEntity>
+	public class UsersRolesConfig() : IEntityTypeConfiguration<UsersRolesEntity>
 	{
-		private readonly List<UsersRolesEntity> usersRolesList = GetUsersRolesEntities(initialDbSeedConfig);
-		private static List<UsersRolesEntity> GetUsersRolesEntities(InitialDbSeedConfig initialDbSeedConfig)
-		{
-			var usersRolesList = Enumerable.Range(3, initialDbSeedConfig.InitialUsersCount)
-				.Select(index => new UsersRolesEntity
-				{
-					UserEntityId = index,
-					RoleEntityId = 3
-				}).ToList();
-			usersRolesList.Add(new UsersRolesEntity { UserEntityId = 1, RoleEntityId = 1 });
-			usersRolesList.Add(new UsersRolesEntity { UserEntityId = 2, RoleEntityId = 2 });
-			return usersRolesList;
-		}
-
 		public void Configure(EntityTypeBuilder<UsersRolesEntity> builder)
 		{
-			builder.HasData(usersRolesList);
+			builder
+			   .HasOne(e => e.UserEntity)
+			   .WithMany(s => s.UserRolesList)
+			   .HasForeignKey(e => e.UserEntityId);
+
+			builder
+				.HasOne(e => e.RoleEntity)
+				.WithMany(c => c.UserRolesList)
+				.HasForeignKey(e => e.RoleEntityId);
+
+			builder.HasData(
+				new UsersRolesEntity { UserEntityId = 1, RoleEntityId = 1 },
+				new UsersRolesEntity { UserEntityId = 2, RoleEntityId = 2 },
+				new UsersRolesEntity { UserEntityId = 3, RoleEntityId = 2 },
+				new UsersRolesEntity { UserEntityId = 4, RoleEntityId = 3 },
+				new UsersRolesEntity { UserEntityId = 5, RoleEntityId = 3 });
+
+			builder.HasKey("UserEntityId", "RoleEntityId");
+			builder.ToTable("UsersRoles");
 		}
 	}
 }

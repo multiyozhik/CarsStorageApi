@@ -1,5 +1,5 @@
 ﻿using CarsStorage.BLL.Repositories.Interfaces;
-using CarsStorage.DAL.EF;
+using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -9,15 +9,13 @@ namespace CarsStorage.BLL.Repositories.Implementations
 	/// <summary>
 	/// Класс репозитория для ролей пользователя.
 	/// </summary>
-	public class RolesRepository(UsersRolesDbContext dbContext) : IRolesRepository
+	public class RolesRepository(AppDbContext dbContext) : IRolesRepository
 	{
 		/// <summary>
 		/// Метод получения всего списка возможных ролей.
 		/// </summary>
 		public async Task<List<RoleEntity>> GetList()
-		{
-			return await dbContext.Roles.ToListAsync();
-		}
+			=> await dbContext.Roles.ToListAsync();
 
 
 		/// <summary>
@@ -25,12 +23,11 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		/// </summary>
 		public async Task<RoleEntity> GetRoleById(int id)
 		{
-			var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.Id == id);
+			var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.RoleEntityId == id);
 			return role is not null
 				? role 
 				: throw new Exception("Роль с заданным Id не найдена");
 		}
-		//ToDo: посмотреть, тут надо изменить GetRoleById, т.к. должен возвращать список ролей.
 
 
 		/// <summary>

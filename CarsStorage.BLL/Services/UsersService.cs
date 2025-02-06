@@ -106,7 +106,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var user = await usersRepository.GetUserByRefreshToken(refreshToken);
-				return new ServiceResult<UserDTO>(user, null);
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(user), null);
 			}
 			catch (Exception exception)
 			{

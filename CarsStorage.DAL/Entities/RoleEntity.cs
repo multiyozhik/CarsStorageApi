@@ -5,11 +5,9 @@ namespace CarsStorage.DAL.Entities
     /// <summary>
     /// Класс сущности роли.
     /// </summary>
-    /// <param name="name">Имя роли.</param>
-
     public class RoleEntity(string name)
 	{
-		public int Id { get; set; }
+		public int RoleEntityId { get; set; }
 
 		public string? Name { get; set; } = name;
 
