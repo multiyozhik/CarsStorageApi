@@ -5,6 +5,7 @@ using CarsStorage.BLL.Abstractions.Models;
 using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
+using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
@@ -37,7 +38,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var carEntity = await carsRepository.Create(carCreaterDTO);
+				var carEntity = await carsRepository.Create(mapper.Map<CarEntity>(carCreaterDTO));
 				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity), null);
 			}
 			catch (Exception exception)
@@ -53,7 +54,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var carEntity = await carsRepository.Update(carDTO);
+				var carEntity = await carsRepository.Update(mapper.Map<CarEntity>(carDTO));
 				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity), null);
 			}
 			catch (Exception exception)

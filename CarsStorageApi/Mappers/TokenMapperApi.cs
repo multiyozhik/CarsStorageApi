@@ -7,15 +7,13 @@ namespace CarsStorageApi.Mappers
 	/// <summary>
 	/// Класс меппера при аутентификации пользователя.
 	/// </summary>
-	public class AuthMapperApi: Profile
+	public class TokenMapperApi: Profile
 	{
-		public AuthMapperApi() 
+		public TokenMapperApi() 
 		{
-			CreateMap<RegisterUserDataRequest, UserRegisterDTO>();
-
-			CreateMap<LoginDataRequest, UserLoginDTO>();
-
 			CreateMap<JWTTokenDTO, JWTTokenRequestResponse>();
+
+			CreateMap<JWTTokenRequestResponse, JWTTokenDTO> ();
 		}
 	}
 }

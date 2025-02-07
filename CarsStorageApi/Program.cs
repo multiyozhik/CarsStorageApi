@@ -9,10 +9,11 @@ using CarsStorage.DAL.Config;
 using CarsStorage.DAL.DbContexts;
 using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,12 +24,70 @@ var app = builder.Build();
 
 Configure(app, app.Environment);
 
-
 static void ConfigureServices(IServiceCollection services, IConfiguration config)
 {
+	(bool validateIssuer, bool validateAudience, bool validateLifetime, bool validateIssuerSigningKey, bool requireExpirationTime) = ValidateAppConfigs(config);
+
+	services.AddOptions<InitialConfig>().BindConfiguration("InitialConfig");
+
+	services.AddOptions<JWTConfig>().BindConfiguration("JWTConfig");
+
 	services.AddControllers();
 
-	services.AddEndpointsApiExplorer();
+	services.AddEndpointsApiExplorer();	
+
+	services.AddDbContext<AppDbContext>(options =>
+		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
+
+	services
+		.AddScoped<IRolesRepository, RolesRepository>()
+		.AddScoped<IUsersRepository, UsersRepository>()
+		.AddScoped<ICarsRepository, CarsRepository>()
+		.AddScoped<IRolesService, RolesService>()
+		.AddScoped<IUsersService, UsersService>()
+		.AddScoped<ITokensService, TokensService>()
+		.AddScoped<IPasswordHasher, PasswordHasher>()
+		.AddScoped<IAuthenticateService, AuthenticateService>()
+		.AddScoped<ICarsService, CarsService>();
+
+	services.AddAuthentication(options =>
+	{
+		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+		options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+	})
+	.AddJwtBearer(options =>  {
+		var jwt = config.GetSection("JWTConfig");
+		options.TokenValidationParameters = new TokenValidationParameters
+		{			
+			ValidateIssuerSigningKey = true,
+			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"])),
+			ValidateIssuer = validateIssuer,
+			ValidIssuer = jwt["Issuer"],
+			ValidateAudience = validateAudience,
+			ValidAudience = jwt["Audience"],
+			ValidateLifetime = validateLifetime,
+			RequireExpirationTime = requireExpirationTime
+		};
+		options.SaveToken = true;
+		options.IncludeErrorDetails = true;
+  })
+  .AddBearerToken();
+
+
+	services.AddAuthorizationBuilder()
+		.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim("CanManageUsers"); })
+		.AddPolicy("RequierManageUsersRoles", policy => { policy.RequireClaim("CanManageUsersRoles"); })
+		.AddPolicy("RequierManageCars", policy => { policy.RequireClaim("CanManageCars"); })
+		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
+
+	services.AddAutoMapper(typeof(TokenMapperApi), typeof(CarMapperApi), typeof(RoleMapperApi), typeof(UserMapperApi));
+	services.AddAutoMapper(typeof(CarMapper), typeof(RoleMapper), typeof(UserMapper));
+
+	//services.AddAutoMapper(Assembly.Load("CarsStorageApi"));
+	//services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Abstractions"));
+	//services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); //не подключилось автоматически
+
 
 	services.AddSwaggerGen();
 	services.AddSwaggerGen(option =>
@@ -59,87 +118,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 					}
 				},
 				Array.Empty<string>()
-			}
+				}
 			}
 		);
 	});
 
-	services.Configure<InitialConfig>(config.GetSection("InitialConfig"));
-	services.Configure<JWTConfig>(config.GetSection("JwtConfig"));
-	services.AddOptions<JWTConfig>();
 
-	services.Configure<IdentityOptions>(options =>
-	{
-		options.User.RequireUniqueEmail = true;
-		options.Password.RequiredLength = 5;
-		options.Password.RequiredUniqueChars = 1;
-		options.Password.RequireLowercase = false;
-		options.Password.RequireDigit = false;
-		options.Password.RequireNonAlphanumeric = false;
-		options.Password.RequireUppercase = false;
-		options.Lockout.MaxFailedAccessAttempts = 5;
-		options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-	});
-
-	services.AddDbContext<AppDbContext>(options =>
-		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
-
-	services.AddDbContext<AppDbContext>(options =>
-		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
-
-	services
-		.AddScoped<IRolesRepository, RolesRepository>()
-		.AddScoped<IUsersRepository, UsersRepository>()
-		.AddScoped<ICarsRepository, CarsRepository>()
-		.AddScoped<IRolesService, RolesService>()
-		.AddScoped<IUsersService, UsersService>()
-		.AddScoped<ITokensService, TokensService>()
-		.AddScoped<IPasswordHasher, PasswordHasher>()
-		.AddScoped<IAuthenticateService, AuthenticateService>()
-		.AddScoped<ICarsService, CarsService>();
-
-	//подключение фильтра
-	//services.AddControllers(options =>
-	//{
-	//	options.Filters.Add<GlobalExceptionFilter>();
-	//});
-
-	services.AddAuthentication(options =>
-	{
-		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-		options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-	})
-		.AddJwtBearer(options =>
-		{
-			var jwtConfig = config.GetSection("JWTConfig") ?? throw new Exception("Не заданы конфигурации валидации для jwt-токена авторизации");
-			if (string.IsNullOrEmpty(jwtConfig["Key"]))
-				throw new Exception("Не задан секретный ключ jwt-токена авторизации");
-			options.TokenValidationParameters = new TokenValidationParameters
-			{
-				ValidateIssuerSigningKey = true,
-				IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwtConfig["Key"])),
-				ValidateIssuer = bool.Parse(jwtConfig["ValidateIssuer"] ?? "true"),
-				ValidIssuer = jwtConfig["Issuer"],
-				ValidateAudience = bool.Parse(jwtConfig["ValidateAudience"] ?? "true"),
-				ValidAudience = jwtConfig["Audience"],
-				ValidateLifetime = bool.Parse(jwtConfig["ValidateLifetime"] ?? "true"),
-				RequireExpirationTime = bool.Parse(jwtConfig["RequireExpirationTime"] ?? "true")
-			};
-			options.SaveToken = true;
-			options.IncludeErrorDetails = true;
-		})
-		.AddBearerToken();
-
-	services.AddAuthorizationBuilder()
-		.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim("CanManageUsers"); })
-		.AddPolicy("RequierManageUsersRoles", policy => { policy.RequireClaim("CanManageUsersRoles"); })
-		.AddPolicy("RequierManageCars", policy => { policy.RequireClaim("CanManageCars"); })
-		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
-
-	services.AddAutoMapper(typeof(AuthMapperApi), typeof(CarMapperApi), typeof(RoleMapperApi), typeof(UserMapperApi));
-	services.AddAutoMapper(typeof(CarMapper), typeof(RoleMapper), typeof(UserMapper));
-	//services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); //не подключилось автоматически
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -153,7 +137,6 @@ static void Configure(WebApplication app, IHostEnvironment env)
 		});
 	}
 
-	//подключение middleware исключений
 	//app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 	app.UseHsts();
@@ -173,3 +156,46 @@ static void Configure(WebApplication app, IHostEnvironment env)
 	app.Run();
 }
 
+static (bool validateIssuerResult, bool validateAudienceResult, bool validateLifetimeResult, bool validateIssuerSigningKeyResult, bool requireExpirationTimeResult) ValidateAppConfigs(IConfiguration jwtConfig)
+{
+	var initialConfig = jwtConfig.GetSection("InitialConfig")
+		?? throw new Exception("Отсутствуют начальные конфигурации.");
+	if (string.IsNullOrEmpty(initialConfig["DefaultRoleName"]))
+		throw new Exception("Не определена роль пользователя при его регистрации в конфигурациях приложения.");
+
+	var config = jwtConfig.GetSection("JWTConfig")
+		?? throw new Exception("Отсутствуют конфигурации для токена.");
+	if (string.IsNullOrEmpty(config["Key"]))
+		throw new Exception("Не определен секретный ключ токена в конфигурации приложения.");
+	if (string.IsNullOrEmpty(config["Issuer"]))
+		throw new Exception("Не определен издатель токена в конфигурациях приложения.");
+	if (string.IsNullOrEmpty(config["Audience"]))
+		throw new Exception("Не определен получатель токена в конфигурациях приложения.");
+	if (string.IsNullOrEmpty(config["ExpireMinutes"]))
+		throw new Exception("Не определено время жизни токена в конфигурациях приложения.");
+
+	var validateIssuer = config["ValidateIssuer"];
+	var validateAudience = config["ValidateIssuer"];
+	var validateLifetime = config["validateLifetime"];
+	var validateIssuerSigningKey = config["ValidateIssuer"];
+	var requireExpirationTime = config["ValidateIssuer"];
+
+	var validateIssuerResult = true;
+	var validateAudienceResult = true;
+	var validateLifetimeResult = true;
+	var validateIssuerSigningKeyResult = true;
+	var requireExpirationTimeResult = true;
+
+	if (!string.IsNullOrEmpty(validateIssuer) && !bool.TryParse(validateIssuer, out validateIssuerResult))
+			throw new Exception("ValidateIssuer должен быть равным true или false.");
+	if (!string.IsNullOrEmpty(validateAudience) && !bool.TryParse(validateAudience, out validateAudienceResult))		
+		throw new Exception("ValidateAudience должен быть равным true или false.");
+	if (!string.IsNullOrEmpty(validateLifetime) && !bool.TryParse(validateLifetime, out validateLifetimeResult))
+		throw new Exception("ValidateLifetime должен быть равным true или false.");
+	if (!string.IsNullOrEmpty(validateIssuerSigningKey) && !bool.TryParse(validateIssuerSigningKey, out validateIssuerSigningKeyResult))
+		throw new Exception("ValidateIssuerSigningKey должен быть равным true или false.");
+	if (!string.IsNullOrEmpty(requireExpirationTime) && !bool.TryParse(requireExpirationTime, out requireExpirationTimeResult))
+		throw new Exception("RequireExpirationTime должен быть равным true или false.");
+
+	return (validateIssuerResult, validateAudienceResult, validateLifetimeResult, validateIssuerSigningKeyResult, requireExpirationTimeResult);
+}

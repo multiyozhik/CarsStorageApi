@@ -1,17 +1,20 @@
-﻿namespace CarsStorage.BLL.Abstractions.Config
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CarsStorage.BLL.Abstractions.Config
 {
 	/// <summary>
 	/// Класс конфигураций токена для его генерации и валидации.
 	/// </summary>
 	public class JWTConfig
 	{
-		public string Key { get; } = string.Empty;
-		public string Issuer { get; } = string.Empty;
-		public string Audience { get; } = string.Empty;
-		public int ExpireMinutes { get; }
-		public bool ValidateIssuer { get; }
-		public bool ValidateAudience { get; }
-		public bool ValidateIssuerSigningKey { get; }
-		public bool ValidateLifetime { get; }
+		public string? Key { get; set; } 
+		public string? Issuer { get; set; } 
+		public string? Audience { get; set; } 
+		public int ExpireMinutes { get; set; }
+		public bool ValidateIssuer { get; set; } = true;
+		public bool ValidateAudience { get; set; } = true;
+		public bool ValidateIssuerSigningKey { get; set; } = true;
+		public bool ValidateLifetime { get; set; } = true;
+		public bool RequireExpirationTime { get; set; } = true;
 	}
 }

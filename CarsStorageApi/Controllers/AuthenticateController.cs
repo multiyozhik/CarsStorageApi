@@ -16,7 +16,7 @@ namespace CarsStorageApi.Controllers
 	/// <param name="mapper"></param>
 	[ApiController]
 	[Route("[controller]/[action]")]		
-	public class AuthenticateController(IAuthenticateService authService, HttpContext httpContext, IMapper mapper) : ControllerBase
+	public class AuthenticateController(IAuthenticateService authService, IMapper mapper) : ControllerBase
 	{
 		/// <summary>
 		/// Метод контроллера регистрации пользователя.

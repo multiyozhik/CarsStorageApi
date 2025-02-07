@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorage.DAL.Entities;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CarsStorage.BLL.Abstractions.Mappers
 {
@@ -11,11 +12,13 @@ namespace CarsStorage.BLL.Abstractions.Mappers
 	{
 		public CarMapper()
 		{
+			CreateMap<CarEntity, CarDTO>();
+
 			CreateMap<CarDTO, CarEntity>();
 
 			CreateMap<CarCreaterDTO, CarEntity>();
 
-			CreateMap<CarEntity, CarDTO>();
+			CreateMap<EntityEntry<CarEntity>, CarEntity>();
 		}
 	}
 }

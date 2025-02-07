@@ -3,6 +3,7 @@ using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
 using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
+using CarsStorage.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.BLL.Repositories.Implementations
@@ -24,25 +25,25 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		/// <summary>
 		/// Метод создания новой записи автомобиля в БД.
 		/// </summary>
-		public async Task<CarEntity> Create(CarCreaterDTO carCreaterDTO)
+		public async Task<CarEntity> Create(CarEntity car)
 		{
-			var carEntity = await dbContext.Cars.AddAsync(mapper.Map<CarEntity>(carCreaterDTO));
+			var carEntity = await dbContext.Cars.AddAsync(car);
 			await dbContext.SaveChangesAsync();
-			return carEntity.Entity;
+			return mapper.Map<CarEntity>(carEntity);
 		}
 
 
 		/// <summary>
 		/// Метод изменения записи данных автомобиля в БД.
 		/// </summary>
-		public async Task<CarEntity> Update(CarDTO carDTO)
+		public async Task<CarEntity> Update(CarEntity car)
 		{
-			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == carDTO.Id)
+			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == car.Id)
 				?? throw new Exception("Автомобиль с заданным Id не найден");
-			carEntity.Model = carDTO.Model;
-			carEntity.Make = carDTO.Make;
-			carEntity.Color = carDTO.Color;
-			carEntity.Count = carDTO.Count;
+			carEntity.Model = car.Model;
+			carEntity.Make = car.Make;
+			carEntity.Color = car.Color;
+			carEntity.Count = car.Count;
 			dbContext.Cars.Update(carEntity);
 			await dbContext.SaveChangesAsync();
 			return carEntity;

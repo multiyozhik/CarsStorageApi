@@ -11,11 +11,11 @@ namespace CarsStorageApi.Mappers
 	{
 		public CarMapperApi()
 		{
-			CreateMap<CarRequestResponse, CarDTO>();
-
 			CreateMap<CarDTO, CarRequestResponse>();
 
 			CreateMap<CarRequest, CarCreaterDTO>();
+
+			CreateMap<CarRequestResponse, CarDTO>();
 		}
 	}
 }

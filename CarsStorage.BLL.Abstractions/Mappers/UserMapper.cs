@@ -3,6 +3,7 @@ using CarsStorage.BLL.Abstractions.ModelsDTO.AuthModels;
 using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Models;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CarsStorage.BLL.Abstractions.Mappers
 {
@@ -13,11 +14,21 @@ namespace CarsStorage.BLL.Abstractions.Mappers
 	{
 		public UserMapper()
 		{
+			CreateMap<UserRegister, UserCreaterWithRolesDTO>();
+
+			CreateMap<UserRegisterDTO, UserCreater>();
+
+			CreateMap<UserRegister, UserCreaterWithRolesDTO>();
+
+			CreateMap<UserLoginDTO, UserEntity>();
+
+			CreateMap<UserDTO, UserEntity>();
+
 			CreateMap<UserEntity, UserDTO>();
 
-			CreateMap<UserCreaterDTO, UserEntity>();
+			CreateMap<UserCreaterDTO, UserCreater>();
 
-			CreateMap<UserRegisterDTO, UserRegister>();
+			CreateMap<EntityEntry<UserEntity>, UserRegister>();
 		}
 	}
 }

@@ -20,7 +20,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.BLL.Abstraction
 		{ABF7EB27-5423-4C5E-8FE5-3F88BE76B278} = {ABF7EB27-5423-4C5E-8FE5-3F88BE76B278}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarsStorage.BLL.Repositories", "CarsStorage.BLL.Repositories\CarsStorage.BLL.Repositories.csproj", "{78B6B750-E784-4116-B4D9-E50CD7103EB4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.BLL.Repositories", "CarsStorage.BLL.Repositories\CarsStorage.BLL.Repositories.csproj", "{78B6B750-E784-4116-B4D9-E50CD7103EB4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{ABF7EB27-5423-4C5E-8FE5-3F88BE76B278} = {ABF7EB27-5423-4C5E-8FE5-3F88BE76B278}
 	EndProjectSection
