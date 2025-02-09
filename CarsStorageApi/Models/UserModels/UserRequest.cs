@@ -3,7 +3,7 @@
 namespace CarsStorageApi.Models.UserModels
 {
 	/// <summary>
-	/// Класс данных пользователя при регистрации в приложении (без id, с паролем и ролями).
+	/// Класс данных пользователя, передаваемых клиентом при создании нового пользователя с ролью.
 	/// </summary>
 	public class UserRequest
     {
@@ -15,6 +15,6 @@ namespace CarsStorageApi.Models.UserModels
 
         [Required(ErrorMessage = "Укажите пароль пользователя")]
         public string? Password { get; set; }
-        public IEnumerable<string>? Roles { get; set; }
+        public List<string>? Roles { get; set; }
     }
 }

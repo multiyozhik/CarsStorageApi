@@ -3,7 +3,7 @@
 namespace CarsStorageApi.Models.CarModels
 {
     /// <summary>
-    /// Класс для данных автомобиля без id.
+    /// Класс данных автомобиля, передаваемых клиентом.
     /// </summary>
     public class CarRequest
     {
@@ -18,7 +18,6 @@ namespace CarsStorageApi.Models.CarModels
 
         [Required(ErrorMessage = "Укажите количество автомобилей")]
         public int Count { get; set; }
-
         public bool IsAccassible { get; set; }
     }
 }

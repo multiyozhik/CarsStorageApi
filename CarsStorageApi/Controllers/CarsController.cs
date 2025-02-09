@@ -1,8 +1,7 @@
 using AutoMapper;
-using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
+using CarsStorage.BLL.Abstractions.Services;
+using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
 using CarsStorageApi.Models.CarModels;
-using CarsStorageApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +12,7 @@ namespace CarsStorageApi.Controllers
 	/// </summary>
 	[ApiController]
 	[Route("[controller]/[action]")]	
-	public class CarsController(ICarsService carsService, IMapper mapper, HttpContext httpContext) : ControllerBase
+	public class CarsController(ICarsService carsService, IMapper mapper) : ControllerBase
 	{
 		/// <summary>
 		/// Метод возвращает задачу с списком всех автомобилей.
@@ -21,17 +20,18 @@ namespace CarsStorageApi.Controllers
 		[Authorize(Policy = "RequierBrowseCars")]
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpGet]
-		public async Task<ActionResult<List<CarRequestResponse>>> GetCars(HttpContext httpContext)
+		public async Task<ActionResult<List<CarResponse>>> GetList(HttpContext httpContext)
 		{
 			var serviceResult = await carsService.GetList();
 			if (serviceResult.IsSuccess)
 			{
-				var carsList = serviceResult.Result.Select(mapper.Map<CarRequestResponse>).ToList();
+				var carsList = serviceResult.Result.Select(mapper.Map<CarResponse>).ToList();
 				return (httpContext.User.HasClaim(c => c.Value == "RequierBrowseCars"))
 					? carsList.Where(c => c.IsAccassible).ToList()
 					: carsList;
 			}
-			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
+			else
+				return BadRequest(serviceResult.ServiceError);			
 		}
 
 
@@ -40,13 +40,14 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPost]
-		public async Task<ActionResult<CarRequestResponse>> Create([FromBody] CarRequest carRequest)
+		public async Task<ActionResult<CarResponse>> Create([FromBody] CarRequest carRequest)
 		{
 			var serviceResult = await carsService.Create(mapper.Map<CarCreaterDTO>(carRequest));
 			
 			if (serviceResult.IsSuccess)
-				return mapper.Map<CarRequestResponse>(serviceResult.Result);
-			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
+				return mapper.Map<CarResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -54,13 +55,14 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task<ActionResult<CarRequestResponse>> Update([FromBody] CarRequestResponse carRequestResponse)
+		public async Task<ActionResult<CarResponse>> Update([FromBody] CarResponse carResponse)
 		{
-			var serviceResult = await carsService.Update(mapper.Map<CarDTO>(carRequestResponse));
+			var serviceResult = await carsService.Update(mapper.Map<CarDTO>(carResponse));
 
 			if (serviceResult.IsSuccess)
-				return mapper.Map<CarRequestResponse>(serviceResult.Result);
-			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
+				return mapper.Map<CarResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -74,7 +76,8 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<int>(serviceResult.Result);
-			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
+			else
+				return BadRequest(serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -82,13 +85,14 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task<ActionResult<CarRequestResponse>> UpdateCount([FromBody] CarCountChangerRequest carCountChangerRequest)
+		public async Task<ActionResult<CarResponse>> UpdateCount([FromBody] CarCountRequest carCountRequest)
 		{
-			var serviceResult = await carsService.UpdateCount(carCountChangerRequest.Id, carCountChangerRequest.Count);
+			var serviceResult = await carsService.UpdateCount(carCountRequest.Id, carCountRequest.Count);
 
 			if (serviceResult.IsSuccess)
-				return mapper.Map<CarRequestResponse>(serviceResult.Result);
-			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
+				return mapper.Map<CarResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ServiceError);
 		}
 
 		/// <summary>
@@ -96,13 +100,14 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task<ActionResult<CarRequestResponse>> MakeInaccessible([FromRoute]int id)
+		public async Task<ActionResult<CarResponse>> MakeInaccessible([FromRoute]int id)
 		{
 			var serviceResult = await carsService.MakeInaccessible(id);
 
 			if (serviceResult.IsSuccess)
-				return mapper.Map<CarRequestResponse>(serviceResult.Result);
-			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
+				return mapper.Map<CarResponse>(serviceResult.Result);
+			else
+				return BadRequest(serviceResult.ServiceError);
 		}
 	}
 }

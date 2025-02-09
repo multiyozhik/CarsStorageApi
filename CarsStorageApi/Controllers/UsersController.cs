@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.Models;
-using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
+using CarsStorage.BLL.Abstractions.Services;
+using CarsStorage.BLL.Abstractions.ModelsDTO.User;
 using CarsStorageApi.Models.UserModels;
 using CarsStorageApi.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -12,21 +11,21 @@ namespace CarsStorageApi.Controllers
 	/// <summary>
 	/// Класс контролллера пользователей.
 	/// </summary>
-    [ApiController]
+	[ApiController]
 	[Authorize(Policy = "RequierManageUsers")]
 	[Route("[controller]/[action]")]	
-	public class UsersController(IUsersService usersService, IMapper mapper) : ControllerBase
+	public class UsersController(IUsersService usersService, IRolesService rolesService, IMapper mapper) : ControllerBase
 	{
 		/// <summary>
 		/// Метод возвращает задачу с списком всех пользователей.
 		/// </summary>
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<UserRequestResponse>>> GetList()
+		public async Task<ActionResult<IEnumerable<UserResponse>>> GetList()
 		{
 			var serviceResult = await usersService.GetList();
 
 			if (serviceResult.IsSuccess)
-				return serviceResult.Result.Select(mapper.Map<UserRequestResponse>).ToList();
+				return serviceResult.Result.Select(mapper.Map<UserResponse>).ToList();
 			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
@@ -34,12 +33,12 @@ namespace CarsStorageApi.Controllers
 		/// Метод возвращает задачу с пользователем по его id.
 		/// </summary>
 		[HttpGet("{id}")]
-		public async Task<ActionResult<UserRequestResponse>> GetById([FromRoute] int id)
+		public async Task<ActionResult<UserResponse>> GetById([FromRoute] int id)
 		{
 			var serviceResult = await usersService.GetById(id);
 
 			if (serviceResult.IsSuccess)
-				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+				return mapper.Map<UserResponse>(serviceResult.Result);
 			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
@@ -47,12 +46,16 @@ namespace CarsStorageApi.Controllers
 		/// Метод возвращает задачу с созданным пользователем.
 		/// </summary>
 		[HttpPost]
-		public async Task<ActionResult<UserRequestResponse>> Create([FromBody] UserRequest userRequest)			
+		public async Task<ActionResult<UserResponse>> Create([FromBody] UserRequest userRequest)			
 		{
-			var serviceResult = await usersService.Create(mapper.Map<UserCreaterDTO>(userRequest));
-
+			var rolesServiceResult = await rolesService.GetRolesByNamesList(userRequest.Roles);
+			if (!rolesServiceResult.IsSuccess)
+				return ExceptionHandler.HandleException(this, rolesServiceResult.ServiceError);
+			var userCreaterDTO = mapper.Map<UserCreaterDTO>(userRequest);
+			userCreaterDTO.RolesList = rolesServiceResult.Result;
+			var serviceResult = await usersService.Create(userCreaterDTO);
 			if (serviceResult.IsSuccess)
-				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+				return mapper.Map<UserResponse>(serviceResult.Result);
 			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
@@ -60,12 +63,12 @@ namespace CarsStorageApi.Controllers
 		/// Метод возвращает задачу с измененным пользователем.
 		/// </summary>
 		[HttpPut]
-		public async Task<ActionResult<UserRequestResponse>> Update([FromBody] UserRequestResponse userRequestResponse)
+		public async Task<ActionResult<UserResponse>> Update([FromBody] UserResponse userResponse)
 		{
-			var serviceResult = await usersService.Update(mapper.Map<UserDTO>(userRequestResponse));
+			var serviceResult = await usersService.Update(mapper.Map<UserDTO>(userResponse));
 
 			if (serviceResult.IsSuccess)
-				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+				return mapper.Map<UserResponse>(serviceResult.Result);
 			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 

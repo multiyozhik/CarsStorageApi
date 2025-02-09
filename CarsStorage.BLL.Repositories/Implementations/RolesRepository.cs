@@ -1,4 +1,7 @@
-﻿using CarsStorage.BLL.Repositories.Interfaces;
+﻿using AutoMapper;
+using CarsStorage.BLL.Abstractions.ModelsDTO.Role;
+using CarsStorage.BLL.Abstractions.ModelsDTO.User;
+using CarsStorage.BLL.Abstractions.Repositories;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -9,45 +12,37 @@ namespace CarsStorage.BLL.Repositories.Implementations
 	/// <summary>
 	/// Класс репозитория для ролей пользователя.
 	/// </summary>
-	public class RolesRepository(AppDbContext dbContext) : IRolesRepository
+	public class RolesRepository(AppDbContext dbContext, IMapper mapper) : IRolesRepository
 	{
 		/// <summary>
-		/// Метод получения всего списка возможных ролей.
+		/// Метод получения всего списка возможных ролей из БД.
 		/// </summary>
-		public async Task<List<RoleEntity>> GetList()
-			=> await dbContext.Roles.ToListAsync();
-
-
-		/// <summary>
-		/// Метод возвращает сущность роли по id пользователя.
-		/// </summary>
-		public async Task<RoleEntity> GetRoleById(int id)
+		public async Task<List<RoleDTO>> GetList()
 		{
-			var role = await dbContext.Roles.FirstOrDefaultAsync(r => r.RoleEntityId == id);
-			return role is not null
-				? role 
-				: throw new Exception("Роль с заданным Id не найдена");
+			var roleEntityList = await dbContext.Roles.ToListAsync();
+			return roleEntityList.Select(mapper.Map<RoleDTO>).ToList();
 		}
 
 
 		/// <summary>
 		/// Метод возвращает список сущностей ролей по полученному списку наименований ролей у пользователя.
 		/// </summary>
-		public async Task<List<RoleEntity>> GetRolesByNamesList(IEnumerable<string> roleNamesList)
+		public async Task<List<RoleDTO>> GetRolesByNamesList(IEnumerable<string> roleNamesList)
 		{
-			var rolesList = await GetList();
-			return roleNamesList.Select(roleName => rolesList.FirstOrDefault(r => r.Name == roleName)).ToList();	
+			var roleEntityList = await dbContext.Roles.Where(r => roleNamesList.Contains(r.Name)).ToListAsync();
+			return roleEntityList.Select(mapper.Map<RoleDTO>).ToList();
 		}
 
 
 		/// <summary>
-		/// Метод возвращает список клаймов по полученной сущности пользователя.
+		/// Метод возвращает список клаймов для пользователя.
 		/// </summary>
-		public List<Claim> GetClaimsByUser(UserEntity userEntity)
+		public List<Claim> GetClaimsByUser(UserDTO userDTO)
 		{
-			var roleEntityList = userEntity.RolesList;
+			
+			var roleEntityList = userDTO.RolesList.Select(mapper.Map<RoleEntity>).ToList();
 			var roleClaims = roleEntityList.SelectMany(role => role.RoleClaims).Distinct().ToList();
-			var userClaims = new List<Claim> { new(ClaimTypes.Name, userEntity.UserName) };
+			var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
 			roleClaims.ForEach(roleClaim => userClaims.Add(new Claim(ClaimTypes.Role, roleClaim.ToString())));
 			return userClaims;
 		}

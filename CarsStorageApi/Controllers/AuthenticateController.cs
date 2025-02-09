@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.ModelsDTO.AuthModels;
-using CarsStorageApi.Models.AuthModels;
+using CarsStorage.BLL.Abstractions.Services;
+using CarsStorage.BLL.Abstractions.ModelsDTO.Token;
+using CarsStorage.BLL.Abstractions.ModelsDTO.User;
+using CarsStorageApi.Models.TokenModels;
 using CarsStorageApi.Models.UserModels;
 using CarsStorageApi.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -12,8 +13,6 @@ namespace CarsStorageApi.Controllers
 	/// <summary>
 	/// Класс контроллер для аутентификации пользователя.
 	/// </summary>
-	/// <param name="authService"></param>
-	/// <param name="mapper"></param>
 	[ApiController]
 	[Route("[controller]/[action]")]		
 	public class AuthenticateController(IAuthenticateService authService, IMapper mapper) : ControllerBase
@@ -21,26 +20,24 @@ namespace CarsStorageApi.Controllers
 		/// <summary>
 		/// Метод контроллера регистрации пользователя.
 		/// </summary>
-		/// <param name="registerUserDataRequest">Объект типа <see cref="RegisterUserDataRequest"/> с данными пользователя, передаваемыми для регистрации.</param>
-		/// <returns>Асинхронная задача, представляющая объект типа <see cref="UserRequestResponse" - зарегистрированного пользователя.</returns>
 		[AllowAnonymous]
 		[HttpPost]
-		public async Task<ActionResult<UserRequestResponse>> Register([FromBody] RegisterUserDataRequest registerUserDataRequest)
+		public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterUserRequest registerUserRequest)
 		{
-			var serviceResult = await authService.Register(mapper.Map<UserRegisterDTO>(registerUserDataRequest));
+
+			var userRegisterDTO = mapper.Map<UserRegisterDTO>(registerUserRequest);			
+			var serviceResult = await authService.Register(userRegisterDTO);
 			if (serviceResult.IsSuccess)
-				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+				return mapper.Map<UserResponse>(serviceResult.Result);
 			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 
 		/// <summary>
-		/// Метод контроллера для входа пользователя в приложение.
+		/// Метод контроллера для входа пользователя в приложение возвращает токен.
 		/// </summary>
-		/// <param name="loginDataRequest">Объект типа <see cref="LoginDataRequest"/> с данными пользователя для входа в приложение.</param>
-		/// <returns>Асинхронная задача, представляющая объект типа <see cref="JWTTokenRequestResponse" - токен для доступа в приложение.</returns>		
 		[AllowAnonymous]
 		[HttpPost]
-		public async Task<ActionResult<JWTTokenRequestResponse>> LogIn([FromBody] LoginDataRequest loginDataRequest)
+		public async Task<ActionResult<JWTTokenRequestResponse>> LogIn([FromBody] LoginUserRequest loginDataRequest)
 		{
 			var serviceResult = await authService.LogIn(mapper.Map<UserLoginDTO>(loginDataRequest));
 			if (serviceResult.IsSuccess)
@@ -52,8 +49,6 @@ namespace CarsStorageApi.Controllers
 		/// <summary>
 		/// Метод контроллера для обновления токена доступа.
 		/// </summary>
-		/// <param name="jwtTokenRequestResponse">Объект типа <see cref="JWTTokenRequestResponse"/> - обновляемый токен.</param>
-		/// <returns>Асинхронная задача, представляющая объект типа <see cref="JWTTokenRequestResponse" - токен для доступа в приложение.</returns>
 		[AllowAnonymous]
 		[HttpPost]
 		public async Task<ActionResult<JWTTokenRequestResponse>> RefreshToken([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
@@ -71,16 +66,15 @@ namespace CarsStorageApi.Controllers
 		/// <summary>
 		/// Метод контроллера для выхода из приложения.
 		/// </summary>
-		/// <returns>Асинхронная задача - выход из приложения.</returns>
 		[Authorize]
 		[HttpGet]
-		public async Task<ActionResult<UserRequestResponse>> LogOut([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
+		public async Task<ActionResult<int>> LogOut([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
 		{
 			if (jwtTokenRequestResponse is null || string.IsNullOrEmpty(jwtTokenRequestResponse.RefreshToken))
 				return Unauthorized();
 			var serviceResult = await authService.LogOut(mapper.Map<JWTTokenDTO>(jwtTokenRequestResponse));
 			if (serviceResult.IsSuccess)				
-				return mapper.Map<UserRequestResponse>(serviceResult.Result);
+				return serviceResult.Result;
 			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);
 		}
 	}

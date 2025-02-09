@@ -10,19 +10,16 @@ namespace CarsStorage.DAL.Config
 	/// </summary>
 	public class RolesConfig : IEntityTypeConfiguration<RoleEntity>
 	{
-		public static List<RoleEntity> AllRolesList { get; set; }
-		public RolesConfig()
-		{
-			AllRolesList = [
-				new RoleEntity("admin") { RoleEntityId = 1, RoleClaims = [RoleClaimType.CanManageUsers, RoleClaimType.CanManageRoles] },
-				new RoleEntity("manager") { RoleEntityId = 2, RoleClaims = [RoleClaimType.CanManageCars, RoleClaimType.CanBrowseCars] },
-				new RoleEntity("user") { RoleEntityId = 3, RoleClaims = [RoleClaimType.CanBrowseCars] }];
-		}
+		private readonly List<RoleEntity> allRolesList = [
+			new RoleEntity("admin") { RoleEntityId = 1, RoleClaims = [RoleClaimType.CanManageUsers, RoleClaimType.CanManageRoles] },
+			new RoleEntity("manager") { RoleEntityId = 2, RoleClaims = [RoleClaimType.CanManageCars, RoleClaimType.CanBrowseCars] },
+			new RoleEntity("user") { RoleEntityId = 3, RoleClaims = [RoleClaimType.CanBrowseCars] }];
 
 		public void Configure(EntityTypeBuilder<RoleEntity> builder)
 		{
-			builder.HasData(AllRolesList);
+			builder.HasData(allRolesList);
 			builder.HasKey(r => r.RoleEntityId);
+			builder.Property(r => r.RoleEntityId).ValueGeneratedOnAdd();
 			builder.ToTable("Roles");
 			builder.Property(r => r.Name).IsRequired();
 			builder.Property(r => r.RoleClaims).IsRequired();

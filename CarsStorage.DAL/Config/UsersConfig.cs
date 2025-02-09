@@ -34,7 +34,8 @@ namespace CarsStorage.DAL.Config
 			usersList.AddRange([user1, user2, user3, user4, user5]);
 
 			builder.HasData(usersList);
-			builder.HasKey(r => r.UserEntityId);
+			builder.HasKey(u => u.UserEntityId);
+			builder.Property(u => u.UserName).ValueGeneratedOnAdd();
 			builder.ToTable("Users");
 			builder.Property(r => r.UserName).IsRequired();
 			builder.Property(r => r.Email).IsRequired();

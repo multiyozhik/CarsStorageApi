@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO.CarDTO;
-using CarsStorage.BLL.Repositories.Interfaces;
+using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
+using CarsStorage.BLL.Abstractions.Repositories;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
-using CarsStorage.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.BLL.Repositories.Implementations
@@ -18,35 +17,36 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		/// <summary>
 		/// Метод получения всего списка автомобилей.
 		/// </summary>
-		public async Task<List<CarEntity>> GetList()
-			=> await dbContext.Cars.ToListAsync();
+		public async Task<List<CarDTO>> GetList()
+		{
+			var carEntityList = await dbContext.Cars.ToListAsync();
+			return carEntityList.Select(mapper.Map<CarDTO>).ToList();
+		}			
 
 
 		/// <summary>
 		/// Метод создания новой записи автомобиля в БД.
 		/// </summary>
-		public async Task<CarEntity> Create(CarEntity car)
+		public async Task<CarDTO> Create(CarDTO carDTO)
 		{
-			var carEntity = await dbContext.Cars.AddAsync(car);
+			var carEntity = mapper.Map<CarEntity>(carDTO);
+			await dbContext.Cars.AddAsync(carEntity);
 			await dbContext.SaveChangesAsync();
-			return mapper.Map<CarEntity>(carEntity);
+			return mapper.Map<CarDTO>(carEntity);
 		}
 
 
 		/// <summary>
 		/// Метод изменения записи данных автомобиля в БД.
 		/// </summary>
-		public async Task<CarEntity> Update(CarEntity car)
+		public async Task<CarDTO> Update(CarDTO carDTO)
 		{
-			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == car.Id)
+			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == carDTO.Id)
 				?? throw new Exception("Автомобиль с заданным Id не найден");
-			carEntity.Model = car.Model;
-			carEntity.Make = car.Make;
-			carEntity.Color = car.Color;
-			carEntity.Count = car.Count;
+			carEntity = mapper.Map<CarEntity>(carDTO);
 			dbContext.Cars.Update(carEntity);
 			await dbContext.SaveChangesAsync();
-			return carEntity;
+			return mapper.Map<CarDTO>(carEntity);
 	
 		}
 
@@ -63,28 +63,30 @@ namespace CarsStorage.BLL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод для изменения количества автомобилей.
+		/// Метод для изменения количества автомобилей для id записи автомобиля в БД.
 		/// </summary>
-		public async Task<CarEntity> UpdateCount(int id, int count)
+		public async Task<CarDTO> UpdateCount(int id, int count)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id)
 				?? throw new Exception("Автомобиль с заданным Id не найден");
 			carEntity.Count = count;
+			dbContext.Update(carEntity);
 			await dbContext.SaveChangesAsync();
-			return carEntity;
+			return mapper.Map<CarDTO>(carEntity);
 		}
 
 
 		/// <summary>
 		/// Метод для того, чтобы сделать запись об автомобиле с id недоступным для просмотра.
 		/// </summary>
-		public async Task<CarEntity> MakeInaccessible(int id)
+		public async Task<CarDTO> MakeInaccessible(int id)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id)
 				?? throw new Exception("Автомобиль с заданным Id не найден");
 			carEntity.IsAccassible = false;
+			dbContext.Update(carEntity);
 			await dbContext.SaveChangesAsync();
-			return carEntity;
+			return mapper.Map<CarDTO>(carEntity);
 		}
 	}
 }

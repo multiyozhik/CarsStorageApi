@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
-
-namespace CarsStorage.DAL.Entities
+﻿namespace CarsStorage.DAL.Entities
 {
-    /// <summary>
-    /// Класс сущности пользователя.
-    /// </summary>
-    public class UserEntity
+	/// <summary>
+	/// Класс сущности пользователя.
+	/// </summary>
+	public class UserEntity
 	{
 		public int UserEntityId { get; set; }
 		public string? UserName { get; set; }

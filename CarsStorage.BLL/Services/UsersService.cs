@@ -1,18 +1,16 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Exceptions;
-using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.Models;
-using CarsStorage.BLL.Abstractions.ModelsDTO.UserDTO;
-using CarsStorage.BLL.Repositories.Interfaces;
-using CarsStorage.DAL.Entities;
-using CarsStorage.DAL.Models;
+using CarsStorage.BLL.Abstractions.General;
+using CarsStorage.BLL.Abstractions.Services;
+using CarsStorage.BLL.Abstractions.ModelsDTO.User;
+using CarsStorage.BLL.Abstractions.Repositories;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
 	/// <summary>
 	/// Класс сервиса пользователей.
 	/// </summary>
-	public class UsersService(IUsersRepository usersRepository, IRolesRepository rolesRepository,  IMapper mapper) : IUsersService
+	public class UsersService(IUsersRepository usersRepository, IRolesService rolesService, IMapper mapper) : IUsersService
 	{
 		/// <summary>
 		/// Метод возвращает результат с списком всех пользователей.
@@ -21,8 +19,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var userEntityList = await usersRepository.GetList();
-				var userDTOList = userEntityList.Select(mapper.Map<UserDTO>).ToList();
+				var userDTOList = await usersRepository.GetList();
 				return new ServiceResult<List<UserDTO>>(userDTOList, null);
 			}
 			catch (Exception exception)
@@ -39,8 +36,8 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var identityAppUser = await usersRepository.GetById(id);
-				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(identityAppUser), null);
+				var userDTO = await usersRepository.GetById(id);
+				return new ServiceResult<UserDTO>(userDTO, null);
 			}
 			catch (Exception exception)
 			{
@@ -56,8 +53,8 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var userEntity = await usersRepository.Create(mapper.Map<UserCreater>(userCreaterDTO));
-				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(userEntity), null);
+				var userDTO = await usersRepository.Create(userCreaterDTO);
+				return new ServiceResult<UserDTO>(userDTO, null);
 			}
 			catch (Exception exception)
 			{
@@ -73,8 +70,8 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var userEntity = await usersRepository.Update(mapper.Map<UserEntity>(userDTO));
-				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(userEntity), null);
+				var user = await usersRepository.Update(userDTO);
+				return new ServiceResult<UserDTO>(user, null);
 			}
 			catch (Exception exception)
 			{
@@ -98,20 +95,20 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
-		/// <summary>
-		/// Метод получения как результат пользователя по значению refresh-токена.
-		/// </summary>
-		public async Task<ServiceResult<UserDTO>> GetUserByRefreshToken(string refreshToken)
-		{
-			try
-			{
-				var user = await usersRepository.GetUserByRefreshToken(refreshToken);
-				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(user), null);
-			}
-			catch (Exception exception)
-			{
-				return new ServiceResult<UserDTO>(null, new UnauthorizedException(exception.Message));
-			}			
-		}
+		///// <summary>
+		///// Метод возвращает id пользователя по значению refresh-токена.
+		///// </summary>
+		//public async Task<ServiceResult<int>> GetUserByRefreshToken(string refreshToken)
+		//{
+		//	try
+		//	{
+		//		var userId = await usersRepository.GetUserIdByRefreshToken(refreshToken);
+		//		return new ServiceResult<int>(userId, null);
+		//	}
+		//	catch (Exception exception)
+		//	{
+		//		return new ServiceResult<int>(null, new UnauthorizedException(exception.Message));
+		//	}
+		//}
 	}
 }

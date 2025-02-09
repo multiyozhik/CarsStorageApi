@@ -1,7 +1,7 @@
-﻿using CarsStorage.BLL.Abstractions.Config;
-using CarsStorage.BLL.Abstractions.Exceptions;
-using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.Models;
+﻿using CarsStorage.BLL.Abstractions.Exceptions;
+using CarsStorage.BLL.Abstractions.General;
+using CarsStorage.BLL.Abstractions.Services;
+using CarsStorage.BLL.Implementations.Config;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -73,7 +73,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// <param name="experedToken">Токен доступа с истекшим сроком жизни</param>
 		/// <returns></returns>
 		/// <exception cref="SecurityTokenException">Исключение о невалидноcти проверяемого токена (когда время его жизни прошло).</exception>
-		public async Task<ServiceResult<ClaimsPrincipal>> GetClaimsPrincipalFromExperedTokenWithValidation(string experedToken)
+		public async Task<ServiceResult<ClaimsPrincipal>> GetClaimsPrincipalFromExperedToken(string experedToken)
 		{
 			try
 			{

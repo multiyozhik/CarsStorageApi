@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-namespace CarsStorage.BLL.Abstractions.Models
+﻿namespace CarsStorage.BLL.Abstractions.General
 {
 	/// <summary>
 	/// Класс результата работы сервиса.

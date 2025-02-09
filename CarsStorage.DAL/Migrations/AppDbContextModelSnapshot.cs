@@ -168,6 +168,7 @@ namespace CarsStorage.DAL.Migrations
 
                     b.Property<string>("UserName")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("text");
 
                     b.HasKey("UserEntityId");

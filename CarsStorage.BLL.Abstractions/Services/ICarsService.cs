@@ -1,0 +1,23 @@
+﻿using CarsStorage.BLL.Abstractions.General;
+using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
+
+namespace CarsStorage.BLL.Abstractions.Services
+{
+	/// <summary>
+	/// Интерфейс для сервиса автомобилей.
+	/// </summary>
+	public interface ICarsService
+	{
+		public Task<ServiceResult<List<CarDTO>>> GetList();
+
+		public Task<ServiceResult<CarDTO>> Create(CarCreaterDTO carCreaterDTO);
+
+		public Task<ServiceResult<CarDTO>> Update(CarDTO carDTO);
+
+		public Task<ServiceResult<int>> Delete(int id);
+
+		public Task<ServiceResult<CarDTO>> UpdateCount(int id, int count);
+
+		public Task<ServiceResult<CarDTO>> MakeInaccessible(int id);
+	}
+}

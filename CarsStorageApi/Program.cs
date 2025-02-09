@@ -1,16 +1,12 @@
-using CarsStorage.BLL.Abstractions.Config;
-using CarsStorage.BLL.Abstractions.Interfaces;
-using CarsStorage.BLL.Abstractions.Mappers;
+using CarsStorage.BLL.Abstractions.Repositories;
+using CarsStorage.BLL.Abstractions.Services;
+using CarsStorage.BLL.Implementations.Config;
 using CarsStorage.BLL.Implementations.Services;
 using CarsStorage.BLL.Repositories.Implementations;
-using CarsStorage.BLL.Repositories.Interfaces;
 using CarsStorage.BLL.Repositories.Utils;
-using CarsStorage.DAL.Config;
 using CarsStorage.DAL.DbContexts;
-using CarsStorageApi.Mappers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -26,7 +22,7 @@ Configure(app, app.Environment);
 
 static void ConfigureServices(IServiceCollection services, IConfiguration config)
 {
-	(bool validateIssuer, bool validateAudience, bool validateLifetime, bool validateIssuerSigningKey, bool requireExpirationTime) = ValidateAppConfigs(config);
+	ValidateAppConfigs(config);
 
 	services.AddOptions<InitialConfig>().BindConfiguration("InitialConfig");
 
@@ -60,20 +56,19 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		var jwt = config.GetSection("JWTConfig");
 		options.TokenValidationParameters = new TokenValidationParameters
 		{			
-			ValidateIssuerSigningKey = true,
 			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"])),
-			ValidateIssuer = validateIssuer,
 			ValidIssuer = jwt["Issuer"],
-			ValidateAudience = validateAudience,
 			ValidAudience = jwt["Audience"],
-			ValidateLifetime = validateLifetime,
-			RequireExpirationTime = requireExpirationTime
+			ValidateIssuer = GetParameterValue(jwt["ValidateIssuer"] ?? "true"),
+			ValidateAudience = GetParameterValue(jwt["ValidateAudience"] ?? "true"),
+			ValidateIssuerSigningKey = GetParameterValue(jwt["ValidateIssuerSigningKey"] ?? "true"),
+			ValidateLifetime = GetParameterValue(jwt["ValidateLifetime"] ?? "true"),
+			RequireExpirationTime = GetParameterValue(jwt["RequireExpirationTime"] ?? "true")
 		};
 		options.SaveToken = true;
 		options.IncludeErrorDetails = true;
-  })
-  .AddBearerToken();
-
+	  })
+	  .AddBearerToken();
 
 	services.AddAuthorizationBuilder()
 		.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim("CanManageUsers"); })
@@ -81,11 +76,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddPolicy("RequierManageCars", policy => { policy.RequireClaim("CanManageCars"); })
 		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
 
-	services.AddAutoMapper(typeof(TokenMapperApi), typeof(CarMapperApi), typeof(RoleMapperApi), typeof(UserMapperApi));
-	services.AddAutoMapper(typeof(CarMapper), typeof(RoleMapper), typeof(UserMapper));
+	//services.AddAutoMapper(typeof(TokenMapperApi), typeof(CarMapperApi), typeof(RoleMapperApi), typeof(UserMapperApi));
+	//services.AddAutoMapper(typeof(CarMapper), typeof(RoleMapper), typeof(UserMapper));
 
-	//services.AddAutoMapper(Assembly.Load("CarsStorageApi"));
-	//services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Abstractions"));
+	services.AddAutoMapper(Assembly.Load("CarsStorageApi"));
+	services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Implementations"));
+	services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Repositories"));
 	//services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); //не подключилось автоматически
 
 
@@ -122,8 +118,6 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 			}
 		);
 	});
-
-
 }
 
 static void Configure(WebApplication app, IHostEnvironment env)
@@ -156,7 +150,7 @@ static void Configure(WebApplication app, IHostEnvironment env)
 	app.Run();
 }
 
-static (bool validateIssuerResult, bool validateAudienceResult, bool validateLifetimeResult, bool validateIssuerSigningKeyResult, bool requireExpirationTimeResult) ValidateAppConfigs(IConfiguration jwtConfig)
+static void ValidateAppConfigs(IConfiguration jwtConfig)
 {
 	var initialConfig = jwtConfig.GetSection("InitialConfig")
 		?? throw new Exception("ќтсутствуют начальные конфигурации.");
@@ -173,29 +167,9 @@ static (bool validateIssuerResult, bool validateAudienceResult, bool validateLif
 		throw new Exception("Ќе определен получатель токена в конфигураци€х приложени€.");
 	if (string.IsNullOrEmpty(config["ExpireMinutes"]))
 		throw new Exception("Ќе определено врем€ жизни токена в конфигураци€х приложени€.");
-
-	var validateIssuer = config["ValidateIssuer"];
-	var validateAudience = config["ValidateIssuer"];
-	var validateLifetime = config["validateLifetime"];
-	var validateIssuerSigningKey = config["ValidateIssuer"];
-	var requireExpirationTime = config["ValidateIssuer"];
-
-	var validateIssuerResult = true;
-	var validateAudienceResult = true;
-	var validateLifetimeResult = true;
-	var validateIssuerSigningKeyResult = true;
-	var requireExpirationTimeResult = true;
-
-	if (!string.IsNullOrEmpty(validateIssuer) && !bool.TryParse(validateIssuer, out validateIssuerResult))
-			throw new Exception("ValidateIssuer должен быть равным true или false.");
-	if (!string.IsNullOrEmpty(validateAudience) && !bool.TryParse(validateAudience, out validateAudienceResult))		
-		throw new Exception("ValidateAudience должен быть равным true или false.");
-	if (!string.IsNullOrEmpty(validateLifetime) && !bool.TryParse(validateLifetime, out validateLifetimeResult))
-		throw new Exception("ValidateLifetime должен быть равным true или false.");
-	if (!string.IsNullOrEmpty(validateIssuerSigningKey) && !bool.TryParse(validateIssuerSigningKey, out validateIssuerSigningKeyResult))
-		throw new Exception("ValidateIssuerSigningKey должен быть равным true или false.");
-	if (!string.IsNullOrEmpty(requireExpirationTime) && !bool.TryParse(requireExpirationTime, out requireExpirationTimeResult))
-		throw new Exception("RequireExpirationTime должен быть равным true или false.");
-
-	return (validateIssuerResult, validateAudienceResult, validateLifetimeResult, validateIssuerSigningKeyResult, requireExpirationTimeResult);
 }
+
+static bool GetParameterValue(string jwtParameter)
+	=> (bool.TryParse(jwtParameter, out bool parameterValue))
+		? parameterValue
+		: throw new Exception("ѕараметр валидации токена должен быть равным true или false.");
