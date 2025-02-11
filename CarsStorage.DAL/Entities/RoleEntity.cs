@@ -1,4 +1,6 @@
 ﻿using CarsStorage.DAL.Models;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace CarsStorage.DAL.Entities
 {
@@ -14,7 +16,5 @@ namespace CarsStorage.DAL.Entities
 		public List<RoleClaimType> RoleClaims { get; set; } = [];
 
 		public List<UserEntity> UsersList { get; set; } = [];
-
-		public List<UsersRolesEntity> UserRolesList { get; set; } = [];
 	}
 }

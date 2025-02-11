@@ -13,11 +13,5 @@ namespace CarsStorage.BLL.Abstractions.Services
 		public Task<ServiceResult<UserDTO>> Create(UserCreaterDTO userCreaterDTO);
 		public Task<ServiceResult<UserDTO>> Update(UserDTO userDTO);
 		public Task<ServiceResult<int>> Delete(int id);
-
-		//public async Task<ServiceResult<List<RoleDTO>>> GetRolesByNamesList(IEnumerable<string> roleNamesList)
-
-
-		//ToDo: Осталось AuthenticateService и UserService и соответствующие им контроллеры.
-
 	}
 }

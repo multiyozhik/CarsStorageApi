@@ -50,7 +50,7 @@ namespace CarsStorageApi.Controllers
 		/// Метод контроллера для обновления токена доступа.
 		/// </summary>
 		[AllowAnonymous]
-		[HttpPost]
+		[HttpPut]
 		public async Task<ActionResult<JWTTokenRequestResponse>> RefreshToken([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
 		{
 			if (jwtTokenRequestResponse is null || string.IsNullOrEmpty(jwtTokenRequestResponse.RefreshToken))
@@ -64,15 +64,15 @@ namespace CarsStorageApi.Controllers
 
 
 		/// <summary>
-		/// Метод контроллера для выхода из приложения.
+		/// Метод контроллера для выхода из приложения (в заголовке передаем токен доступа).
 		/// </summary>
 		[Authorize]
 		[HttpGet]
-		public async Task<ActionResult<int>> LogOut([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
+		public async Task<ActionResult<int>> LogOut([FromHeader] string accessToken)
 		{
-			if (jwtTokenRequestResponse is null || string.IsNullOrEmpty(jwtTokenRequestResponse.RefreshToken))
+			if (string.IsNullOrEmpty(accessToken))
 				return Unauthorized();
-			var serviceResult = await authService.LogOut(mapper.Map<JWTTokenDTO>(jwtTokenRequestResponse));
+			var serviceResult = await authService.LogOut(accessToken);
 			if (serviceResult.IsSuccess)				
 				return serviceResult.Result;
 			return ExceptionHandler.HandleException(this, serviceResult.ServiceError);

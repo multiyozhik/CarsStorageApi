@@ -1,3 +1,4 @@
+using CarsStorage.BLL.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Abstractions.Repositories;
 using CarsStorage.BLL.Abstractions.Services;
 using CarsStorage.BLL.Implementations.Config;
@@ -5,6 +6,7 @@ using CarsStorage.BLL.Implementations.Services;
 using CarsStorage.BLL.Repositories.Implementations;
 using CarsStorage.BLL.Repositories.Utils;
 using CarsStorage.DAL.DbContexts;
+using CarsStorageApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -26,11 +28,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddOptions<InitialConfig>().BindConfiguration("InitialConfig");
 
-	services.AddOptions<JWTConfig>().BindConfiguration("JWTConfig");
-
-	services.AddControllers();
-
-	services.AddEndpointsApiExplorer();	
+	services.AddOptions<JWTConfig>().BindConfiguration("JWTConfig");	
 
 	services.AddDbContext<AppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
@@ -55,7 +53,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	.AddJwtBearer(options =>  {
 		var jwt = config.GetSection("JWTConfig");
 		options.TokenValidationParameters = new TokenValidationParameters
-		{			
+		{
 			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"])),
 			ValidIssuer = jwt["Issuer"],
 			ValidAudience = jwt["Audience"],
@@ -71,19 +69,17 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	  .AddBearerToken();
 
 	services.AddAuthorizationBuilder()
-		.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim("CanManageUsers"); })
-		.AddPolicy("RequierManageUsersRoles", policy => { policy.RequireClaim("CanManageUsersRoles"); })
-		.AddPolicy("RequierManageCars", policy => { policy.RequireClaim("CanManageCars"); })
-		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim("CanBrowseCars"); });
+		.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim(typeof(RoleClaimTypeBLL).ToString(), RoleClaimTypeBLL.CanManageUsers.ToString()); })
+		.AddPolicy("RequierManageUsersRoles", policy => { policy.RequireClaim(typeof(RoleClaimTypeBLL).ToString(), RoleClaimTypeBLL.CanManageRoles.ToString()); })
+		.AddPolicy("RequierManageCars", policy => { policy.RequireClaim(typeof(RoleClaimTypeBLL).ToString(), RoleClaimTypeBLL.CanManageCars.ToString()); })
+		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim(typeof(RoleClaimTypeBLL).ToString(), RoleClaimTypeBLL.CanBrowseCars.ToString()); });
 
-	//services.AddAutoMapper(typeof(TokenMapperApi), typeof(CarMapperApi), typeof(RoleMapperApi), typeof(UserMapperApi));
-	//services.AddAutoMapper(typeof(CarMapper), typeof(RoleMapper), typeof(UserMapper));
+	services.AddControllers();
+	services.AddEndpointsApiExplorer();
 
 	services.AddAutoMapper(Assembly.Load("CarsStorageApi"));
 	services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Implementations"));
 	services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Repositories"));
-	//services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies()); //не подключилось автоматически
-
 
 	services.AddSwaggerGen();
 	services.AddSwaggerGen(option =>

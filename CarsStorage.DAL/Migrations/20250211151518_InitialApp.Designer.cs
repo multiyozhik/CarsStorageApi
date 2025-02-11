@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarsStorage.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250208111722_InitialApp")]
+    [Migration("20250211151518_InitialApp")]
     partial class InitialApp
     {
         /// <inheritdoc />
@@ -171,7 +171,6 @@ namespace CarsStorage.DAL.Migrations
 
                     b.Property<string>("UserName")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("text");
 
                     b.HasKey("UserEntityId");
@@ -263,31 +262,16 @@ namespace CarsStorage.DAL.Migrations
                         });
                 });
 
-            modelBuilder.Entity("RoleEntityUserEntity", b =>
-                {
-                    b.Property<int>("RolesListRoleEntityId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UsersListUserEntityId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("RolesListRoleEntityId", "UsersListUserEntityId");
-
-                    b.HasIndex("UsersListUserEntityId");
-
-                    b.ToTable("RoleEntityUserEntity");
-                });
-
             modelBuilder.Entity("CarsStorage.DAL.Entities.UsersRolesEntity", b =>
                 {
                     b.HasOne("CarsStorage.DAL.Entities.RoleEntity", "RoleEntity")
-                        .WithMany("UserRolesList")
+                        .WithMany()
                         .HasForeignKey("RoleEntityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("CarsStorage.DAL.Entities.UserEntity", "UserEntity")
-                        .WithMany("UserRolesList")
+                        .WithMany()
                         .HasForeignKey("UserEntityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -295,31 +279,6 @@ namespace CarsStorage.DAL.Migrations
                     b.Navigation("RoleEntity");
 
                     b.Navigation("UserEntity");
-                });
-
-            modelBuilder.Entity("RoleEntityUserEntity", b =>
-                {
-                    b.HasOne("CarsStorage.DAL.Entities.RoleEntity", null)
-                        .WithMany()
-                        .HasForeignKey("RolesListRoleEntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CarsStorage.DAL.Entities.UserEntity", null)
-                        .WithMany()
-                        .HasForeignKey("UsersListUserEntityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("CarsStorage.DAL.Entities.RoleEntity", b =>
-                {
-                    b.Navigation("UserRolesList");
-                });
-
-            modelBuilder.Entity("CarsStorage.DAL.Entities.UserEntity", b =>
-                {
-                    b.Navigation("UserRolesList");
                 });
 #pragma warning restore 612, 618
         }

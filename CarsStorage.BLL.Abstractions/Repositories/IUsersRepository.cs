@@ -12,11 +12,12 @@ namespace CarsStorage.BLL.Abstractions.Repositories
 		public Task<UserDTO> GetById(int userId);
 		public Task<UserDTO> GetUserIfValid(UserLoginDTO userLoginDTO);
 		public Task<UserDTO> Create(UserCreaterDTO userCreaterDTO);
+		public Task<UserDTO> Register(UserCreaterDTO userCreaterDTO, IEnumerable<string> rolesNamesList);
 		public Task<UserDTO> Update(UserDTO userDTO);
 		public Task Delete(int id);
-		public Task UpdateToken(int id, JWTTokenDTO jwtTokenDTO);
+		public Task<JWTTokenDTO> UpdateToken(int id, JWTTokenDTO jwtTokenDTO);
 		public Task<UserDTO> GetUserByRefreshToken(string refreshToken);
 		public Task<JWTTokenDTO> GetTokenByUserId(int userId);
-		public Task<int> ClearToken(string refreshToken);
+		public Task<int> ClearToken(string accessToken);
 	}
 }

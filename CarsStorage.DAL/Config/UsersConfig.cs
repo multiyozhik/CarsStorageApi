@@ -23,7 +23,7 @@ namespace CarsStorage.DAL.Config
 
 
 		public void Configure(EntityTypeBuilder<UserEntity> builder)
-        {
+		{
 			var user1 = new UserEntity { UserEntityId = 1, UserName = "admin", Email = "admin@mail.ru", Hash = hash1, Salt = salt1 };
 			var user2 = new UserEntity { UserEntityId = 2, UserName = "manager", Email = "manager@mail.ru", Hash = hash2, Salt = salt2 };
 			var user3 = new UserEntity { UserEntityId = 3, UserName = "user3", Email = "user3@mail.ru", Hash = hash3, Salt = salt3 };
@@ -35,10 +35,29 @@ namespace CarsStorage.DAL.Config
 
 			builder.HasData(usersList);
 			builder.HasKey(u => u.UserEntityId);
-			builder.Property(u => u.UserName).ValueGeneratedOnAdd();
+			builder.Property(u => u.UserEntityId).ValueGeneratedOnAdd();
 			builder.ToTable("Users");
 			builder.Property(r => r.UserName).IsRequired();
 			builder.Property(r => r.Email).IsRequired();
+
+			//builder
+			//	.HasMany(u => u.RolesList)
+			//	.WithMany(r => r.UsersList)
+			//	.UsingEntity<UsersRolesEntity>();
+
+
+			builder
+				.HasMany(u => u.RolesList)
+				.WithMany(r => r.UsersList)
+				.UsingEntity<UsersRolesEntity>(
+					j => j
+						.HasOne(ur => ur.RoleEntity)
+						.WithMany()
+						.OnDelete(DeleteBehavior.Cascade),
+					j => j
+						.HasOne(ur => ur.UserEntity)
+						.WithMany()
+						.OnDelete(DeleteBehavior.Cascade));
 		}
-    }
+	}
 }

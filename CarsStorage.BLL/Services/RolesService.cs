@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Exceptions;
 using CarsStorage.BLL.Abstractions.General;
-using CarsStorage.BLL.Abstractions.Services;
 using CarsStorage.BLL.Abstractions.ModelsDTO.Role;
-using CarsStorage.BLL.Abstractions.ModelsDTO.User;
-using System.Security.Claims;
 using CarsStorage.BLL.Abstractions.Repositories;
+using CarsStorage.BLL.Abstractions.Services;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
@@ -44,23 +42,6 @@ namespace CarsStorage.BLL.Implementations.Services
 			catch (Exception exception)
 			{
 				return new ServiceResult<List<RoleDTO>>(null, new BadRequestException(exception.Message));
-			}
-		}
-
-
-		/// <summary>
-		/// Метод возвращает как результат список клаймов для пользователя.
-		/// </summary>
-		public async Task<ServiceResult<List<Claim>>> GetClaimsByUser(UserDTO userDTO)
-		{
-			try
-			{
-				var claimsList = rolesRepository.GetClaimsByUser(userDTO).ToList();
-				return new ServiceResult<List<Claim>>(claimsList, null);
-			}
-			catch(Exception exception)
-			{
-				return new ServiceResult<List<Claim>>(null, new BadRequestException(exception.Message));
 			}
 		}
 	}

@@ -11,6 +11,5 @@ namespace CarsStorage.BLL.Abstractions.Repositories
 	{
 		public Task<List<RoleDTO>> GetList();
 		public Task<List<RoleDTO>> GetRolesByNamesList(IEnumerable<string> roleNamesList);
-		public List<Claim> GetClaimsByUser(UserDTO userDTO);
 	}
 }

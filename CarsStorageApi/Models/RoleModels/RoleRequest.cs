@@ -13,6 +13,6 @@ namespace CarsStorageApi.Models.RoleModels
         public string? Name { get; set; }
 
         [Required]
-        public List<RoleClaimType>? RoleClaims { get; set; }
+        public List<RoleClaimTypeBLL>? RoleClaims { get; set; }
     }
 }

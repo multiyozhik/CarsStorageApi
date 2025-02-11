@@ -43,7 +43,12 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == carDTO.Id)
 				?? throw new Exception("Автомобиль с заданным Id не найден");
-			carEntity = mapper.Map<CarEntity>(carDTO);
+
+			carEntity.Model = carDTO.Model;
+			carEntity.Make = carDTO.Make;
+			carEntity.Color = carDTO.Color;
+			carEntity.IsAccassible = carDTO.IsAccassible;
+
 			dbContext.Cars.Update(carEntity);
 			await dbContext.SaveChangesAsync();
 			return mapper.Map<CarDTO>(carEntity);

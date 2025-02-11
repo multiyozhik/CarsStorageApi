@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Возможные типы клаймов для описания роли.
 	/// </summary>
-	public enum RoleClaimType
+	public enum RoleClaimTypeBLL
 	{
 		CanBrowseCars = 1,
 		CanManageUsers = 2,

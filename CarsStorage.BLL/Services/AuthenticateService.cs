@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using CarsStorage.BLL.Abstractions.Exceptions;
 using CarsStorage.BLL.Abstractions.General;
-using CarsStorage.BLL.Abstractions.Services;
+using CarsStorage.BLL.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Abstractions.ModelsDTO.Token;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
+using CarsStorage.BLL.Abstractions.Repositories;
+using CarsStorage.BLL.Abstractions.Services;
 using CarsStorage.BLL.Implementations.Config;
 using Microsoft.Extensions.Options;
-using CarsStorage.BLL.Abstractions.Repositories;
+using System.Security.Claims;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
@@ -25,8 +27,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			{			
 				var userCreaterDTO = mapper.Map<UserCreaterDTO>(userRegisterDTO);
 				var rolesNames = new List<string>([initialConfig.Value.DefaultRoleName]);
-				userCreaterDTO.RolesList = (await rolesService.GetRolesByNamesList(rolesNames)).Result;
-				var userDTO = await usersRepository.Create(userCreaterDTO);
+				var userDTO = await usersRepository.Register(userCreaterDTO, rolesNames);
 				return new ServiceResult<UserDTO>(userDTO, null);
 			}
 			catch (Exception exception)
@@ -37,16 +38,21 @@ namespace CarsStorage.BLL.Implementations.Services
 
 
 		/// <summary>
-		/// Метод сервиса для входа пользователя в приложении.
+		/// Метод сервиса для входа пользователя в приложении и возврата токена клиенту.
 		/// </summary>
 		public async Task<ServiceResult<JWTTokenDTO>> LogIn(UserLoginDTO userLoginDTO) 
 		{
 			try
 			{
-				var userDTO = await usersRepository.GetUserIfValid(userLoginDTO);
-				var claimsList = await rolesService.GetClaimsByUser(userDTO);
+				var userDTO = await usersRepository.GetUserIfValid(userLoginDTO);			
 
-				var accessTokenFromService = await tokenService.GetAccessToken(claimsList.Result);
+				var roleDTOList = userDTO.RolesList;
+				var roleClaims = roleDTOList.SelectMany(role => role.RoleClaims).Distinct().ToList();
+				var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
+
+				roleClaims.ForEach(roleClaim => userClaims.Add(new Claim(typeof(RoleClaimTypeBLL).ToString(), roleClaim.ToString())));				
+				
+				var accessTokenFromService = await tokenService.GetAccessToken(userClaims);
 				var refreshTokenFromService = await tokenService.GetRefreshToken();
 
 				var jwtTokenDTO = new JWTTokenDTO()
@@ -55,7 +61,7 @@ namespace CarsStorage.BLL.Implementations.Services
 					RefreshToken = refreshTokenFromService.Result
 				};
 
-				await usersRepository.UpdateToken(userDTO.Id, jwtTokenDTO);
+				jwtTokenDTO = await usersRepository.UpdateToken(userDTO.Id, jwtTokenDTO);
 				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null);				
 			}
 			catch (Exception exception)
@@ -64,13 +70,14 @@ namespace CarsStorage.BLL.Implementations.Services
 			}
 		}
 
+
 		/// <summary>
-		/// Метод сервиса возвращает как результат обновленный объект токена.
+		/// Метод сервиса возвращает как результат объект токена с обновленным refresh токеном.
 		/// </summary>
 		public async Task<ServiceResult<JWTTokenDTO>> RefreshToken(JWTTokenDTO jwtTokenDTO)
 		{
-			//по refresh токену нашли userDTO => userId => недействительный access токен,
-			//из кот. получили список клаймов из ClaimsPrincipal для генерации нового access токена,
+			//по refresh токену нашли userDTO, по userId возвращаем истекший access токен,
+			//из кот. получаем список клаймов из ClaimsPrincipal для генерации нового access токена,
 			//refreshToken - просто обновляется рандомная строка (без полезной нагрузки)
 			try
 			{
@@ -99,16 +106,16 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// <summary>
 		/// Метод сервиса для выхода пользователя из приложения, возвращает как результат id вышедшего пользователя.
 		/// </summary>
-		public async Task<ServiceResult<int>> LogOut(JWTTokenDTO jwtTokenDTO) 
+		public async Task<ServiceResult<int>> LogOut(string accessToken) 
 		{
 			try
 			{
-				var userId = await usersRepository.ClearToken(jwtTokenDTO.RefreshToken);
+				var userId = await usersRepository.ClearToken(accessToken);
 				return new ServiceResult<int>(userId, null);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<int>(int.MinValue, new BadRequestException(exception.Message));
+				return new ServiceResult<int>(0, new BadRequestException(exception.Message));
 			}
 		}
 	}

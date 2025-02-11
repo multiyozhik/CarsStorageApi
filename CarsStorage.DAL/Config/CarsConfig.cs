@@ -18,13 +18,14 @@ namespace CarsStorage.DAL.Config
                     new CarEntity { Id = 4, Model = "Audi", Make = "G8", Color = "черный", Count = 5, IsAccassible = true },
                     new CarEntity { Id = 5, Model = "Cherry", Make = "Tigo 4", Color = "серый", Count = 2, IsAccassible = true });
 
-            builder.HasKey(c => c.Id);
-            builder.ToTable("Cars");
+			builder.ToTable("Cars");
+			builder.HasKey(c => c.Id);
+			builder.Property(u => u.Id).ValueGeneratedOnAdd();
             builder.Property(c => c.Model).IsRequired();
             builder.Property(c => c.Make).IsRequired();
             builder.Property(c => c.Color).IsRequired();
             builder.Property(c => c.Count).IsRequired();
             builder.Property(c => c.IsAccassible).IsRequired().HasDefaultValue(true);
-        }
+		}
     }
 }

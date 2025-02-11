@@ -63,30 +63,6 @@ namespace CarsStorage.DAL.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoleEntityUserEntity",
-                columns: table => new
-                {
-                    RolesListRoleEntityId = table.Column<int>(type: "integer", nullable: false),
-                    UsersListUserEntityId = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RoleEntityUserEntity", x => new { x.RolesListRoleEntityId, x.UsersListUserEntityId });
-                    table.ForeignKey(
-                        name: "FK_RoleEntityUserEntity_Roles_RolesListRoleEntityId",
-                        column: x => x.RolesListRoleEntityId,
-                        principalTable: "Roles",
-                        principalColumn: "RoleEntityId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_RoleEntityUserEntity_Users_UsersListUserEntityId",
-                        column: x => x.UsersListUserEntityId,
-                        principalTable: "Users",
-                        principalColumn: "UserEntityId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "UsersRoles",
                 columns: table => new
                 {
@@ -157,11 +133,6 @@ namespace CarsStorage.DAL.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleEntityUserEntity_UsersListUserEntityId",
-                table: "RoleEntityUserEntity",
-                column: "UsersListUserEntityId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_UsersRoles_RoleEntityId",
                 table: "UsersRoles",
                 column: "RoleEntityId");
@@ -172,9 +143,6 @@ namespace CarsStorage.DAL.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Cars");
-
-            migrationBuilder.DropTable(
-                name: "RoleEntityUserEntity");
 
             migrationBuilder.DropTable(
                 name: "UsersRoles");

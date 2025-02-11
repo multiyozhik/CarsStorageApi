@@ -1,4 +1,7 @@
-﻿namespace CarsStorage.DAL.Entities
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CarsStorage.DAL.Entities
 {
 	/// <summary>
 	/// Класс сущности пользователя.
@@ -13,6 +16,5 @@
 		public string? AccessToken { get; set; }
 		public string? RefreshToken { get; set; }
 		public List<RoleEntity>? RolesList { get; set; } = [];
-		public List<UsersRolesEntity> UserRolesList { get; set; } = [];
 	}
 }

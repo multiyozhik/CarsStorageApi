@@ -28,7 +28,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var jwtConfig = jwtOptions.Value;
-				var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Key));
+				var key = new SymmetricSecurityKey(Convert.FromBase64String(jwtConfig.Key));
 				var accessTokenExpires = DateTime.Now.AddMinutes(jwtConfig.ExpireMinutes);
 				var accessToken = new JwtSecurityToken(
 					issuer: jwtConfig.Issuer,
@@ -78,7 +78,7 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var jwtConfig = jwtOptions.Value;
-				var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Key));
+				var key = new SymmetricSecurityKey(Convert.FromBase64String(jwtConfig.Key));
 				var tokenHandler = new JwtSecurityTokenHandler();
 				var validationParameters = new TokenValidationParameters()
 				{
@@ -91,8 +91,7 @@ namespace CarsStorage.BLL.Implementations.Services
 				};
 				var claimsPrincipal = tokenHandler.ValidateToken(experedToken, validationParameters, out SecurityToken securityToken);
 
-				var jwtSecurityToken = securityToken as JwtSecurityToken;
-				if (jwtSecurityToken is null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+				if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
 					throw new SecurityTokenException("Неверный токен");
 				return new ServiceResult<ClaimsPrincipal>(claimsPrincipal, null);
 			}

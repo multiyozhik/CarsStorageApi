@@ -10,17 +10,7 @@ namespace CarsStorage.DAL.Config
 	public class UsersRolesConfig() : IEntityTypeConfiguration<UsersRolesEntity>
 	{
 		public void Configure(EntityTypeBuilder<UsersRolesEntity> builder)
-		{
-			builder
-			   .HasOne(e => e.UserEntity)
-			   .WithMany(s => s.UserRolesList)
-			   .HasForeignKey(e => e.UserEntityId);
-
-			builder
-				.HasOne(e => e.RoleEntity)
-				.WithMany(c => c.UserRolesList)
-				.HasForeignKey(e => e.RoleEntityId);
-
+		{			
 			builder.HasData(
 				new UsersRolesEntity { UserEntityId = 1, RoleEntityId = 1 },
 				new UsersRolesEntity { UserEntityId = 2, RoleEntityId = 2 },

@@ -11,22 +11,21 @@ namespace CarsStorageApi.Controllers
 	/// Класс контроллера для автмобилей.
 	/// </summary>
 	[ApiController]
-	[Route("[controller]/[action]")]	
+	[Route("[controller]/[action]")]
 	public class CarsController(ICarsService carsService, IMapper mapper) : ControllerBase
 	{
 		/// <summary>
 		/// Метод возвращает задачу с списком всех автомобилей.
 		/// </summary>
 		[Authorize(Policy = "RequierBrowseCars")]
-		[Authorize(Policy = "RequierManageCars")]
 		[HttpGet]
-		public async Task<ActionResult<List<CarResponse>>> GetList(HttpContext httpContext)
+		public async Task<ActionResult<List<CarResponse>>> GetList()
 		{
 			var serviceResult = await carsService.GetList();
 			if (serviceResult.IsSuccess)
 			{
 				var carsList = serviceResult.Result.Select(mapper.Map<CarResponse>).ToList();
-				return (httpContext.User.HasClaim(c => c.Value == "RequierBrowseCars"))
+				return (HttpContext.User.HasClaim(c => c.Value == "RequierBrowseCars"))
 					? carsList.Where(c => c.IsAccassible).ToList()
 					: carsList;
 			}
@@ -69,8 +68,8 @@ namespace CarsStorageApi.Controllers
 		/// Метод возвращает задачу с id удаленной записи автомобиля.
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
-		[HttpDelete("{id}")]
-		public async Task<ActionResult<int>> Delete([FromRoute] int id)
+		[HttpDelete]
+		public async Task<ActionResult<int>> Delete([FromQuery] int id)
 		{
 			var serviceResult = await carsService.Delete(id);
 
@@ -100,7 +99,7 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task<ActionResult<CarResponse>> MakeInaccessible([FromRoute]int id)
+		public async Task<ActionResult<CarResponse>> MakeInaccessible([FromQuery]int id)
 		{
 			var serviceResult = await carsService.MakeInaccessible(id);
 

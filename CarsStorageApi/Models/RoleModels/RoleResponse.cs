@@ -9,6 +9,6 @@ namespace CarsStorageApi.Models.RoleModels
     {
         public int Id { get; set; }
         public string? Name { get; set; }
-        public List<RoleClaimType>? RoleClaims { get; set; }
+        public List<RoleClaimTypeBLL>? RoleClaims { get; set; }
     }
 }
