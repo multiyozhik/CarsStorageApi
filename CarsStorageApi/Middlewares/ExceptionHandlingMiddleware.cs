@@ -6,7 +6,6 @@ namespace CarsStorageApi.Middlewares
 	/// <summary>
 	/// middleware для обработки исключений.
 	/// </summary>
-	/// <param name="next"></param>
 	public class ExceptionHandlingMiddleware(RequestDelegate next)
 	{
 		public async Task InvokeAsync(HttpContext httpContext)
@@ -21,7 +20,7 @@ namespace CarsStorageApi.Middlewares
 			}
 		}
 
-		private async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
+		private static async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
 		{
 			var response = httpContext.Response;
 			var statusCode = exception switch

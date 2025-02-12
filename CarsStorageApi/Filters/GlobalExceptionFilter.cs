@@ -7,6 +7,7 @@ namespace CarsStorageApi.Filters
 	/// <summary>
 	/// Класс глобального фильтра исключений.
 	/// </summary>
+	[AttributeUsage(AttributeTargets.All)]
 	public class GlobalExceptionFilter : Attribute, IAsyncExceptionFilter
 	{		
 		public async Task OnExceptionAsync(ExceptionContext context)

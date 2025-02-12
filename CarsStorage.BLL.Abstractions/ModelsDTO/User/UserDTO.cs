@@ -8,8 +8,8 @@ namespace CarsStorage.BLL.Abstractions.ModelsDTO.User
 	public class UserDTO
 	{
 		public int Id { get; set; }
-		public string? UserName { get; set; }
-		public string? Email { get; set; }
+		public string UserName { get; set; } = string.Empty;
+		public string Email { get; set; } =	string.Empty;
 		public List<RoleDTO>? RolesList { get; set; }
 	}
 }

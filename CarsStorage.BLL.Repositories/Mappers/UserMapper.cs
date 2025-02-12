@@ -20,7 +20,9 @@ namespace CarsStorage.BLL.Repositories.Mappers
 			CreateMap<UserEntity, UserDTO>()
 				.ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.UserEntityId));
 
-			CreateMap<UserCreaterDTO, UserEntity>();			
+			CreateMap<UserCreaterDTO, UserEntity>();
+
+			CreateMap<UserUpdaterDTO, UserEntity>();
 		}
 	}
 }

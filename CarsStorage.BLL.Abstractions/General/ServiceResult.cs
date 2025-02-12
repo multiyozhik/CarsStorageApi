@@ -1,15 +1,26 @@
 ﻿namespace CarsStorage.BLL.Abstractions.General
 {
 	/// <summary>
-	/// Класс результата работы сервиса.
+	/// Типизированный класс результата работы сервис (конструктор - для результата и конструктор - для ошибки). 
 	/// </summary>
-	public class ServiceResult<T>(T? result, Exception? serviceError)
+	public class ServiceResult<T>
 	{
-		public T? Result { get; set; } = result;
-		public Exception? ServiceError { get; set; } = serviceError;
-		public bool IsSuccess
+		private readonly T? result;
+		private readonly Exception? serviceError;
+		public T Result => result ?? throw new InvalidOperationException("Результат сервиса не установлен.");
+		public Exception ServiceError => serviceError ?? throw new InvalidOperationException("Ошибка сервиса не установлена.");
+		public bool IsSuccess => result is not null;   //результат сервиса в дальнейшем в методах будем возвращать через проверку
+
+		public ServiceResult(T result)
 		{
-			get => ServiceError is null && Result is not null;
+			this.result = result;
+			serviceError = null;
+		}
+
+		public ServiceResult(Exception serviceError)
+		{
+			this.serviceError = serviceError;
+			result = default;
 		}
 	}
 }

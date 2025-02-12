@@ -7,10 +7,10 @@ namespace CarsStorageApi.Models.CarModels
 	/// </summary>
 	public class CarCountRequest
     {
-        [Required]
+        [Required(ErrorMessage = "Укажите Id автомобиля")]
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Укажите количество автомобилей")]
         public int Count { get; set; }
     }
 }

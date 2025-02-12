@@ -1,5 +1,4 @@
-﻿using CarsStorage.BLL.Abstractions.ModelsDTO.Role;
-
+﻿
 namespace CarsStorage.BLL.Abstractions.ModelsDTO.User
 {
 	/// <summary>
@@ -7,9 +6,9 @@ namespace CarsStorage.BLL.Abstractions.ModelsDTO.User
 	/// </summary>
 	public class UserCreaterDTO
 	{
-		public string? UserName { get; set; }
-		public string? Email { get; set; }
-		public string? Password { get; set; }
-		public List<RoleDTO>? RolesList { get; set; }
+		public string UserName { get; set; } = string.Empty;
+		public string Email { get; set; } = string.Empty;
+		public string Password { get; set; } = string.Empty;
+		public List<string> RoleNamesList { get; set; } = [];
 	}
 }

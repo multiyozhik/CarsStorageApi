@@ -30,7 +30,7 @@ namespace CarsStorageApi.Controllers
 					: carsList;
 			}
 			else
-				return BadRequest(serviceResult.ServiceError);			
+				throw serviceResult.ServiceError;
 		}
 
 
@@ -46,7 +46,7 @@ namespace CarsStorageApi.Controllers
 			if (serviceResult.IsSuccess)
 				return mapper.Map<CarResponse>(serviceResult.Result);
 			else
-				return BadRequest(serviceResult.ServiceError);
+				throw serviceResult.ServiceError;
 		}
 
 		/// <summary>
@@ -60,8 +60,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<CarResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ServiceError);
+			throw serviceResult.ServiceError;
 		}
 
 		/// <summary>
@@ -75,8 +74,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<int>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ServiceError);
+			throw serviceResult.ServiceError;
 		}
 
 		/// <summary>
@@ -105,8 +103,7 @@ namespace CarsStorageApi.Controllers
 
 			if (serviceResult.IsSuccess)
 				return mapper.Map<CarResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ServiceError);
+			throw serviceResult.ServiceError;
 		}
 	}
 }

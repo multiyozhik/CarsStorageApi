@@ -41,6 +41,8 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		{
 			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == userLoginDTO.UserName)
 				?? throw new Exception("Неверный логин.");
+			if (string.IsNullOrEmpty(userEntity.Hash) || string.IsNullOrEmpty(userEntity.Salt))
+				throw new Exception("Не определены пароль и соль.");
 			if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.Hash, userEntity.Salt))
 				throw new Exception("Неверный пароль.");				
 			return mapper.Map<UserDTO>(userEntity);
@@ -48,11 +50,17 @@ namespace CarsStorage.BLL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод возвращает созданного администратором пользователя в БД.
+		/// Метод возвращает созданного пользователя в БД (пароль хешируется перед сохранением в БД).
 		/// </summary>
 		public async Task<UserDTO> Create(UserCreaterDTO userCreaterDTO)
 		{
 			var userEntity = mapper.Map<UserEntity>(userCreaterDTO);
+			var hashedPassword = passwordHasher.HashPassword(userCreaterDTO.Password);
+			userEntity.Hash = hashedPassword.Hash;
+			userEntity.Salt = hashedPassword.Salt;
+			if (userCreaterDTO.RoleNamesList is null)
+				throw new Exception("Не определены роли пользователя.");
+			userEntity.RolesList = await dbContext.Roles.Where(r => userCreaterDTO.RoleNamesList.Contains(r.Name)).ToListAsync();
 			await dbContext.Users.AddAsync(userEntity);
 			await dbContext.SaveChangesAsync();
 			return mapper.Map<UserDTO>(userEntity);
@@ -60,34 +68,17 @@ namespace CarsStorage.BLL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод возвращает зарегистрированного пользователя в БД пользователя с передачей дефолтного списка ролей (пароль хешируется перед сохранением в БД).
-		/// </summary>
-		public async Task<UserDTO> Register(UserCreaterDTO userCreaterDTO, IEnumerable<string> rolesNamesList)
-		{
-			var userEntity = mapper.Map<UserEntity>(userCreaterDTO);
-			userEntity.RolesList = await dbContext.Roles.Where(r => rolesNamesList.Contains(r.Name)).ToListAsync();
-			var hashedPassword = passwordHasher.HashPassword(userCreaterDTO.Password);
-			userEntity.Hash = hashedPassword.Hash;
-			userEntity.Salt = hashedPassword.Salt;
-			var user = await dbContext.Users.AddAsync(userEntity);
-			await dbContext.SaveChangesAsync(); 
-			return mapper.Map<UserDTO>(userEntity);
-		}
-
-
-		/// <summary>
 		/// Метод возвращает обновленного пользователя из БД.
 		/// </summary>
-		public async Task<UserDTO> Update(UserDTO userDTO)
+		public async Task<UserDTO> Update(UserUpdaterDTO userUpdaterDTO)
 		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userDTO.Id)
-				?? throw new Exception("Пользователь с заданным Id не найден");
-			userEntity.UserName = userDTO.UserName;
-			userEntity.Email = userDTO.Email;
-			if (userDTO.RolesList is null)
-				throw new Exception("Не заданы роли пользователя.");
-			var rolesEntity = userDTO.RolesList.Select(mapper.Map<RoleEntity>).ToList();				
-			userEntity.RolesList = rolesEntity;
+			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userUpdaterDTO.Id)
+				?? throw new Exception("Пользователь с заданным Id не найден");			
+			userEntity.UserName = userUpdaterDTO.UserName;
+			userEntity.Email = userUpdaterDTO.Email;
+			if (userUpdaterDTO.RoleNamesList is null)
+				throw new Exception("Не определены роли пользователя.");
+			userEntity.RolesList = await dbContext.Roles.Where(r => userUpdaterDTO.RoleNamesList.Contains(r.Name)).ToListAsync();
 			dbContext.Users.Update(userEntity);
 			await dbContext.SaveChangesAsync();
 			return mapper.Map<UserDTO>(userEntity);
@@ -123,7 +114,11 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userId)
 				?? throw new Exception("Пользователь с заданным id не найден");
-			return new JWTTokenDTO { AccessToken = userEntity.AccessToken , RefreshToken = userEntity.RefreshToken};
+			return new JWTTokenDTO
+			{
+				AccessToken = userEntity.AccessToken ?? throw new Exception("Токен доступа не определен."),
+				RefreshToken = userEntity.RefreshToken ?? throw new Exception("Токен обновления не определен.")
+			};
 		}
 
 

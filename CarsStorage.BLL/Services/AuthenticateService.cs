@@ -1,13 +1,10 @@
-﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.Exceptions;
+﻿using CarsStorage.BLL.Abstractions.Exceptions;
 using CarsStorage.BLL.Abstractions.General;
 using CarsStorage.BLL.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Abstractions.ModelsDTO.Token;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.Repositories;
 using CarsStorage.BLL.Abstractions.Services;
-using CarsStorage.BLL.Implementations.Config;
-using Microsoft.Extensions.Options;
 using System.Security.Claims;
 
 namespace CarsStorage.BLL.Implementations.Services
@@ -15,28 +12,8 @@ namespace CarsStorage.BLL.Implementations.Services
 	/// <summary>
 	/// Сервис для аутентификации.
 	/// </summary>
-	public class AuthenticateService(IUsersRepository usersRepository, IRolesService rolesService, ITokensService tokenService, 
-		IMapper mapper, IOptions<InitialConfig> initialConfig) : IAuthenticateService
+	public class AuthenticateService(IUsersRepository usersRepository, ITokensService tokenService) : IAuthenticateService
 	{
-		/// <summary>
-		/// Метод сервиса для регистрации пользователя в приложении.
-		/// </summary>
-		public async Task<ServiceResult<UserDTO>> Register(UserRegisterDTO userRegisterDTO)
-		{
-			try
-			{			
-				var userCreaterDTO = mapper.Map<UserCreaterDTO>(userRegisterDTO);
-				var rolesNames = new List<string>([initialConfig.Value.DefaultRoleName]);
-				var userDTO = await usersRepository.Register(userCreaterDTO, rolesNames);
-				return new ServiceResult<UserDTO>(userDTO, null);
-			}
-			catch (Exception exception)
-			{
-				return new ServiceResult<UserDTO>(null, new BadRequestException(exception.Message));
-			}
-		}
-
-
 		/// <summary>
 		/// Метод сервиса для входа пользователя в приложении и возврата токена клиенту.
 		/// </summary>
@@ -45,15 +22,13 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var userDTO = await usersRepository.GetUserIfValid(userLoginDTO);			
-
-				var roleDTOList = userDTO.RolesList;
-				var roleClaims = roleDTOList.SelectMany(role => role.RoleClaims).Distinct().ToList();
+				var roleClaims = userDTO.RolesList.SelectMany(role => role.RoleClaims).Distinct().ToList();
 				var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
 
 				roleClaims.ForEach(roleClaim => userClaims.Add(new Claim(typeof(RoleClaimTypeBLL).ToString(), roleClaim.ToString())));				
 				
-				var accessTokenFromService = await tokenService.GetAccessToken(userClaims);
-				var refreshTokenFromService = await tokenService.GetRefreshToken();
+				var accessTokenFromService = tokenService.GetAccessToken(userClaims);
+				var refreshTokenFromService = tokenService.GetRefreshToken();
 
 				var jwtTokenDTO = new JWTTokenDTO()
 				{
@@ -62,11 +37,11 @@ namespace CarsStorage.BLL.Implementations.Services
 				};
 
 				jwtTokenDTO = await usersRepository.UpdateToken(userDTO.Id, jwtTokenDTO);
-				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO, null);				
+				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO);				
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<JWTTokenDTO>(null, new UnauthorizedAccessException(exception.Message));
+				return new ServiceResult<JWTTokenDTO>(new UnauthorizedAccessException(exception.Message));
 			}
 		}
 
@@ -83,10 +58,10 @@ namespace CarsStorage.BLL.Implementations.Services
 			{
 				var userDTO = await usersRepository.GetUserByRefreshToken(jwtTokenDTO.RefreshToken);
 				jwtTokenDTO = await usersRepository.GetTokenByUserId(userDTO.Id);
-				var principal = await tokenService.GetClaimsPrincipalFromExperedToken(jwtTokenDTO.AccessToken);
+				var principal = tokenService.GetClaimsPrincipalFromExperedToken(jwtTokenDTO.AccessToken);
 
-				var accessToken = await tokenService.GetAccessToken(principal.Result.Claims.ToList());
-				var refreshToken = await tokenService.GetRefreshToken();
+				var accessToken = tokenService.GetAccessToken(principal.Result.Claims.ToList());
+				var refreshToken = tokenService.GetRefreshToken();
 
 				var newRefreshingToken = new JWTTokenDTO()
 				{
@@ -94,11 +69,11 @@ namespace CarsStorage.BLL.Implementations.Services
 					RefreshToken = refreshToken.Result
 				};
 				await usersRepository.UpdateToken(userDTO.Id, newRefreshingToken);
-				return new ServiceResult<JWTTokenDTO>(newRefreshingToken, null);
+				return new ServiceResult<JWTTokenDTO>(newRefreshingToken);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<JWTTokenDTO>(null, new UnauthorizedAccessException(exception.Message));
+				return new ServiceResult<JWTTokenDTO>(new UnauthorizedAccessException(exception.Message));
 			}
 		}
 
@@ -111,11 +86,11 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var userId = await usersRepository.ClearToken(accessToken);
-				return new ServiceResult<int>(userId, null);
+				return new ServiceResult<int>(userId);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<int>(0, new BadRequestException(exception.Message));
+				return new ServiceResult<int>(new BadRequestException(exception.Message));
 			}
 		}
 	}

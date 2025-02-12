@@ -8,8 +8,8 @@ namespace CarsStorage.BLL.Abstractions.Services
 	/// </summary>
 	public interface ITokensService
 	{
-		public Task<ServiceResult<string>> GetAccessToken(IEnumerable<Claim> claims);
-		public Task<ServiceResult<string>> GetRefreshToken();
-		public Task<ServiceResult<ClaimsPrincipal>> GetClaimsPrincipalFromExperedToken(string experedToken);
+		public ServiceResult<string> GetAccessToken(IEnumerable<Claim> claims);
+		public ServiceResult<string> GetRefreshToken();
+		public ServiceResult<ClaimsPrincipal> GetClaimsPrincipalFromExperedToken(string experedToken);
 	}
 }

@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Role;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
 using CarsStorageApi.Models.UserModels;
 
@@ -12,15 +11,17 @@ namespace CarsStorageApi.MappersApi
 	{
 		public UserMapperApi() 
 		{
-			CreateMap<RegisterUserRequest, UserRegisterDTO>();
+			CreateMap<RegisterUserRequest, UserCreaterDTO>()
+				.ForMember(dest => dest.RoleNamesList, opt => opt.MapFrom(src => new List<string>()));
 
 			CreateMap<LoginUserRequest, UserLoginDTO>();
 
-			CreateMap<UserRequest, UserCreaterDTO>()
-				.ForMember(dest => dest.RolesList, opt => opt.MapFrom(src => new List<RoleDTO>()));
+			CreateMap<UserRequest, UserCreaterDTO>();
 
 			CreateMap<UserDTO, UserResponse>()
-				.ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.RolesList.Select(role => role.Name).ToList()));
+				.ForMember(dest => dest.RoleNamesList, opt => opt.MapFrom(src => src.RolesList.Select(role => role.Name).ToList()));
+
+			CreateMap<UserResponse, UserUpdaterDTO>();
 		}	
 	}
 }

@@ -5,10 +5,10 @@
 	/// </summary>
 	public class CarCreaterDTO
 	{
-		public string? Model { get; set; }
-		public string? Make { get; set; }
-		public string? Color { get; set; }
+		public string Model { get; set; } = string.Empty;
+		public string Make { get; set; } = string.Empty;
+		public string Color { get; set; } = string.Empty;
 		public int Count { get; set; }
-		public bool? IsAccassible { get; set; }
+		public bool IsAccassible { get; set; }
 	}
 }

@@ -7,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace CarsStorage.BLL.Implementations.Services
 {
@@ -23,7 +22,7 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// <param name="claims">Коллекция клаймов, на основе которых генерируется токен.</param>
 		/// <param name="expires">Возвращаемое значение даты и времени истечения жизни сгенерированного токена.</param>
 		/// <returns></returns>
-		public async Task<ServiceResult<string>> GetAccessToken(IEnumerable<Claim> claims)
+		public ServiceResult<string> GetAccessToken(IEnumerable<Claim> claims)
 		{
 			try
 			{
@@ -37,11 +36,11 @@ namespace CarsStorage.BLL.Implementations.Services
 					expires: accessTokenExpires,
 					signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
 				var tokenHandler = new JwtSecurityTokenHandler();
-				return new ServiceResult<string>(tokenHandler.WriteToken(accessToken), null);
+				return new ServiceResult<string>(tokenHandler.WriteToken(accessToken));
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<string>(null, new BadRequestException(exception.Message));
+				return new ServiceResult<string>(new BadRequestException(exception.Message));
 			}
 
 		}
@@ -51,29 +50,26 @@ namespace CarsStorage.BLL.Implementations.Services
 		/// Метод обновления токена доступа, генерация генератором случайных чисел с преобразованием в строку.
 		/// </summary>
 		/// <returns></returns>
-		public async Task<ServiceResult<string>> GetRefreshToken()
+		public ServiceResult<string> GetRefreshToken()
 		{
 			try
 			{
 				var randomNumber = new byte[32];
 				using var randomNumberGenerator = RandomNumberGenerator.Create();
 				randomNumberGenerator.GetBytes(randomNumber);
-				return new ServiceResult<string>(Convert.ToHexString(randomNumber), null);
+				return new ServiceResult<string>(Convert.ToHexString(randomNumber));
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<string>(null, new ServerException(exception.Message));
+				return new ServiceResult<string>(new ServerException(exception.Message));
 			}
 		}
 
 
 		/// <summary>
-		/// Метод получения из проверяемого токена доступа с истекшим сроком жизни объекта ClaimsPrincipal для получения клаймов.
+		/// Метод получения из токена доступа с истекшим сроком жизни объекта ClaimsPrincipal для получения клаймов.
 		/// </summary>
-		/// <param name="experedToken">Токен доступа с истекшим сроком жизни</param>
-		/// <returns></returns>
-		/// <exception cref="SecurityTokenException">Исключение о невалидноcти проверяемого токена (когда время его жизни прошло).</exception>
-		public async Task<ServiceResult<ClaimsPrincipal>> GetClaimsPrincipalFromExperedToken(string experedToken)
+		public ServiceResult<ClaimsPrincipal> GetClaimsPrincipalFromExperedToken(string experedToken)
 		{
 			try
 			{
@@ -93,11 +89,11 @@ namespace CarsStorage.BLL.Implementations.Services
 
 				if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
 					throw new SecurityTokenException("Неверный токен");
-				return new ServiceResult<ClaimsPrincipal>(claimsPrincipal, null);
+				return new ServiceResult<ClaimsPrincipal>(claimsPrincipal);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<ClaimsPrincipal>(null, new BadRequestException(exception.Message));
+				return new ServiceResult<ClaimsPrincipal>(new BadRequestException(exception.Message));
 			}
 		}
 	}

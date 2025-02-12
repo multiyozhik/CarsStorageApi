@@ -6,7 +6,8 @@ using CarsStorage.BLL.Implementations.Services;
 using CarsStorage.BLL.Repositories.Implementations;
 using CarsStorage.BLL.Repositories.Utils;
 using CarsStorage.DAL.DbContexts;
-using CarsStorageApi.Models;
+using CarsStorageApi.Filters;
+using CarsStorageApi.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -34,10 +35,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services
-		.AddScoped<IRolesRepository, RolesRepository>()
 		.AddScoped<IUsersRepository, UsersRepository>()
 		.AddScoped<ICarsRepository, CarsRepository>()
-		.AddScoped<IRolesService, RolesService>()
 		.AddScoped<IUsersService, UsersService>()
 		.AddScoped<ITokensService, TokensService>()
 		.AddScoped<IPasswordHasher, PasswordHasher>()
@@ -53,8 +52,9 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	.AddJwtBearer(options =>  {
 		var jwt = config.GetSection("JWTConfig");
 		options.TokenValidationParameters = new TokenValidationParameters
-		{
-			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"])),
+		{			
+			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"] 
+				?? throw new Exception("Не определен секретный ключ токена в конфигурации приложения."))),
 			ValidIssuer = jwt["Issuer"],
 			ValidAudience = jwt["Audience"],
 			ValidateIssuer = GetParameterValue(jwt["ValidateIssuer"] ?? "true"),
@@ -76,6 +76,11 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddControllers();
 	services.AddEndpointsApiExplorer();
+
+	services.AddControllersWithViews(options =>
+	{
+		options.Filters.Add<GlobalExceptionFilter>();
+	});
 
 	services.AddAutoMapper(Assembly.Load("CarsStorageApi"));
 	services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Implementations"));
@@ -118,6 +123,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 static void Configure(WebApplication app, IHostEnvironment env)
 {
+	app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 	if (app.Environment.IsDevelopment())
 	{
 		app.UseSwagger();
@@ -126,8 +133,6 @@ static void Configure(WebApplication app, IHostEnvironment env)
 			c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
 		});
 	}
-
-	//app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 	app.UseHsts();
 
@@ -150,7 +155,7 @@ static void ValidateAppConfigs(IConfiguration jwtConfig)
 {
 	var initialConfig = jwtConfig.GetSection("InitialConfig")
 		?? throw new Exception("Отсутствуют начальные конфигурации.");
-	if (string.IsNullOrEmpty(initialConfig["DefaultRoleName"]))
+	if (string.IsNullOrEmpty(initialConfig["InitialRoleName"]))
 		throw new Exception("Не определена роль пользователя при его регистрации в конфигурациях приложения.");
 
 	var config = jwtConfig.GetSection("JWTConfig")

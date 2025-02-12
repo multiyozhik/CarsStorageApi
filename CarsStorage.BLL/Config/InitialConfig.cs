@@ -5,6 +5,6 @@
 	/// </summary>
 	public class InitialConfig
 	{
-		public string? DefaultRoleName { get; set; }
+		public string InitialRoleName { get; set; } = string.Empty;
 	}
 }

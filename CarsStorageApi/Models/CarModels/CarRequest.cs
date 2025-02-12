@@ -8,15 +8,18 @@ namespace CarsStorageApi.Models.CarModels
     public class CarRequest
     {
         [Required(ErrorMessage = "Укажите модель автомобиля")]
-        public string? Model { get; set; }
+		[StringLength(50, MinimumLength = 3, ErrorMessage = "Длина строки д.б. от 3 до 30 символов")]
+		public string Model { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Укажите марку автомобиля")]
-        public string? Make { get; set; }
+		[Required(ErrorMessage = "Укажите марку автомобиля")]
+		[StringLength(50, MinimumLength = 2, ErrorMessage = "Длина строки д.б. от 3 до 30 символов")]
+		public string Make { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Укажите цвет автомобиля")]
-        public string? Color { get; set; }
+		[Required(ErrorMessage = "Укажите цвет автомобиля")]
+		[StringLength(50, MinimumLength = 3, ErrorMessage = "Длина строки д.б. от 3 до 30 символов")]
+		public string Color { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Укажите количество автомобилей")]
+		[Required(ErrorMessage = "Укажите количество автомобилей")]
         public int Count { get; set; }
         public bool IsAccassible { get; set; }
     }

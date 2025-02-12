@@ -20,11 +20,11 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var carsDTOList = await carsRepository.GetList();
-				return new ServiceResult<List<CarDTO>>(carsDTOList, null);
+				return new ServiceResult<List<CarDTO>>(carsDTOList);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<List<CarDTO>>(null, new NotFoundException(exception.Message));
+				return new ServiceResult<List<CarDTO>>(new NotFoundException(exception.Message));
 			}			
 		}
 
@@ -37,11 +37,11 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var carDTO = await carsRepository.Create(mapper.Map<CarDTO>(carCreaterDTO));
-				return new ServiceResult<CarDTO>(carDTO, null);
+				return new ServiceResult<CarDTO>(carDTO);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<CarDTO>(null, new BadRequestException(exception.Message));
+				return new ServiceResult<CarDTO>(new BadRequestException(exception.Message));
 			}
 		}
 
@@ -54,11 +54,11 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var car = await carsRepository.Update(carDTO);
-				return new ServiceResult<CarDTO>(car, null);
+				return new ServiceResult<CarDTO>(car);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<CarDTO>(null, new BadRequestException(exception.Message));
+				return new ServiceResult<CarDTO>(new BadRequestException(exception.Message));
 			}
 		}
 
@@ -70,11 +70,11 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				await carsRepository.Delete(id);
-				return new ServiceResult<int>(id, null);
+				return new ServiceResult<int>(id);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<int>(id, new BadRequestException(exception.Message));
+				return new ServiceResult<int>(new BadRequestException(exception.Message));
 			}
 		}
 
@@ -87,11 +87,11 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var carDTO = await carsRepository.UpdateCount(id, count);
-				return new ServiceResult<CarDTO>(carDTO, null);
+				return new ServiceResult<CarDTO>(carDTO);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<CarDTO>(null, new BadRequestException(exception.Message));
+				return new ServiceResult<CarDTO>(new BadRequestException(exception.Message));
 			}
 		}
 
@@ -104,11 +104,11 @@ namespace CarsStorage.BLL.Implementations.Services
 			try
 			{
 				var carDTO = await carsRepository.MakeInaccessible(id);
-				return new ServiceResult<CarDTO>(carDTO, null);
+				return new ServiceResult<CarDTO>(carDTO);
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<CarDTO>(null, new BadRequestException(exception.Message));
+				return new ServiceResult<CarDTO>(new BadRequestException(exception.Message));
 			}
 		}
 	}

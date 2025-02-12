@@ -15,6 +15,6 @@ namespace CarsStorageApi.Models.UserModels
 
         [Required(ErrorMessage = "Укажите пароль пользователя")]
         public string? Password { get; set; }
-        public List<string>? Roles { get; set; }
+        public List<string>? RoleNamesList { get; set; }
     }
 }
