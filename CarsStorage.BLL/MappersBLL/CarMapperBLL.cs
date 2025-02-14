@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
+using CarsStorage.Abstractions.ModelsDTO.Car;
 
-namespace CarsStorage.BLL.Implementations.MappersBLL
+namespace CarsStorage.BLL.Services.MappersBLL
 {
 	public class CarMapperBLL : Profile
 	{

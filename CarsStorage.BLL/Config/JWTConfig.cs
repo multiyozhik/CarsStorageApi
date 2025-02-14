@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Implementations.Config
+﻿namespace CarsStorage.BLL.Services.Config
 {
 	/// <summary>
 	/// Класс конфигураций токена для его генерации и валидации.

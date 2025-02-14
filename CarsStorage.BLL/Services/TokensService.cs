@@ -1,14 +1,14 @@
-﻿using CarsStorage.BLL.Abstractions.Exceptions;
-using CarsStorage.BLL.Abstractions.General;
-using CarsStorage.BLL.Abstractions.Services;
-using CarsStorage.BLL.Implementations.Config;
+﻿using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.Exceptions;
+using CarsStorage.Abstractions.General;
+using CarsStorage.BLL.Services.Config;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 
-namespace CarsStorage.BLL.Implementations.Services
+namespace CarsStorage.BLL.Services.Services
 {
 	/// <summary>
 	/// Сервис для методов токенов доступа.

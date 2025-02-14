@@ -1,7 +1,7 @@
-﻿using CarsStorage.BLL.Abstractions.General;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
+﻿using CarsStorage.Abstractions.General;
+using CarsStorage.Abstractions.ModelsDTO.Car;
 
-namespace CarsStorage.BLL.Abstractions.Services
+namespace CarsStorage.Abstractions.BLL.Services
 {
 	/// <summary>
 	/// Интерфейс для сервиса автомобилей.

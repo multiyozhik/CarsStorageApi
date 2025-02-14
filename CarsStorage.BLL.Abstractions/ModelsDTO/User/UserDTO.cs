@@ -1,4 +1,4 @@
-﻿using CarsStorage.BLL.Abstractions.ModelsDTO.Role;
+﻿using CarsStorage.Abstractions.ModelsDTO.Role;
 
 namespace CarsStorage.BLL.Abstractions.ModelsDTO.User
 {

@@ -1,6 +1,6 @@
-﻿using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
+﻿using CarsStorage.Abstractions.ModelsDTO.Car;
 
-namespace CarsStorage.BLL.Abstractions.Repositories
+namespace CarsStorage.Abstractions.DAL.Repositories
 {
 	/// <summary>
 	/// Интерфейс для репозитория автомобилей.

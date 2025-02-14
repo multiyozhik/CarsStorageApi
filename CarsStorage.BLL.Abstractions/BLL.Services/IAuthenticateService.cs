@@ -1,8 +1,8 @@
-﻿using CarsStorage.BLL.Abstractions.General;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Token;
-using CarsStorage.BLL.Abstractions.ModelsDTO.User;
+﻿using CarsStorage.Abstractions.General;
+using CarsStorage.Abstractions.ModelsDTO.Token;
+using CarsStorage.Abstractions.ModelsDTO.User;
 
-namespace CarsStorage.BLL.Abstractions.Services
+namespace CarsStorage.Abstractions.BLL.Services
 {
 	/// <summary>
 	/// Интерфейс для аутентификации пользователей.

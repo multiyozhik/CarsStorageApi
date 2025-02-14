@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
-using CarsStorage.BLL.Abstractions.Repositories;
+using CarsStorage.Abstractions.DAL.Repositories;
+using CarsStorage.Abstractions.ModelsDTO.Car;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarsStorage.BLL.Repositories.Implementations
+namespace CarsStorage.DAL.Repositories.Implementations
 {
 	/// <summary>
 	/// Класс репозитория автомобилей.

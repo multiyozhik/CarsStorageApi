@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Abstractions.ModelsDTO.Role
+﻿namespace CarsStorage.Abstractions.ModelsDTO.Role
 {
 	/// <summary>
 	/// Класс для роли с id.

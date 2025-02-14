@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Token;
+using CarsStorage.Abstractions.DAL.Repositories;
+using CarsStorage.Abstractions.ModelsDTO.Token;
+using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
-using CarsStorage.BLL.Abstractions.Repositories;
-using CarsStorage.BLL.Repositories.Utils;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
+using CarsStorage.DAL.Repositories.Utils;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarsStorage.BLL.Repositories.Implementations
+namespace CarsStorage.DAL.Repositories.Implementations
 {
 	/// <summary>
 	/// Класс репозитория для пользователей (использует сущность пользователя и возвращает данные пользователя без пароля).
@@ -35,16 +36,24 @@ namespace CarsStorage.BLL.Repositories.Implementations
 		}
 
 		/// <summary>
-		/// Метод проверяет валидность логина и пароля и возвращает найденного в БД пользователя.
+		/// Метод проверяет валидность логина и пароля в БД пользователя.
 		/// </summary>
-		public async Task<UserDTO> GetUserIfValid(UserLoginDTO userLoginDTO)
+		public async Task IsUserValid(UserLoginDTO userLoginDTO)
 		{
-			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == userLoginDTO.UserName)
+			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == userLoginDTO.UserName)
 				?? throw new Exception("Неверный логин.");
 			if (string.IsNullOrEmpty(userEntity.Hash) || string.IsNullOrEmpty(userEntity.Salt))
 				throw new Exception("Не определены пароль и соль.");
 			if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.Hash, userEntity.Salt))
-				throw new Exception("Неверный пароль.");				
+				throw new Exception("Неверный пароль.");			
+		}
+
+		/// <summary>
+		/// Метод возвращает найденного в БД пользователя с его ролями.
+		/// </summary>
+		public async Task<UserDTO> GetUserWithRoles(UserLoginDTO userLoginDTO)
+		{
+			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == userLoginDTO.UserName);				
 			return mapper.Map<UserDTO>(userEntity);
 		}
 
@@ -65,6 +74,22 @@ namespace CarsStorage.BLL.Repositories.Implementations
 			await dbContext.SaveChangesAsync();
 			return mapper.Map<UserDTO>(userEntity);
 		}
+
+
+		/// <summary>
+		/// Метод возвращает созданного пользователя в БД, аутентентифицированного в сервисе аутентификации.
+		/// </summary>
+		public async Task<UserDTO> CreateAuthUser(UserCreaterDTO userCreaterDTO)
+		{
+			var userEntity = mapper.Map<UserEntity>(userCreaterDTO);			
+			if (userCreaterDTO.RoleNamesList is null)
+				throw new Exception("Не определены роли пользователя.");
+			userEntity.RolesList = await dbContext.Roles.Where(r => userCreaterDTO.RoleNamesList.Contains(r.Name)).ToListAsync();
+			await dbContext.Users.AddAsync(userEntity);
+			await dbContext.SaveChangesAsync();
+			return mapper.Map<UserDTO>(userEntity);
+		}
+
 
 
 		/// <summary>

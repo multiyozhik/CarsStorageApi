@@ -1,7 +1,7 @@
-﻿using CarsStorage.BLL.Abstractions.General;
+﻿using CarsStorage.Abstractions.General;
 using System.Security.Claims;
 
-namespace CarsStorage.BLL.Abstractions.Services
+namespace CarsStorage.Abstractions.BLL.Services
 {
 	/// <summary>
 	/// Интерфейс для сервиса токенов.

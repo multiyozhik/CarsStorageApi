@@ -1,7 +1,6 @@
 ﻿using System.Security.Cryptography;
-using System.Text;
 
-namespace CarsStorage.BLL.Repositories.Utils
+namespace CarsStorage.DAL.Repositories.Utils
 {
 	/// <summary>
 	/// Класс пароля (свойства хеш и соль) используется в БД как свойство сущности пользователя.

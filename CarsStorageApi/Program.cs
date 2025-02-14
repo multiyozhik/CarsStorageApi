@@ -1,11 +1,11 @@
-using CarsStorage.BLL.Abstractions.ModelsDTO;
-using CarsStorage.BLL.Abstractions.Repositories;
-using CarsStorage.BLL.Abstractions.Services;
-using CarsStorage.BLL.Implementations.Config;
-using CarsStorage.BLL.Implementations.Services;
-using CarsStorage.BLL.Repositories.Implementations;
-using CarsStorage.BLL.Repositories.Utils;
+using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.DAL.Repositories;
+using CarsStorage.Abstractions.ModelsDTO;
+using CarsStorage.BLL.Services.Config;
+using CarsStorage.BLL.Services.Services;
 using CarsStorage.DAL.DbContexts;
+using CarsStorage.DAL.Repositories.Implementations;
+using CarsStorage.DAL.Repositories.Utils;
 using CarsStorageApi.Filters;
 using CarsStorageApi.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -29,7 +29,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddOptions<InitialConfig>().BindConfiguration("InitialConfig");
 
-	services.AddOptions<JWTConfig>().BindConfiguration("JWTConfig");	
+	services.AddOptions<JWTConfig>().BindConfiguration("JWTConfig");
 
 	services.AddDbContext<AppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
@@ -49,11 +49,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 	})
-	.AddJwtBearer(options =>  {
+	.AddJwtBearer(options =>
+	{
 		var jwt = config.GetSection("JWTConfig");
 		options.TokenValidationParameters = new TokenValidationParameters
-		{			
-			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"] 
+		{
+			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"]
 				?? throw new Exception("Не определен секретный ключ токена в конфигурации приложения."))),
 			ValidIssuer = jwt["Issuer"],
 			ValidAudience = jwt["Audience"],
@@ -65,8 +66,21 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		};
 		options.SaveToken = true;
 		options.IncludeErrorDetails = true;
-	  })
-	  .AddBearerToken();
+	})
+	  .AddBearerToken()
+	  .AddOAuth("GitHub", options =>
+	  {
+		  var gitHubConfig = config.GetSection("GitHubConfig")
+			?? throw new Exception("Не определены конфигурации Google провайдера аутентификации");
+		  options.ClientId = gitHubConfig["ClientId"]
+			?? throw new Exception("Не определен идентификатор клиента");
+		  options.ClientSecret = gitHubConfig["ClientSecret"]
+			?? throw new Exception("Не определен секретный ключ клиента"); 
+		  options.SaveTokens = true;
+		  options.Scope.Add("userName"); 
+		  options.Scope.Add("email"); 
+		  options.CallbackPath = new PathString("/Authenticate/GitHubResponse");
+	  });
 
 	services.AddAuthorizationBuilder()
 		.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim(typeof(RoleClaimTypeBLL).ToString(), RoleClaimTypeBLL.CanManageUsers.ToString()); })
@@ -174,3 +188,11 @@ static bool GetParameterValue(string jwtParameter)
 	=> (bool.TryParse(jwtParameter, out bool parameterValue))
 		? parameterValue
 		: throw new Exception("Параметр валидации токена должен быть равным true или false.");
+
+
+//ToDo: + переименовать папку в Dal.Repositories, CarsStorage.Abstractions, а внутри Dal.Repositories и BLL.Services.
+//ToDo: выделить tokenRepository  и в нем использовать dbContext.Users со всеми методами обновления токенов и др. с токенами.
+//ToDo: меппить в BLL слое, мепперы из DAL в BLL слой, т.к. что будет, если оторвать BLL модель и заменить ее на другие модели? придется менять DAL-слой, потому что он принимает старые BLL-модели, а это сложнее уже,
+//а вот если, поменяем EF на другое и DAL-модели, то BLL все равно видит DAL-модели. Получаетсяю. что репозитории рабоют на вход и выход только EF-модели, а в BLL - мепперы в сущность и из сущности.
+//аннотации прописать, в том числе к свойствам кратко.
+//кодировку переписать.

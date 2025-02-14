@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Abstractions.Exceptions
+﻿namespace CarsStorage.Abstractions.Exceptions
 {
 	public class ForbiddenException(string message) : Exception(message)
 	{

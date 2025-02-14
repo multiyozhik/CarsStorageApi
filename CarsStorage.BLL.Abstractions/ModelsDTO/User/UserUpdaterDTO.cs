@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Abstractions.ModelsDTO.User
+﻿namespace CarsStorage.Abstractions.ModelsDTO.User
 {
 	public class UserUpdaterDTO
 	{

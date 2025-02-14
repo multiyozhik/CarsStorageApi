@@ -1,13 +1,14 @@
-﻿using CarsStorage.BLL.Abstractions.Exceptions;
-using CarsStorage.BLL.Abstractions.General;
-using CarsStorage.BLL.Abstractions.ModelsDTO;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Token;
+﻿using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.DAL.Repositories;
+using CarsStorage.Abstractions.Exceptions;
+using CarsStorage.Abstractions.General;
+using CarsStorage.Abstractions.ModelsDTO;
+using CarsStorage.Abstractions.ModelsDTO.Token;
+using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
-using CarsStorage.BLL.Abstractions.Repositories;
-using CarsStorage.BLL.Abstractions.Services;
 using System.Security.Claims;
 
-namespace CarsStorage.BLL.Implementations.Services
+namespace CarsStorage.BLL.Services.Services
 {
 	/// <summary>
 	/// Сервис для аутентификации.
@@ -21,7 +22,8 @@ namespace CarsStorage.BLL.Implementations.Services
 		{
 			try
 			{
-				var userDTO = await usersRepository.GetUserIfValid(userLoginDTO);			
+				await usersRepository.IsUserValid(userLoginDTO);
+				var userDTO = await usersRepository.GetUserWithRoles(userLoginDTO);			
 				var roleClaims = userDTO.RolesList.SelectMany(role => role.RoleClaims).Distinct().ToList();
 				var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
 
@@ -44,6 +46,34 @@ namespace CarsStorage.BLL.Implementations.Services
 				return new ServiceResult<JWTTokenDTO>(new UnauthorizedAccessException(exception.Message));
 			}
 		}
+
+
+
+		/// <summary>
+		/// Метод сервиса для доступа аутентифицированного пользователя в приложение.
+		/// </summary>
+		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(GitHubUserDTO gitHubUser, List<string> initialRoleNamesList)
+		{
+			try
+			{
+				var userDTO = await usersRepository.GetUserWithRoles(gitHubUser);
+
+
+
+
+				if (isExist)
+					usersRepository.Create(mapper.Map<userCreaterDTO>(gitHubUser));
+				var userCreaterDTO = new UserCreaterDTO() { UserName }
+				LogIn(mapper.Map<UserDTO>(userCreaterDTO));
+				return new ServiceResult<UserDTO>(userDTO);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<UserDTO>(new NotFoundException(exception.Message));
+			}
+		}
+
+
 
 
 		/// <summary>

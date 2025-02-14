@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
+using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
 using CarsStorage.DAL.Entities;
 
-namespace CarsStorage.BLL.Repositories.Mappers
+namespace CarsStorage.DAL.Repositories.Mappers
 {
 	/// <summary>
 	/// Класс меппера для пользователей.

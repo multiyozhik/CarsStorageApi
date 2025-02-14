@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO.User;
-using CarsStorage.BLL.Abstractions.Services;
+using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorageApi.Models.UserModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

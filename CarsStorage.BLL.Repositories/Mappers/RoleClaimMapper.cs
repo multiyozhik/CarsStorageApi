@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO;
+using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.DAL.Models;
 
-namespace CarsStorage.BLL.Repositories.Mappers
+namespace CarsStorage.DAL.Repositories.Mappers
 {
 	public class RoleClaimMapper : Profile
 	{

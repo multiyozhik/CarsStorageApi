@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Repositories.Utils
+﻿namespace CarsStorage.DAL.Repositories.Utils
 {
 	/// <summary>
 	/// Интерфейс для  хеширования пароля - методы получения строки хеша и соли, проверки входящего пароля на соответствие хранимому паролю в БД. 

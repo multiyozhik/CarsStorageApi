@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Abstractions.ModelsDTO.User
+﻿namespace CarsStorage.Abstractions.ModelsDTO.User
 {
 	/// <summary>
 	/// Класс данных пользователя с именем и паролем при входе в приложение.

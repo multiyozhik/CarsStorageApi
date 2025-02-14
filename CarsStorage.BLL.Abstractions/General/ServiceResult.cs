@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Abstractions.General
+﻿namespace CarsStorage.Abstractions.General
 {
 	/// <summary>
 	/// Типизированный класс результата работы сервис (конструктор - для результата и конструктор - для ошибки). 

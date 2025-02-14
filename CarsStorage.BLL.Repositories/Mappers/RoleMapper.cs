@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Role;
+using CarsStorage.Abstractions.ModelsDTO.Role;
 using CarsStorage.DAL.Entities;
 
-namespace CarsStorage.BLL.Repositories.Mappers
+namespace CarsStorage.DAL.Repositories.Mappers
 {
 	/// <summary>
 	/// Класс меппера для ролей.

@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Abstractions.ModelsDTO.Car
+﻿namespace CarsStorage.Abstractions.ModelsDTO.Car
 {
 	/// <summary>
 	/// Класс с данными об автомобиле с id.

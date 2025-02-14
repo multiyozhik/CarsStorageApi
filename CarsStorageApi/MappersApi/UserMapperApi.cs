@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
 using CarsStorageApi.Models.UserModels;
 

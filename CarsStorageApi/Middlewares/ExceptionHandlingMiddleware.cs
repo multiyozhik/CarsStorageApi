@@ -1,4 +1,4 @@
-﻿using CarsStorage.BLL.Abstractions.Exceptions;
+﻿using CarsStorage.Abstractions.Exceptions;
 using System.Net;
 
 namespace CarsStorageApi.Middlewares

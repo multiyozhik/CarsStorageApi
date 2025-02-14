@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Implementations.Config
+﻿namespace CarsStorage.BLL.Services.Config
 {
 	/// <summary>
 	/// Класс конфигурирования роли пользователя при регистрации нового пользователя. 

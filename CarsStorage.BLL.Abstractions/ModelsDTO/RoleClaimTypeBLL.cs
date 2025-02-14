@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Abstractions.ModelsDTO
+﻿namespace CarsStorage.Abstractions.ModelsDTO
 {
 	/// <summary>
 	/// Возможные типы клаймов для описания роли.

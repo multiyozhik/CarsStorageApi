@@ -1,5 +1,5 @@
 ﻿
-namespace CarsStorage.BLL.Abstractions.ModelsDTO.User
+namespace CarsStorage.Abstractions.ModelsDTO.User
 {
 	/// <summary>
 	/// Класс с данными пользователя (в т.ч. именем, паролем и ролями) для создания пользователя.

@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.Exceptions;
-using CarsStorage.BLL.Abstractions.General;
-using CarsStorage.BLL.Abstractions.Services;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
-using CarsStorage.BLL.Abstractions.Repositories;
+using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.DAL.Repositories;
+using CarsStorage.Abstractions.Exceptions;
+using CarsStorage.Abstractions.General;
+using CarsStorage.Abstractions.ModelsDTO.Car;
 
-namespace CarsStorage.BLL.Implementations.Services
+namespace CarsStorage.BLL.Services.Services
 {
 	/// <summary>
 	/// Класс сервиса автомобилей.

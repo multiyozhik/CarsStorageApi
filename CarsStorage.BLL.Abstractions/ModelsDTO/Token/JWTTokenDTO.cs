@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.BLL.Abstractions.ModelsDTO.Token
+﻿namespace CarsStorage.Abstractions.ModelsDTO.Token
 {
 	/// <summary>
 	/// Класс токена.

@@ -1,10 +1,13 @@
-﻿using CarsStorage.BLL.Abstractions.Exceptions;
-using CarsStorage.BLL.Abstractions.General;
+﻿using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.DAL.Repositories;
+using CarsStorage.Abstractions.Exceptions;
+using CarsStorage.Abstractions.General;
+using CarsStorage.Abstractions.ModelsDTO.Token;
+using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
-using CarsStorage.BLL.Abstractions.Repositories;
-using CarsStorage.BLL.Abstractions.Services;
+using System;
 
-namespace CarsStorage.BLL.Implementations.Services
+namespace CarsStorage.BLL.Services.Services
 {
 	/// <summary>
 	/// Класс сервиса пользователей.
