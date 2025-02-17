@@ -2,19 +2,13 @@
 using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.Abstractions.ModelsDTO.User;
-using CarsStorage.BLL.Services.Config;
 using CarsStorageApi.Models.TokenModels;
 using CarsStorageApi.Models.UserModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Headers;
-using System.Net;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using CarsStorage.Abstractions.General;
-using Newtonsoft.Json;
 
 namespace CarsStorageApi.Controllers
 {
@@ -57,7 +51,7 @@ namespace CarsStorageApi.Controllers
 
 
 		/// <summary>
-		/// Метод для перенаправления на GitHub для аутентификации.
+		/// Метод для аутентификации в GitHub.
 		/// </summary>
 		[AllowAnonymous]
 		[HttpGet]
@@ -70,42 +64,27 @@ namespace CarsStorageApi.Controllers
 
 
 		/// <summary>
-		/// Метод обработки ответа от GitHub провайдера аутентификации с получением токена.
+		/// Метод обработки ответа от GitHub провайдера аутентификации с получением токена доступа.
 		/// </summary>
 		[AllowAnonymous]
 		[HttpGet]
-		public async Task<ActionResult<JWTTokenRequestResponse>> GitHubResponse(/*[FromHeader] string accessToken*/)
+		public async Task<ActionResult<JWTTokenRequestResponse>> GitHubResponse()
 		{
 			var authResult = HttpContext.AuthenticateAsync("GitHub").Result;
 			if (!authResult.Succeeded)
 				return Unauthorized(authResult.Failure);
-
-			var userName = authResult.Principal.FindFirst(ClaimTypes.Name)?.Value;
-			var accessToken = authResult.Properties.GetTokenValue("access_token");
-
-			var gitHubUser = await GetGitHubUserInfo(accessToken);
-
-			var initialRoleNamesList = new List<string>([initialConfig.Value.InitialRoleName]);
-
-			var serviceResult = await authService.LogInAuthUser(gitHubUser, initialRoleNamesList);
+			var authUser = new AuthUser
+			{
+				UserName = authResult.Principal.FindFirst(ClaimTypes.Name)?.Value,
+				Email = authResult.Principal.FindFirst(ClaimTypes.Email)?.Value,
+				AccessTokenFromAuthService = authResult.Properties.GetTokenValue("access_token"),
+				RolesNamesList = [initialConfig.Value.InitialRoleName]
+			};
+			var serviceResult = await authService.LogInAuthUser(authUser);
 			if (serviceResult.IsSuccess)
 				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
 			throw serviceResult.ServiceError;
 		}
-
-
-		/// <summary>
-		/// Закрытые метод для получения информации о пользователе из GitHub сервиса аутентификации.
-		/// </summary>
-		private static async Task<GitHubUserDTO> GetGitHubUserInfo(string accessToken)
-		{
-			using var httpClient = new HttpClient();
-			httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-			httpClient.DefaultRequestHeaders.Add("User-Agent", "CarsStoraheApi");
-			var response = await httpClient.GetStringAsync($"https://api.github.com/user");
-			return JsonConvert.DeserializeObject<GitHubUserDTO>(response);		
-		}
-
 
 
 		/// <summary>

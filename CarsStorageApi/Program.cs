@@ -6,6 +6,7 @@ using CarsStorage.BLL.Services.Services;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Repositories.Implementations;
 using CarsStorage.DAL.Repositories.Utils;
+using CarsStorageApi.Config;
 using CarsStorageApi.Filters;
 using CarsStorageApi.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -71,7 +72,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	  .AddOAuth("GitHub", options =>
 	  {
 		  var gitHubConfig = config.GetSection("GitHubConfig")
-			?? throw new Exception("Не определены конфигурации Google провайдера аутентификации");
+			?? throw new Exception("Не определены конфигурации GitHub провайдера аутентификации");
 		  options.ClientId = gitHubConfig["ClientId"]
 			?? throw new Exception("Не определен идентификатор клиента");
 		  options.ClientSecret = gitHubConfig["ClientSecret"]

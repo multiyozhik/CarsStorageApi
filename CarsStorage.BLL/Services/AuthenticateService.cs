@@ -13,7 +13,7 @@ namespace CarsStorage.BLL.Services.Services
 	/// <summary>
 	/// Сервис для аутентификации.
 	/// </summary>
-	public class AuthenticateService(IUsersRepository usersRepository, ITokensService tokenService) : IAuthenticateService
+	public class AuthenticateService(IUsersRepository usersRepository,  ITokensService tokenService) : IAuthenticateService
 	{
 		/// <summary>
 		/// Метод сервиса для входа пользователя в приложении и возврата токена клиенту.
@@ -23,7 +23,10 @@ namespace CarsStorage.BLL.Services.Services
 			try
 			{
 				await usersRepository.IsUserValid(userLoginDTO);
-				var userDTO = await usersRepository.GetUserWithRoles(userLoginDTO);			
+				var userDTO = await usersRepository.GetUserWithRoles(userLoginDTO);	
+				
+				//далее вынести в отдельный метод
+
 				var roleClaims = userDTO.RolesList.SelectMany(role => role.RoleClaims).Distinct().ToList();
 				var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
 
@@ -37,9 +40,11 @@ namespace CarsStorage.BLL.Services.Services
 					AccessToken = accessTokenFromService.Result,
 					RefreshToken = refreshTokenFromService.Result
 				};
+				var tokenServiceResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
 
-				jwtTokenDTO = await usersRepository.UpdateToken(userDTO.Id, jwtTokenDTO);
-				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO);				
+				if (!tokenServiceResult.IsSuccess)
+					throw tokenServiceResult.ServiceError;
+				return new ServiceResult<JWTTokenDTO>(tokenServiceResult.Result);				
 			}
 			catch (Exception exception)
 			{
@@ -52,20 +57,26 @@ namespace CarsStorage.BLL.Services.Services
 		/// <summary>
 		/// Метод сервиса для доступа аутентифицированного пользователя в приложение.
 		/// </summary>
-		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(GitHubUserDTO gitHubUser, List<string> initialRoleNamesList)
+		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUser authUser)
 		{
 			try
 			{
-				var userDTO = await usersRepository.GetUserWithRoles(gitHubUser);
+				//найти в БД по токену доступа от github  пользователя DTO с ролями,
+				//если не найден - создать entity user с username, email, access token, initail roles
+				//по возвращенному userDTO и его клаймам по имеющимся ролям -
+				//сгенерировать токен доступа и обновления и сохранить их в БД.
+
+				var userDTO = await usersRepository.GetByUserName(AuthUser authUser);
 
 
 
 
-				if (isExist)
-					usersRepository.Create(mapper.Map<userCreaterDTO>(gitHubUser));
-				var userCreaterDTO = new UserCreaterDTO() { UserName }
-				LogIn(mapper.Map<UserDTO>(userCreaterDTO));
-				return new ServiceResult<UserDTO>(userDTO);
+				//if (isExist)
+				//	usersRepository.Create(mapper.Map<userCreaterDTO>(gitHubUser));
+				//var userCreaterDTO = new UserCreaterDTO() { UserName }
+				//LogIn(mapper.Map<UserDTO>(userCreaterDTO));
+				//UserDTO userDTO = null;
+				return new ServiceResult<UserDTO>(null);
 			}
 			catch (Exception exception)
 			{
@@ -87,8 +98,12 @@ namespace CarsStorage.BLL.Services.Services
 			try
 			{
 				var userDTO = await usersRepository.GetUserByRefreshToken(jwtTokenDTO.RefreshToken);
-				jwtTokenDTO = await usersRepository.GetTokenByUserId(userDTO.Id);
-				var principal = tokenService.GetClaimsPrincipalFromExperedToken(jwtTokenDTO.AccessToken);
+				var jwtTokenResult = await tokenService.GetTokenByUserId(userDTO.Id);
+
+				if (!jwtTokenResult.IsSuccess)
+					throw jwtTokenResult.ServiceError;
+
+				var principal = tokenService.GetClaimsPrincipalFromExperedToken(jwtTokenResult.Result.AccessToken);
 
 				var accessToken = tokenService.GetAccessToken(principal.Result.Claims.ToList());
 				var refreshToken = tokenService.GetRefreshToken();
@@ -98,8 +113,10 @@ namespace CarsStorage.BLL.Services.Services
 					AccessToken = accessToken.Result,
 					RefreshToken = refreshToken.Result
 				};
-				await usersRepository.UpdateToken(userDTO.Id, newRefreshingToken);
-				return new ServiceResult<JWTTokenDTO>(newRefreshingToken);
+				var refreshTokenResult = await tokenService.UpdateToken(userDTO.Id, newRefreshingToken);
+				if (!refreshTokenResult.IsSuccess)
+					throw refreshTokenResult.ServiceError;
+				return new ServiceResult<JWTTokenDTO>(refreshTokenResult.Result);
 			}
 			catch (Exception exception)
 			{
@@ -115,8 +132,10 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var userId = await usersRepository.ClearToken(accessToken);
-				return new ServiceResult<int>(userId);
+				var userIdResult = await tokenService.ClearToken(accessToken);
+				if (!userIdResult.IsSuccess)
+					throw userIdResult.ServiceError;
+				return new ServiceResult<int>(userIdResult.Result);
 			}
 			catch (Exception exception)
 			{

@@ -15,6 +15,9 @@ namespace CarsStorage.DAL.Entities
 		public string? Salt { get; set; }
 		public string? AccessToken { get; set; }
 		public string? RefreshToken { get; set; }
+		public string? AccessTokenFromAuthService { get; set; }
 		public List<RoleEntity>? RolesList { get; set; } = [];
+
+		//ToDo: выполнить миграцию AddAccessTokenFromAuthServiceIntoUserEntity
 	}
 }

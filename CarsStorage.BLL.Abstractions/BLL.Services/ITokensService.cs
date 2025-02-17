@@ -1,4 +1,5 @@
 ﻿using CarsStorage.Abstractions.General;
+using CarsStorage.Abstractions.ModelsDTO.Token;
 using System.Security.Claims;
 
 namespace CarsStorage.Abstractions.BLL.Services
@@ -11,5 +12,8 @@ namespace CarsStorage.Abstractions.BLL.Services
 		public ServiceResult<string> GetAccessToken(IEnumerable<Claim> claims);
 		public ServiceResult<string> GetRefreshToken();
 		public ServiceResult<ClaimsPrincipal> GetClaimsPrincipalFromExperedToken(string experedToken);
+		public Task<ServiceResult<JWTTokenDTO>> GetTokenByUserId(int userId);
+		public Task<ServiceResult<JWTTokenDTO>> UpdateToken(int userId, JWTTokenDTO jwtTokenDTO);
+		public Task<ServiceResult<int>> ClearToken(string accessToken);
 	}
 }

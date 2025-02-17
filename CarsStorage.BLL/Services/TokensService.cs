@@ -1,6 +1,8 @@
 ﻿using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.General;
+using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.BLL.Services.Config;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -14,7 +16,7 @@ namespace CarsStorage.BLL.Services.Services
 	/// Сервис для методов токенов доступа.
 	/// </summary>
 	/// <param name="jwtConfig"></param>
-	public class TokensService(IOptions<JWTConfig> jwtOptions) : ITokensService
+	public class TokensService(ITokensRepository tokensRepository, IOptions<JWTConfig> jwtOptions) : ITokensService
 	{
 		/// <summary>
 		/// Метод генерации токена доступа.
@@ -94,6 +96,56 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				return new ServiceResult<ClaimsPrincipal>(new BadRequestException(exception.Message));
+			}
+		}
+
+		/// <summary>
+		/// Метод возвращает токен по id пользователя.
+		/// </summary>
+		public async Task<ServiceResult<JWTTokenDTO>> GetTokenByUserId(int userId)
+		{
+			try 
+			{
+				var jwtToken = await tokensRepository.GetTokenByUserId(userId);
+				return new ServiceResult<JWTTokenDTO>(jwtToken);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<JWTTokenDTO>(new NotFoundException(exception.Message));
+			}
+		}
+
+
+		/// <summary>
+		/// Метод обновляет токен для пользователя с id.
+		/// </summary>
+		public async Task<ServiceResult<JWTTokenDTO>> UpdateToken(int userId, JWTTokenDTO jwtTokenDTO)
+		{
+			try
+			{
+				var jwtToken = await tokensRepository.UpdateToken(userId, jwtTokenDTO);
+				return new ServiceResult<JWTTokenDTO>(jwtToken);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<JWTTokenDTO>(new BadRequestException(exception.Message));
+			}
+		}
+
+
+		/// <summary>
+		/// Метод очищает токен в БД при выходе пользователя из системы.
+		/// </summary>
+		public async Task<ServiceResult<int>> ClearToken(string accessToken)
+		{
+			try
+			{
+				var userId = await tokensRepository.ClearToken(accessToken);
+				return new ServiceResult<int>(userId);
+			}
+			catch (Exception exception)
+			{
+				return new ServiceResult<int>(new BadRequestException(exception.Message));
 			}
 		}
 	}
