@@ -39,10 +39,22 @@ namespace CarsStorage.DAL.Repositories.Implementations
 		/// <summary>
 		/// Метод возвращает dto-пользователя по username пользователя.
 		/// </summary>
-		public async Task<UserDTO> GetByUserName(string userName)
+		public async Task<UserDTO> GetUserByAuthUserData(AuthUserData authUserData)
 		{
-			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == userName);
-			return userEntity is not null ? mapper.Map<UserDTO>(userEntity) : null;
+			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == authUserData.UserName);
+			if (userEntity is null)
+			{
+				userEntity = new UserEntity()
+				{
+					UserName = authUserData.UserName,
+					Email = authUserData.Email,
+					AccessToken = authUserData.AccessTokenFromAuthService,
+					RolesList = await dbContext.Roles.Where(r => authUserData.RolesNamesList.Contains(r.Name)).ToListAsync()
+				};
+				await dbContext.Users.AddAsync(userEntity);
+				await dbContext.SaveChangesAsync();
+			}						
+			return mapper.Map<UserDTO>(userEntity);
 		}
 
 
@@ -86,39 +98,20 @@ namespace CarsStorage.DAL.Repositories.Implementations
 			return mapper.Map<UserDTO>(userEntity);
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
 
-		public async Task<UserDTO> GetUserByTokenFromAuthService(AuthUser authUser)
-		{
-			var userEntity = dbContext.Users.Include(u => u.RolesList).FirstOrDefault(u => u.AccessTokenFromAuthService == authUser.AccessTokenFromAuthService);
-			if (userEntity is not null)
-				return mapper.Map<UserDTO>(userEntity);
-			var newUserEntity = new UserEntity 
-			{ 
-				UserName = authUser.UserName,
-				Email = authUser.Email,
-				AccessTokenFromAuthService = authUser.AccessTokenFromAuthService,
-
-			};
-
-		}
-
-
-		/// <summary>
-		/// Метод возвращает созданного пользователя в БД, аутентентифицированного в сервисе аутентификации.
-		/// </summary>
-		public async Task<UserDTO> CreateAuthUser(UserCreaterDTO userCreaterDTO)
-		{
-			var userEntity = mapper.Map<UserEntity>(userCreaterDTO);			
-			if (userCreaterDTO.RoleNamesList is null)
-				throw new Exception("Не определены роли пользователя.");
-			userEntity.RolesList = await dbContext.Roles.Where(r => userCreaterDTO.RoleNamesList.Contains(r.Name)).ToListAsync();
-			await dbContext.Users.AddAsync(userEntity);
-			await dbContext.SaveChangesAsync();
-			return mapper.Map<UserDTO>(userEntity);
-		}
+		///// <summary>
+		///// Метод возвращает созданного пользователя в БД, аутентентифицированного в сервисе аутентификации.
+		///// </summary>
+		//public async Task<UserDTO> CreateAuthUser(UserCreaterDTO userCreaterDTO)
+		//{
+		//	var userEntity = mapper.Map<UserEntity>(userCreaterDTO);			
+		//	if (userCreaterDTO.RoleNamesList is null)
+		//		throw new Exception("Не определены роли пользователя.");
+		//	userEntity.RolesList = await dbContext.Roles.Where(r => userCreaterDTO.RoleNamesList.Contains(r.Name)).ToListAsync();
+		//	await dbContext.Users.AddAsync(userEntity);
+		//	await dbContext.SaveChangesAsync();
+		//	return mapper.Map<UserDTO>(userEntity);
+		//}
 
 
 

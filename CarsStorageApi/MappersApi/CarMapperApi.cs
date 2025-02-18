@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using CarsStorage.BLL.Abstractions.ModelsDTO.Car;
+using CarsStorage.Abstractions.ModelsDTO.Car;
 using CarsStorageApi.Models.CarModels;
 
 namespace CarsStorageApi.MappersApi

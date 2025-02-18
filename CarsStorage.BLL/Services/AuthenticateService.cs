@@ -16,35 +16,15 @@ namespace CarsStorage.BLL.Services.Services
 	public class AuthenticateService(IUsersRepository usersRepository,  ITokensService tokenService) : IAuthenticateService
 	{
 		/// <summary>
-		/// Метод сервиса для входа пользователя в приложении и возврата токена клиенту.
+		/// Метод сервиса для входа пользователя в приложение и возврата токена клиенту.
 		/// </summary>
 		public async Task<ServiceResult<JWTTokenDTO>> LogIn(UserLoginDTO userLoginDTO) 
 		{
 			try
 			{
 				await usersRepository.IsUserValid(userLoginDTO);
-				var userDTO = await usersRepository.GetUserWithRoles(userLoginDTO);	
-				
-				//далее вынести в отдельный метод
-
-				var roleClaims = userDTO.RolesList.SelectMany(role => role.RoleClaims).Distinct().ToList();
-				var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
-
-				roleClaims.ForEach(roleClaim => userClaims.Add(new Claim(typeof(RoleClaimTypeBLL).ToString(), roleClaim.ToString())));				
-				
-				var accessTokenFromService = tokenService.GetAccessToken(userClaims);
-				var refreshTokenFromService = tokenService.GetRefreshToken();
-
-				var jwtTokenDTO = new JWTTokenDTO()
-				{
-					AccessToken = accessTokenFromService.Result,
-					RefreshToken = refreshTokenFromService.Result
-				};
-				var tokenServiceResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
-
-				if (!tokenServiceResult.IsSuccess)
-					throw tokenServiceResult.ServiceError;
-				return new ServiceResult<JWTTokenDTO>(tokenServiceResult.Result);				
+				var userDTO = await usersRepository.GetUserWithRoles(userLoginDTO);
+				return new ServiceResult<JWTTokenDTO>(await GetJWTTokenDTO(userDTO));
 			}
 			catch (Exception exception)
 			{
@@ -53,38 +33,21 @@ namespace CarsStorage.BLL.Services.Services
 		}
 
 
-
 		/// <summary>
-		/// Метод сервиса для доступа аутентифицированного пользователя в приложение.
+		/// Метод сервиса для входа аутентифицированного пользователя в приложение.
 		/// </summary>
-		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUser authUser)
+		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUserData authUserData)
 		{
 			try
 			{
-				//найти в БД по токену доступа от github  пользователя DTO с ролями,
-				//если не найден - создать entity user с username, email, access token, initail roles
-				//по возвращенному userDTO и его клаймам по имеющимся ролям -
-				//сгенерировать токен доступа и обновления и сохранить их в БД.
-
-				var userDTO = await usersRepository.GetByUserName(AuthUser authUser);
-
-
-
-
-				//if (isExist)
-				//	usersRepository.Create(mapper.Map<userCreaterDTO>(gitHubUser));
-				//var userCreaterDTO = new UserCreaterDTO() { UserName }
-				//LogIn(mapper.Map<UserDTO>(userCreaterDTO));
-				//UserDTO userDTO = null;
-				return new ServiceResult<UserDTO>(null);
+				var userDTO = await usersRepository.GetUserByAuthUserData(authUserData);
+				return new ServiceResult<JWTTokenDTO>(await GetJWTTokenDTO(userDTO));
 			}
 			catch (Exception exception)
 			{
-				return new ServiceResult<UserDTO>(new NotFoundException(exception.Message));
+				return new ServiceResult<JWTTokenDTO>(new NotFoundException(exception.Message));
 			}
 		}
-
-
 
 
 		/// <summary>
@@ -141,6 +104,32 @@ namespace CarsStorage.BLL.Services.Services
 			{
 				return new ServiceResult<int>(new BadRequestException(exception.Message));
 			}
+		}
+
+
+		/// <summary>
+		/// Закрытый метод сервиса возвращает токен для входа пользователя в приложение.
+		/// </summary>
+		private async Task<JWTTokenDTO> GetJWTTokenDTO(UserDTO userDTO)
+		{
+			var roleClaims = userDTO.RolesList.SelectMany(role => role.RoleClaims).Distinct().ToList();
+			var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
+
+			roleClaims.ForEach(roleClaim => userClaims.Add(new Claim(typeof(RoleClaimTypeBLL).ToString(), roleClaim.ToString())));
+
+			var accessTokenFromService = tokenService.GetAccessToken(userClaims);
+			var refreshTokenFromService = tokenService.GetRefreshToken();
+
+			var jwtTokenDTO = new JWTTokenDTO()
+			{
+				AccessToken = accessTokenFromService.Result,
+				RefreshToken = refreshTokenFromService.Result
+			};
+			var tokenServiceResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
+
+			if (!tokenServiceResult.IsSuccess)
+				throw tokenServiceResult.ServiceError;
+			return tokenServiceResult.Result;
 		}
 	}
 }

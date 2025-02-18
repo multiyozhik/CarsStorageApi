@@ -1,6 +1,6 @@
 ﻿namespace CarsStorage.Abstractions.ModelsDTO.User
 {
-	public class AuthUser
+	public class AuthUserData
 	{
 		public string? UserName { get; set; }
 		public string? Email { get; set; }

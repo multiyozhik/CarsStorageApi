@@ -1,10 +1,11 @@
-﻿using CarsStorage.Abstractions.ModelsDTO.Token;
+﻿using CarsStorage.Abstractions.DAL.Repositories;
+using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.DAL.DbContexts;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.DAL.Repositories.Implementations
 {
-	public class TokensRepository(AppDbContext dbContext)
+	public class TokensRepository(AppDbContext dbContext) : ITokensRepository
 	{
 		/// <summary>
 		/// Метод возвращает токен по id пользователя.

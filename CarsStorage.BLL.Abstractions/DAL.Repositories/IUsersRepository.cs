@@ -16,5 +16,6 @@ namespace CarsStorage.Abstractions.DAL.Repositories
 		public Task<UserDTO> Update(UserUpdaterDTO userUpdaterDTO);
 		public Task Delete(int id);
 		public Task<UserDTO> GetUserByRefreshToken(string refreshToken);
+		public Task<UserDTO> GetUserByAuthUserData(AuthUserData authUserData);
 	}
 }
