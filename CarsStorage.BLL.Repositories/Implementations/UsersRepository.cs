@@ -6,7 +6,6 @@ using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
 using CarsStorage.DAL.Repositories.Utils;
 using Microsoft.EntityFrameworkCore;
-using Riok.Mapperly.Abstractions;
 
 namespace CarsStorage.DAL.Repositories.Implementations
 {
@@ -48,7 +47,6 @@ namespace CarsStorage.DAL.Repositories.Implementations
 				{
 					UserName = authUserData.UserName,
 					Email = authUserData.Email,
-					AccessToken = authUserData.AccessTokenFromAuthService,
 					RolesList = await dbContext.Roles.Where(r => authUserData.RolesNamesList.Contains(r.Name)).ToListAsync()
 				};
 				await dbContext.Users.AddAsync(userEntity);

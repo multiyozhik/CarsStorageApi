@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using CarsStorage.Abstractions.BLL.Services;
-using CarsStorage.Abstractions.General;
 using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorageApi.Config;
 using CarsStorageApi.Models.TokenModels;
 using CarsStorageApi.Models.UserModels;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -18,14 +19,14 @@ namespace CarsStorageApi.Controllers
 	/// Класс контроллер для аутентификации пользователя.
 	/// </summary>
 	[ApiController]
-	[Route("[controller]/[action]")]
-	public class AuthenticateController(IAuthenticateService authService, IUsersService usersService, IMapper mapper, IOptions<InitialConfig> initialConfig, IOptions<GitHubConfig> gitHubConfig) : ControllerBase
+	[Route("[controller]")]
+	public class AuthenticateController(IAuthenticateService authService, IUsersService usersService, IMapper mapper, IOptions<InitialConfig> initialConfig) : ControllerBase
 	{
 		/// <summary>
 		/// Метод контроллера регистрации пользователя (для нового пользователя устанавливается начальный спсиок ролей из начальной конфигурации приложения).
 		/// </summary>
 		[AllowAnonymous]
-		[HttpPost]
+		[HttpPost("Register")]
 		public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterUserRequest registerUserRequest)
 		{
 			var userCreaterDTO = mapper.Map<UserCreaterDTO>(registerUserRequest);
@@ -41,7 +42,7 @@ namespace CarsStorageApi.Controllers
 		/// Метод контроллера для входа пользователя в приложение возвращает токен.
 		/// </summary>
 		[AllowAnonymous]
-		[HttpPost]
+		[HttpPost("LogIn")]
 		public async Task<ActionResult<JWTTokenRequestResponse>> LogIn([FromBody] LoginUserRequest loginDataRequest)
 		{
 			var serviceResult = await authService.LogIn(mapper.Map<UserLoginDTO>(loginDataRequest));
@@ -50,63 +51,63 @@ namespace CarsStorageApi.Controllers
 			throw serviceResult.ServiceError;
 		}
 
-
 		/// <summary>
-		/// Метод для аутентификации в GitHub.
+		/// Метод-обработчик при успешной аутентификации в Google, перенаправляет на обработку пользовательских данных.
 		/// </summary>
-		[AllowAnonymous]
-		[HttpGet]
-		//[Authorize(AuthenticationSchemes = "GitHub")]
-		//public async Task<HttpResponseMessage> GitHubLogin()
-		public IActionResult GitHubLogin()
+		[AllowAnonymous]               //по url https://localhost:{port}/Authenticate/signin-google
+		[HttpGet("signin-google")]     //должен совпадать с redirect uri при регистрации в Google Api https://localhost:{port}/signin-google
+		public async Task GoogleLogin()
 		{
-			string state = RandomGenerator.GenerateState();
-			
-			//var authorizeUrl = $"https://github.com/login/oauth/authorize?client_id={gitHubConfig.Value.ClientId}&redirect_uri={gitHubConfig.Value.RedirectUri}&scope=user&state={state}";
-			//var authorizeUrl = $"https://github.com/login/oauth/authorize?client_id={gitHubConfig.Value.ClientId}&redirect_uri=http://127.0.0.1:7251/Authenticate/GitHubResponse&scope=user&state={state}";
-			////var authorizeUrl = $"https://github.com/login/oauth/authorize?client_id={gitHubConfig.Value.ClientId}&scope=user";
-			//return Redirect(authorizeUrl);
-
-			//https://github.com/login/oauth/authorize?client_id=Ov23liCK3lqpBsOCWGtz&redirect_uri=https://localhost:7251/Authenticate/GitHubResponse
-
-			//https://github.com/login/oauth/authorize?client_id=Ov23liCK3lqpBsOCWGtz&redirect_uri=/Authenticate/GitHubResponse&scope=username,email
-			//https://github.com/login/oauth/authorize?client_id=Ov23liCK3lqpBsOCWGtz&redirect_uri=/Authenticate/GitHubResponse&scope=user:email&state=12345
-
-			var properties = new AuthenticationProperties	{RedirectUri = Url.Action("GitHubResponse", "Authenticate")	};
-			return Challenge(properties, "GitHub");
+			await HttpContext.ChallengeAsync(GoogleDefaults.AuthenticationScheme, new AuthenticationProperties
+			{
+				RedirectUri = Url.Action("AuthResponseHandler", "Authenticate", new { authScheme = CookieAuthenticationDefaults.AuthenticationScheme })
+			});
 		}
 
 
 		/// <summary>
-		/// Метод обработки ответа от GitHub провайдера аутентификации с получением токена доступа.
+		/// Метод-обработчик при успешной аутентификации в GitHub, перенаправляет на обработку пользовательских данных.
 		/// </summary>
-		//[Authorize]
-		[AllowAnonymous]
-		[HttpGet]
-		public async Task<ActionResult<JWTTokenRequestResponse>> GitHubResponse()
+		[AllowAnonymous]               //по url https://localhost:{port}/Authenticate/signin-github
+		[HttpGet("signin-github")]    //должен совпадать с redirect uri при регистрации в GitHub https://localhost:{port}/signin-github
+		public async Task GitHubLogin() 
 		{
-			var authResult = HttpContext.AuthenticateAsync("GitHub").Result;
+			await HttpContext.ChallengeAsync("GitHub", new AuthenticationProperties
+			{
+				RedirectUri = Url.Action("AuthResponseHandler", "Authenticate", new { authScheme = "GitHub" })
+			});
+		}
+
+
+		/// <summary>
+		/// Метод обработки ответа от стороннего провайдера аутентификации с получением токена доступа.
+		/// </summary>
+		[HttpGet("AuthResponseHandler")]
+		public async Task<ActionResult<JWTTokenRequestResponse>> AuthResponseHandler([FromQuery] string authScheme)
+		{
+			var authResult = await HttpContext.AuthenticateAsync(authScheme);
 			if (!authResult.Succeeded)
-				return Unauthorized(authResult.Failure);
+			{
+				return BadRequest();
+			}
 			var authUserData = new AuthUserData
 			{
 				UserName = authResult.Principal.FindFirst(ClaimTypes.Name)?.Value,
 				Email = authResult.Principal.FindFirst(ClaimTypes.Email)?.Value,
-				AccessTokenFromAuthService = authResult.Properties.GetTokenValue("access_token"),
 				RolesNamesList = [initialConfig.Value.InitialRoleName]
 			};
 			var serviceResult = await authService.LogInAuthUser(authUserData);
-			if (serviceResult.IsSuccess)
-				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
+			if (serviceResult.IsSuccess)			
+				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);				
 			throw serviceResult.ServiceError;
-		}
+		}		
 
 
 		/// <summary>
 		/// Метод контроллера для обновления токена при истечении срока токена доступа.
 		/// </summary>
 		[AllowAnonymous]
-		[HttpPut]
+		[HttpPut("RefreshToken")]
 		public async Task<ActionResult<JWTTokenRequestResponse>> RefreshToken([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
 		{
 			if (jwtTokenRequestResponse is null || string.IsNullOrEmpty(jwtTokenRequestResponse.RefreshToken))
@@ -123,7 +124,7 @@ namespace CarsStorageApi.Controllers
 		/// Метод контроллера для выхода из приложения (в заголовке передаем токен доступа).
 		/// </summary>
 		[Authorize]
-		[HttpGet]
+		[HttpGet("LogOut")]
 		public async Task<ActionResult<int>> LogOut([FromHeader] string accessToken)
 		{
 			if (string.IsNullOrEmpty(accessToken))

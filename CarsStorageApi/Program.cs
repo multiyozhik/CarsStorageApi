@@ -1,6 +1,5 @@
 using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.DAL.Repositories;
-using CarsStorage.Abstractions.General;
 using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Services.Config;
 using CarsStorage.BLL.Services.Services;
@@ -11,17 +10,15 @@ using CarsStorageApi.Config;
 using CarsStorageApi.Filters;
 using CarsStorageApi.Middlewares;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Octokit;
-using System;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Claims;
-using System.Text.Json;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,8 +37,6 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddOptions<JWTConfig>().BindConfiguration("JWTConfig");
 
-	services.AddOptions<GitHubConfig>().BindConfiguration("GitHubConfig");
-
 	services.AddDbContext<AppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
@@ -54,13 +49,14 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IPasswordHasher, PasswordHasher>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>();
-
+		
 	services.AddAuthentication(options =>
 	{
-		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+		options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 		options.DefaultChallengeScheme = "GitHub";
 		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 	})
+	.AddCookie()
 	.AddJwtBearer(options =>
 	{
 		var jwt = config.GetSection("JWTConfig");
@@ -83,13 +79,13 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	.AddOAuth("GitHub", options =>
 	{
 		var gitHubConfig = config.GetSection("GitHubConfig")
-		?? throw new Exception("Не определены конфигурации GitHub провайдера аутентификации");
+			?? throw new Exception("Не определены конфигурации GitHub провайдера аутентификации");
 		options.ClientId = gitHubConfig["ClientId"]
-		?? throw new Exception("Не определен идентификатор клиента");
+			?? throw new Exception("Не определен идентификатор клиента");
 		options.ClientSecret = gitHubConfig["ClientSecret"]
-		?? throw new Exception("Не определен секретный ключ клиента");
+			?? throw new Exception("Не определен секретный ключ клиента");
 		options.CallbackPath = gitHubConfig["RedirectUri"]
-		?? throw new Exception("Не определен коллбек путь после GitHub аутентификации");
+			?? throw new Exception("Не определен коллбек путь после GitHub аутентификации");
 		options.Scope.Add(gitHubConfig["Scope"] ?? "");
 		options.SaveTokens = true;
 
@@ -101,33 +97,34 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.ClaimActions.MapJsonKey(ClaimTypes.Name, "username");
 		options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
 
+		options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+
 		options.Events = new OAuthEvents
 		{
 			OnCreatingTicket = async context =>
 			{
-				var accessToken = context.AccessToken;
-				var userRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.github.com/user");
-				userRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-				userRequest.Headers.Add("User-Agent", "CarsStorageApi");
-
-				var userResponse = await context.Backchannel.SendAsync(userRequest);
-				if (userResponse.IsSuccessStatusCode)
+				var token = context.AccessToken;
+				var githubClient = new GitHubClient(new Octokit.ProductHeaderValue("CarsStorageApi"))
 				{
-					var userInfo = await userResponse.Content.ReadAsStringAsync();
-					//с использованием репозитория сохранить пользователя
-				}
-				List<AuthenticationToken> tokens = context.Properties.GetTokens().ToList();
-				tokens.Add(new AuthenticationToken()
-				{
-					Name = "TicketCreated",
-					Value = DateTime.UtcNow.ToString()
-				});
-				context.Properties.StoreTokens(tokens);			
+					Credentials = new Credentials(token)
+				};
+				var user = await githubClient.User.Current();
+				context.Identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Login));
+				context.Identity.AddClaim(new Claim(ClaimTypes.Name, user.Name ?? user.Login));
+				context.Identity.AddClaim(new Claim(ClaimTypes.Email, user.Email ?? user.Login));
 			}
 		};
+	})
+	.AddGoogle(options =>
+	{
+		options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+		options.ClientId = config["GoogleConfig:ClientId"]
+			?? throw new Exception("Не определен идентификатор клиента");
+		options.ClientSecret = config["GoogleConfig:ClientSecret"]
+			?? throw new Exception("Не определен секретный ключ клиента");
+		options.Scope.Add("email");
+		options.Scope.Add("profile");
 	});
-
-	//https://github.com/login/oauth/authorize?client_id=Ov23liCK3lqpBsOCWGtz&redirect_uri=https://localhost:7251/Authenticate/GitHubResponse&scope=user&state=6891b4eb-d5fa-454e-a1d8-500898e67691
 
 	services.AddAuthorizationBuilder()
 		.AddPolicy("RequierManageUsers", policy => { policy.RequireClaim(typeof(RoleClaimTypeBLL).ToString(), RoleClaimTypeBLL.CanManageUsers.ToString()); })
@@ -181,22 +178,13 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		);
 	});
 
-	services.AddCors(options =>
-	{
-		options.AddPolicy("AllowAll",
-			builder =>
-			{
-				builder.AllowAnyOrigin()
-						.AllowAnyMethod()
-						.AllowAnyHeader();
-			});
-	});
+	services.AddCors();
 }
 
 
 static void Configure(WebApplication app, IHostEnvironment env)
 {
-	//app.UseMiddleware<ExceptionHandlingMiddleware>();
+	app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 	if (app.Environment.IsDevelopment())
 	{
@@ -215,13 +203,15 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.UseStatusCodePages();
 
-	app.UseCors("AllowAll");
+	app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
 	app.UseAuthentication();
 
 	app.UseAuthorization();
-
+	
 	app.MapControllers();
+
+	app.UseRouting();	
 
 	app.Run();
 }
@@ -249,5 +239,3 @@ static bool GetParameterValue(string jwtParameter)
 	=> (bool.TryParse(jwtParameter, out bool parameterValue))
 		? parameterValue
 		: throw new Exception("Параметр валидации токена должен быть равным true или false.");
-
-

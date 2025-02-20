@@ -41,7 +41,11 @@ namespace CarsStorage.BLL.Services.Services
 			try
 			{
 				var userDTO = await usersRepository.GetUserByAuthUserData(authUserData);
-				return new ServiceResult<JWTTokenDTO>(await GetJWTTokenDTO(userDTO));
+				var jwtTokenDTO = await GetJWTTokenDTO(userDTO);
+				var updateTokenResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
+				if (!updateTokenResult.IsSuccess)
+					throw updateTokenResult.ServiceError;
+				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO);
 			}
 			catch (Exception exception)
 			{
