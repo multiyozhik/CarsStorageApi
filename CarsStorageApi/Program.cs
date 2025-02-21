@@ -1,4 +1,4 @@
-using CarsStorage.Abstractions.BLL.Services;
+п»їusing CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Services.Config;
@@ -49,10 +49,11 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IPasswordHasher, PasswordHasher>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>();
-		
+
 	services.AddAuthentication(options =>
 	{
-		options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+		options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
 		options.DefaultChallengeScheme = "GitHub";
 		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 	})
@@ -63,7 +64,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.TokenValidationParameters = new TokenValidationParameters
 		{
 			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"]
-				?? throw new Exception("Не определен секретный ключ токена в конфигурации приложения."))),
+				?? throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ СЃРµРєСЂРµС‚РЅС‹Р№ РєР»СЋС‡ С‚РѕРєРµРЅР° РІ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РїСЂРёР»РѕР¶РµРЅРёСЏ."))),
 			ValidIssuer = jwt["Issuer"],
 			ValidAudience = jwt["Audience"],
 			ValidateIssuer = GetParameterValue(jwt["ValidateIssuer"] ?? "true"),
@@ -79,13 +80,13 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	.AddOAuth("GitHub", options =>
 	{
 		var gitHubConfig = config.GetSection("GitHubConfig")
-			?? throw new Exception("Не определены конфигурации GitHub провайдера аутентификации");
+			?? throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅС‹ РєРѕРЅС„РёРіСѓСЂР°С†РёРё GitHub РїСЂРѕРІР°Р№РґРµСЂР° Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё");
 		options.ClientId = gitHubConfig["ClientId"]
-			?? throw new Exception("Не определен идентификатор клиента");
+			?? throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РєР»РёРµРЅС‚Р°");
 		options.ClientSecret = gitHubConfig["ClientSecret"]
-			?? throw new Exception("Не определен секретный ключ клиента");
+			?? throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ СЃРµРєСЂРµС‚РЅС‹Р№ РєР»СЋС‡ РєР»РёРµРЅС‚Р°");
 		options.CallbackPath = gitHubConfig["RedirectUri"]
-			?? throw new Exception("Не определен коллбек путь после GitHub аутентификации");
+			?? throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ РєРѕР»Р»Р±РµРє РїСѓС‚СЊ РїРѕСЃР»Рµ GitHub Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё");
 		options.Scope.Add(gitHubConfig["Scope"] ?? "");
 		options.SaveTokens = true;
 
@@ -119,9 +120,9 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	{
 		options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 		options.ClientId = config["GoogleConfig:ClientId"]
-			?? throw new Exception("Не определен идентификатор клиента");
+			?? throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РєР»РёРµРЅС‚Р°");
 		options.ClientSecret = config["GoogleConfig:ClientSecret"]
-			?? throw new Exception("Не определен секретный ключ клиента");
+			?? throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ СЃРµРєСЂРµС‚РЅС‹Р№ РєР»СЋС‡ РєР»РёРµРЅС‚Р°");
 		options.Scope.Add("email");
 		options.Scope.Add("profile");
 	});
@@ -219,23 +220,23 @@ static void Configure(WebApplication app, IHostEnvironment env)
 static void ValidateAppConfigs(IConfiguration jwtConfig)
 {
 	var initialConfig = jwtConfig.GetSection("InitialConfig")
-		?? throw new Exception("Отсутствуют начальные конфигурации.");
+		?? throw new Exception("РћС‚СЃСѓС‚СЃС‚РІСѓСЋС‚ РЅР°С‡Р°Р»СЊРЅС‹Рµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё.");
 	if (string.IsNullOrEmpty(initialConfig["InitialRoleName"]))
-		throw new Exception("Не определена роль пользователя при его регистрации в конфигурациях приложения.");
+		throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅР° СЂРѕР»СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РїСЂРё РµРіРѕ СЂРµРіРёСЃС‚СЂР°С†РёРё РІ РєРѕРЅС„РёРіСѓСЂР°С†РёСЏС… РїСЂРёР»РѕР¶РµРЅРёСЏ.");
 
 	var config = jwtConfig.GetSection("JWTConfig")
-		?? throw new Exception("Отсутствуют конфигурации для токена.");
+		?? throw new Exception("РћС‚СЃСѓС‚СЃС‚РІСѓСЋС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РґР»СЏ С‚РѕРєРµРЅР°.");
 	if (string.IsNullOrEmpty(config["Key"]))
-		throw new Exception("Не определен секретный ключ токена в конфигурации приложения.");
+		throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ СЃРµРєСЂРµС‚РЅС‹Р№ РєР»СЋС‡ С‚РѕРєРµРЅР° РІ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РїСЂРёР»РѕР¶РµРЅРёСЏ.");
 	if (string.IsNullOrEmpty(config["Issuer"]))
-		throw new Exception("Не определен издатель токена в конфигурациях приложения.");
+		throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ РёР·РґР°С‚РµР»СЊ С‚РѕРєРµРЅР° РІ РєРѕРЅС„РёРіСѓСЂР°С†РёСЏС… РїСЂРёР»РѕР¶РµРЅРёСЏ.");
 	if (string.IsNullOrEmpty(config["Audience"]))
-		throw new Exception("Не определен получатель токена в конфигурациях приложения.");
+		throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅ РїРѕР»СѓС‡Р°С‚РµР»СЊ С‚РѕРєРµРЅР° РІ РєРѕРЅС„РёРіСѓСЂР°С†РёСЏС… РїСЂРёР»РѕР¶РµРЅРёСЏ.");
 	if (string.IsNullOrEmpty(config["ExpireMinutes"]))
-		throw new Exception("Не определено время жизни токена в конфигурациях приложения.");
+		throw new Exception("РќРµ РѕРїСЂРµРґРµР»РµРЅРѕ РІСЂРµРјСЏ Р¶РёР·РЅРё С‚РѕРєРµРЅР° РІ РєРѕРЅС„РёРіСѓСЂР°С†РёСЏС… РїСЂРёР»РѕР¶РµРЅРёСЏ.");
 }
 
 static bool GetParameterValue(string jwtParameter)
 	=> (bool.TryParse(jwtParameter, out bool parameterValue))
 		? parameterValue
-		: throw new Exception("Параметр валидации токена должен быть равным true или false.");
+		: throw new Exception("РџР°СЂР°РјРµС‚СЂ РІР°Р»РёРґР°С†РёРё С‚РѕРєРµРЅР° РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ СЂР°РІРЅС‹Рј true РёР»Рё false.");

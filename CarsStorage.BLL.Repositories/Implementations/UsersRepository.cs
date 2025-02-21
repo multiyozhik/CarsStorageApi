@@ -97,22 +97,6 @@ namespace CarsStorage.DAL.Repositories.Implementations
 		}
 
 
-		///// <summary>
-		///// Метод возвращает созданного пользователя в БД, аутентентифицированного в сервисе аутентификации.
-		///// </summary>
-		//public async Task<UserDTO> CreateAuthUser(UserCreaterDTO userCreaterDTO)
-		//{
-		//	var userEntity = mapper.Map<UserEntity>(userCreaterDTO);			
-		//	if (userCreaterDTO.RoleNamesList is null)
-		//		throw new Exception("Не определены роли пользователя.");
-		//	userEntity.RolesList = await dbContext.Roles.Where(r => userCreaterDTO.RoleNamesList.Contains(r.Name)).ToListAsync();
-		//	await dbContext.Users.AddAsync(userEntity);
-		//	await dbContext.SaveChangesAsync();
-		//	return mapper.Map<UserDTO>(userEntity);
-		//}
-
-
-
 		/// <summary>
 		/// Метод возвращает обновленного пользователя из БД.
 		/// </summary>
