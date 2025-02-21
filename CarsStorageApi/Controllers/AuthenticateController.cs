@@ -70,7 +70,7 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		[AllowAnonymous]               //по url https://localhost:{port}/Authenticate/signin-github
 		[HttpGet("signin-github")]    //должен совпадать с redirect uri при регистрации в GitHub https://localhost:{port}/signin-github
-		public async Task GitHubLogin() 
+		public async Task GitHubLogin()
 		{
 			await HttpContext.ChallengeAsync("GitHub", new AuthenticationProperties
 			{
@@ -97,10 +97,10 @@ namespace CarsStorageApi.Controllers
 				RolesNamesList = [initialConfig.Value.InitialRoleName]
 			};
 			var serviceResult = await authService.LogInAuthUser(authUserData);
-			if (serviceResult.IsSuccess)			
-				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);				
+			if (serviceResult.IsSuccess)
+				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
 			throw serviceResult.ServiceError;
-		}		
+		}
 
 
 		/// <summary>
@@ -130,7 +130,7 @@ namespace CarsStorageApi.Controllers
 			if (string.IsNullOrEmpty(accessToken))
 				return Unauthorized();
 			var serviceResult = await authService.LogOut(accessToken);
-			if (serviceResult.IsSuccess)				
+			if (serviceResult.IsSuccess)
 				return serviceResult.Result;
 			throw serviceResult.ServiceError;
 		}
