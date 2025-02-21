@@ -49,10 +49,11 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IPasswordHasher, PasswordHasher>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>();
-		
+
 	services.AddAuthentication(options =>
 	{
-		options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+		options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
 		options.DefaultChallengeScheme = "GitHub";
 		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 	})

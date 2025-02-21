@@ -51,6 +51,7 @@ namespace CarsStorageApi.Controllers
 			throw serviceResult.ServiceError;
 		}
 
+
 		/// <summary>
 		/// Метод-обработчик при успешной аутентификации в Google, перенаправляет на обработку пользовательских данных.
 		/// </summary>
