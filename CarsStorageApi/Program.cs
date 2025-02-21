@@ -64,7 +64,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.TokenValidationParameters = new TokenValidationParameters
 		{
 			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"]
-				?? throw new Exception("Не определен секретный ключ токена в конфигурации приложения."))),
+				?? throw new Exception("НОВОЕ Не определен секретный ключ токена в конфигурации приложения."))),
 			ValidIssuer = jwt["Issuer"],
 			ValidAudience = jwt["Audience"],
 			ValidateIssuer = GetParameterValue(jwt["ValidateIssuer"] ?? "true"),
