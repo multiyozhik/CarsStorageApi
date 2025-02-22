@@ -1,7 +1,7 @@
-namespace CarsStorageApi.Models.CarModels
+п»їnamespace CarsStorageApi.Models.CarModels
 {
 	/// <summary>
-	/// Класс данных автомобиля, возвращаемых клиенту.
+	/// РљР»Р°СЃСЃ РґР°РЅРЅС‹С… Р°РІС‚РѕРјРѕР±РёР»СЏ, РІРѕР·РІСЂР°С‰Р°РµРјС‹С… РєР»РёРµРЅС‚Сѓ.
 	/// </summary>
 	public class CarResponse
     {

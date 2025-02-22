@@ -119,9 +119,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	.AddGoogle(options =>
 	{
 		options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-		options.ClientId = config["GoogleConfig:ClientId"]
+
+		var googleConfig = config.GetSection("GoogleConfig")
+			?? throw new Exception("Не определены конфигурации Google провайдера аутентификации");
+		options.ClientId = googleConfig["ClientId"]
 			?? throw new Exception("Не определен идентификатор клиента");
-		options.ClientSecret = config["GoogleConfig:ClientSecret"]
+		options.ClientSecret = googleConfig["ClientSecret"]
 			?? throw new Exception("Не определен секретный ключ клиента");
 		options.Scope.Add("email");
 		options.Scope.Add("profile");
