@@ -1,65 +1,83 @@
-﻿using CarsStorage.BLL.Abstractions;
-using CarsStorage.BLL.Config;
-using CarsStorageApi.Config;
-using CarsStorageApi.Mappers;
+﻿using AutoMapper;
+using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.ModelsDTO.User;
+using CarsStorageApi.Models.UserModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace CarsStorageApi.Controllers
 {
+	/// <summary>
+	/// Класс контролллера пользователей.
+	/// </summary>
 	[ApiController]
-	[Authorize(Roles = "admin")]
-	[Route("[controller]/[action]")]
-	
-	public class UsersController(IUsersService usersService, IOptions<RoleNamesConfig> roleNamesConfig) : ControllerBase
+	[Authorize(Policy = "RequierManageUsers")]
+	[Route("[controller]/[action]")]	
+	public class UsersController(IUsersService usersService, IMapper mapper) : ControllerBase
 	{
-		private readonly UserMapper userMapper = new();
-
+		/// <summary>
+		/// Метод возвращает задачу с списком всех пользователей.
+		/// </summary>
 		[HttpGet]
-		public async Task<IEnumerable<UserDTO>> GetList()
+		public async Task<ActionResult<IEnumerable<UserResponse>>> GetList()
 		{
-			var appUsersList = await usersService.GetList();
-			return appUsersList.Select(userMapper.AppUserToUserDto);
+			var serviceResult = await usersService.GetList();
+
+			if (serviceResult.IsSuccess)
+				return serviceResult.Result.Select(mapper.Map<UserResponse>).ToList();
+			throw serviceResult.ServiceError;
 		}
 
+		/// <summary>
+		/// Метод возвращает задачу с пользователем по его id.
+		/// </summary>
 		[HttpGet("{id}")]
-		public async Task<ActionResult<UserDTO>> GetById([FromRoute] Guid id)
+		public async Task<ActionResult<UserResponse>> GetById([FromRoute] int id)
 		{
-			var appUser = await usersService.GetById(id);
-			if (appUser.Value is not null)
-				return userMapper.AppUserToUserDto(appUser.Value);
-			return NotFound("Пользователь не найден"); 
+			var serviceResult = await usersService.GetById(id);
+
+			if (serviceResult.IsSuccess)
+				return mapper.Map<UserResponse>(serviceResult.Result);
+			throw serviceResult.ServiceError;
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с созданным пользователем.
+		/// </summary>
 		[HttpPost]
-		public async Task<IActionResult> Create([FromBody] RegisterUserDTO registerUserDTO)			
+		public async Task<ActionResult<UserResponse>> Create([FromBody] UserRequest userRequest)			
 		{
-			if (string.IsNullOrWhiteSpace(registerUserDTO.UserName)
-				|| string.IsNullOrWhiteSpace(registerUserDTO.Email)
-				|| string.IsNullOrWhiteSpace(registerUserDTO.Password))
-				return BadRequest("Ошибка ввода данных пользователя");
-
-			if (roleNamesConfig.Value.DefaultUserRoleNames is null)
-				throw new Exception("Не заданы конфигурации, значение роли пользователя по умолчанию");
-			else
-				registerUserDTO.Roles ??= roleNamesConfig.Value.DefaultUserRoleNames;
-
-			return await usersService.Create(userMapper.RegUserDtoToRegAppUser(registerUserDTO));
+			var userCreaterDTO = mapper.Map<UserCreaterDTO>(userRequest);
+			var serviceResult = await usersService.Create(userCreaterDTO);
+			if (serviceResult.IsSuccess)
+				return mapper.Map<UserResponse>(serviceResult.Result);
+			throw serviceResult.ServiceError;
 		}
 
-
+		/// <summary>
+		/// Метод возвращает задачу с измененным пользователем.
+		/// </summary>
 		[HttpPut]
-		public async Task<IActionResult> Update([FromBody] UserDTO userDTO)
+		public async Task<ActionResult<UserResponse>> Update([FromBody] UserResponse userResponse)
 		{
-			return await usersService.Update(userMapper.UserDtoToAppUser(userDTO));
+			var serviceResult = await usersService.Update(mapper.Map<UserUpdaterDTO>(userResponse));
+
+			if (serviceResult.IsSuccess)
+				return mapper.Map<UserResponse>(serviceResult.Result);
+			throw serviceResult.ServiceError;
 		}
 
+		/// <summary>
+		/// Метод возвращает задачу с id удаленного пользователя.
+		/// </summary>
 		[HttpDelete("{id}")]
-		public async Task<IActionResult> Delete([FromRoute] Guid id)
+		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{
-			return await usersService.Delete(id);
+			var serviceResult = await usersService.Delete(id);
+
+			if (serviceResult.IsSuccess)
+				return serviceResult.Result;
+			throw serviceResult.ServiceError;
 		}
 	}
 }
