@@ -1,4 +1,4 @@
-﻿namespace CarsStorage.DAL.Repositories.Utils
+﻿namespace CarsStorage.BLL.Services.Utils
 {
 	/// <summary>
 	/// Класс пароля (свойства хеш и соль) используется в БД как свойство сущности пользователя.

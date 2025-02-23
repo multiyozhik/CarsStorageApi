@@ -20,6 +20,7 @@ namespace CarsStorage.DAL.Config
 			builder.HasData(allRolesList);
 			builder.HasKey(r => r.RoleEntityId);
 			builder.Property(r => r.RoleEntityId).ValueGeneratedOnAdd();
+			builder.HasIndex(u => u.Name).IsUnique();
 			builder.ToTable("Roles");
 			builder.Property(r => r.Name).IsRequired();
 			builder.Property(r => r.RoleClaims).IsRequired();

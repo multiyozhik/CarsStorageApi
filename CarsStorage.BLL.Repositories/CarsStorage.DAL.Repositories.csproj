@@ -16,8 +16,4 @@
     <ProjectReference Include="..\CarsStorage.DAL\CarsStorage.DAL.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Config\" />
-  </ItemGroup>
-
 </Project>

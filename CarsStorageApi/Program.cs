@@ -3,9 +3,9 @@ using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Services.Config;
 using CarsStorage.BLL.Services.Services;
+using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Repositories.Implementations;
-using CarsStorage.DAL.Repositories.Utils;
 using CarsStorageApi.Config;
 using CarsStorageApi.Filters;
 using CarsStorageApi.Middlewares;
@@ -239,7 +239,7 @@ static void ValidateAppConfigs(IConfiguration jwtConfig)
 		throw new Exception("Не определено время жизни токена в конфигурациях приложения.");
 }
 
-static bool GetParameterValue(string jwtParameter)
-	=> (bool.TryParse(jwtParameter, out bool parameterValue))
+static bool GetParameterValue(string jwtParameter) 
+	=> (bool.TryParse(jwtParameter, out bool parameterValue)) 
 		? parameterValue
 		: throw new Exception("Параметр валидации токена должен быть равным true или false.");

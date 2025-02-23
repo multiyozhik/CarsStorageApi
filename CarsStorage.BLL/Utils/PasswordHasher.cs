@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace CarsStorage.DAL.Repositories.Utils
+namespace CarsStorage.BLL.Services.Utils
 {
 	/// <summary>
 	/// Класс для  хеширования пароля с использованием Rfc2898DeriveBytes и рандомной соли с помощью RandomNumberGenerator. 

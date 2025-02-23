@@ -1,10 +1,6 @@
-﻿using AutoMapper;
-using CarsStorage.Abstractions.DAL.Repositories;
-using CarsStorage.Abstractions.ModelsDTO.User;
-using CarsStorage.BLL.Abstractions.ModelsDTO.User;
+﻿using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
-using CarsStorage.DAL.Repositories.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.DAL.Repositories.Implementations
@@ -12,106 +8,78 @@ namespace CarsStorage.DAL.Repositories.Implementations
 	/// <summary>
 	/// Класс репозитория для пользователей (использует сущность пользователя и возвращает данные пользователя без пароля).
 	/// </summary>
-	public class UsersRepository(AppDbContext dbContext, IPasswordHasher passwordHasher, IMapper mapper) : IUsersRepository
+	public class UsersRepository(AppDbContext dbContext) : IUsersRepository
 	{
 		/// <summary>
 		/// Метод возвращает список всех пользователей из БД.
-		public async Task<List<UserDTO>> GetList()
+		public async Task<List<UserEntity>> GetList()
 		{
-			var userEntityList = await dbContext.Users.Include(u => u.RolesList).ToListAsync();
-			return userEntityList.Select(mapper.Map<UserDTO>).ToList();
+			return await dbContext.Users.Include(u => u.RolesList).ToListAsync();
 		}
 
 
 		/// <summary>
 		/// Метод возвращает dto-пользователя по id пользователя.
 		/// </summary>
-		public async Task<UserDTO> GetById(int id)
+		public async Task<UserEntity> GetUserByUserId(int id)
 		{
-			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserEntityId == id);
-			return userEntity is not null 
-				? mapper.Map<UserDTO>(userEntity) 
-				: throw new Exception("Не найден пользователь по id");
+			return await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserEntityId == id)
+				?? throw new Exception("Не найден пользователь по id");
 		}
 
 
 		/// <summary>
-		/// Метод возвращает dto-пользователя по username пользователя.
+		/// Метод возвращает dto-пользователя по id пользователя.
 		/// </summary>
-		public async Task<UserDTO> GetUserByAuthUserData(AuthUserData authUserData)
+		public async Task<UserEntity?> GetUserByUserName(string userName)
 		{
-			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == authUserData.UserName);
-			if (userEntity is null)
-			{
-				userEntity = new UserEntity()
-				{
-					UserName = authUserData.UserName,
-					Email = authUserData.Email,
-					RolesList = await dbContext.Roles.Where(r => authUserData.RolesNamesList.Contains(r.Name)).ToListAsync()
-				};
-				await dbContext.Users.AddAsync(userEntity);
-				await dbContext.SaveChangesAsync();
-			}						
-			return mapper.Map<UserDTO>(userEntity);
+			return await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == userName);
 		}
 
 
 		/// <summary>
-		/// Метод проверяет валидность логина и пароля в БД пользователя.
+		/// Метод возвращает список сущностей ролей по списку имен ролей для пользователя.
 		/// </summary>
-		public async Task IsUserValid(UserLoginDTO userLoginDTO)
+		public async Task<List<RoleEntity>> GetRolesByRoleNames(List<string> roleNamesList)
 		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == userLoginDTO.UserName)
-				?? throw new Exception("Неверный логин.");
-			if (string.IsNullOrEmpty(userEntity.Hash) || string.IsNullOrEmpty(userEntity.Salt))
-				throw new Exception("Не определены пароль и соль.");
-			if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.Hash, userEntity.Salt))
-				throw new Exception("Неверный пароль.");			
+			return await dbContext.Roles.Where(r => roleNamesList.Contains(r.Name)).ToListAsync();
 		}
 
+
 		/// <summary>
-		/// Метод возвращает найденного в БД пользователя с его ролями.
+		/// Метод возвращает пользователя по refresh токену.
 		/// </summary>
-		public async Task<UserDTO> GetUserWithRoles(UserLoginDTO userLoginDTO)
+		public async Task<UserEntity> GetUserByRefreshToken(string refreshToken)
 		{
-			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == userLoginDTO.UserName);				
-			return mapper.Map<UserDTO>(userEntity);
+			return await dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken)
+				?? throw new Exception("Пользователь с заданным токеном не найден");
 		}
 
 
 		/// <summary>
 		/// Метод возвращает созданного пользователя в БД (пароль хешируется перед сохранением в БД).
 		/// </summary>
-		public async Task<UserDTO> Create(UserCreaterDTO userCreaterDTO)
-		{
-			var userEntity = mapper.Map<UserEntity>(userCreaterDTO);
-			var hashedPassword = passwordHasher.HashPassword(userCreaterDTO.Password);
-			userEntity.Hash = hashedPassword.Hash;
-			userEntity.Salt = hashedPassword.Salt;
-			if (userCreaterDTO.RoleNamesList is null)
-				throw new Exception("Не определены роли пользователя.");
-			userEntity.RolesList = await dbContext.Roles.Where(r => userCreaterDTO.RoleNamesList.Contains(r.Name)).ToListAsync();
+		public async Task<UserEntity> Create(UserEntity userEntity)
+		{			
 			await dbContext.Users.AddAsync(userEntity);
 			await dbContext.SaveChangesAsync();
-			return mapper.Map<UserDTO>(userEntity);
+			return userEntity;
 		}
 
 
 		/// <summary>
 		/// Метод возвращает обновленного пользователя из БД.
 		/// </summary>
-		public async Task<UserDTO> Update(UserUpdaterDTO userUpdaterDTO)
+		public async Task<UserEntity> Update(UserEntity userEntity)
 		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userUpdaterDTO.Id)
-				?? throw new Exception("Пользователь с заданным Id не найден");			
-			userEntity.UserName = userUpdaterDTO.UserName;
-			userEntity.Email = userUpdaterDTO.Email;
-			if (userUpdaterDTO.RoleNamesList is null)
-				throw new Exception("Не определены роли пользователя.");
-			userEntity.RolesList = await dbContext.Roles.Where(r => userUpdaterDTO.RoleNamesList.Contains(r.Name)).ToListAsync();
-			dbContext.Users.Update(userEntity);
+			var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userEntity.UserEntityId)
+				?? throw new Exception("Пользователь с заданным Id не найден");
+			user.UserName = userEntity.UserName;
+			user.Email = userEntity.Email;
+			user.RolesList = userEntity.RolesList;
+			dbContext.Users.Update(user);
 			await dbContext.SaveChangesAsync();
-			return mapper.Map<UserDTO>(userEntity);
+			return user;
 		}
 
 
@@ -124,16 +92,6 @@ namespace CarsStorage.DAL.Repositories.Implementations
 				?? throw new Exception("Пользователь с заданным Id не найден");
 			dbContext.Users.Remove(userEntity);
 			await dbContext.SaveChangesAsync();
-		}
-
-		/// <summary>
-		/// Метод возвращает пользователя по refresh токену.
-		/// </summary>
-		public async Task<UserDTO> GetUserByRefreshToken(string refreshToken)
-		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken)
-				?? throw new Exception("Пользователь с заданным токеном не найден");
-			return mapper.Map<UserDTO>(userEntity);
 		}
 	}
 }

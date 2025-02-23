@@ -10,7 +10,7 @@ namespace CarsStorage.Abstractions.BLL.Services
 	public interface IAuthenticateService
 	{
 		public Task<ServiceResult<JWTTokenDTO>> LogIn(UserLoginDTO userLoginDTO);
-		public Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUserData authUserData);
+		public Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUserDataDTO authUserDataDTO);
 		public Task<ServiceResult<JWTTokenDTO>> RefreshToken(JWTTokenDTO jwtTokenDTO);
 		public Task<ServiceResult<int>> LogOut(string accessToken);
 	}

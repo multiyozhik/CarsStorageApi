@@ -2,14 +2,14 @@
 using CarsStorage.Abstractions.ModelsDTO.Role;
 using CarsStorage.DAL.Entities;
 
-namespace CarsStorage.DAL.Repositories.Mappers
+namespace CarsStorage.BLL.Services.MappersBLL
 {
 	/// <summary>
 	/// Класс меппера для ролей.
 	/// </summary>
-	public class RoleMapper : Profile
+	public class RoleMapperBLL : Profile
 	{
-		public RoleMapper()
+		public RoleMapperBLL()
 		{
 			CreateMap<RoleEntity, RoleDTO>()
 				.ForMember(dist => dist.Id, opt => opt.MapFrom(src => src.RoleEntityId));
