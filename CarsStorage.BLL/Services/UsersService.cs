@@ -13,11 +13,15 @@ namespace CarsStorage.BLL.Services.Services
 	/// <summary>
 	/// Класс сервиса пользователей.
 	/// </summary>
+	/// <param name="usersRepository">Репозиторий пользователей.</param>
+	/// <param name="mapper">Объект мепппера.</param>
+	/// <param name="passwordHasher">Объект для хеширования паролей.</param>
 	public class UsersService(IUsersRepository usersRepository, IMapper mapper, IPasswordHasher passwordHasher) : IUsersService
 	{
 		/// <summary>
-		/// Метод возвращает результат с списком всех пользователей.
+		/// Метод для получения списка всех пользователей.
 		/// </summary>
+		/// <returns>Список всех пользователей.</returns>
 		public async Task<ServiceResult<List<UserDTO>>> GetList()
 		{
 			try
@@ -34,8 +38,10 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод возвращает результат с пользователем по полученному id.
+		/// Метод для получения объекта пользователя по его идентификатору.
 		/// </summary>
+		/// <param name="id">Идентификатор пользователя.</param>
+		/// <returns>Объект пользователя.</returns>
 		public async Task<ServiceResult<UserDTO>> GetById(int id)
 		{
 			try
@@ -51,8 +57,10 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод создает пользователя (с паролем и ролями) и возвращает как результат созданного пользователя.
+		/// Метод для создания объекта пользователя.
 		/// </summary>
+		/// <param name="userCreaterDTO">Объект пользователя для создания.</param>
+		/// <returns>Созданный объект пользователя.</returns>
 		public async Task<ServiceResult<UserDTO>> Create(UserCreaterDTO userCreaterDTO)
 		{
 			try
@@ -75,8 +83,10 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод изменяет пользователя и возвращает как результат его.
+		/// Метод для изменения объекта пользователя.
 		/// </summary>
+		/// <param name="userUpdaterDTO">Объект пользователя для изменения.</param>
+		/// <returns>Измененный объект пользователя.</returns>
 		public async Task<ServiceResult<UserDTO>> Update(UserUpdaterDTO userUpdaterDTO)
 		{
 			try
@@ -95,8 +105,10 @@ namespace CarsStorage.BLL.Services.Services
 		}
 
 		/// <summary>
-		/// Метод удаляет пользователя по id и возвращает id этого удаленного пользователя.
+		/// Метод для удаления объекта пользователя по его идентификатору.
 		/// </summary>
+		/// <param name="id">Идентификатор пользователя.</param>
+		/// <returns>Идентификатор удаленного пользователя.</returns>
 		public async Task<ServiceResult<int>> Delete(int id)
 		{
 			try

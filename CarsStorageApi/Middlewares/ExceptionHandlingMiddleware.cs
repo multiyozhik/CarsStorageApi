@@ -4,10 +4,16 @@ using System.Net;
 namespace CarsStorageApi.Middlewares
 {
 	/// <summary>
-	/// middleware для обработки исключений.
+	/// Класс middleware для обработки исключений.
 	/// </summary>
+	/// <param name="next">Делегат для обработки http-запроса.</param>
 	public class ExceptionHandlingMiddleware(RequestDelegate next)
 	{
+		/// <summary>
+		/// Метод обработки http-запроса.
+		/// </summary>
+		/// <param name="httpContext"></param>
+		/// <returns></returns>
 		public async Task InvokeAsync(HttpContext httpContext)
 		{
 			try
@@ -20,6 +26,12 @@ namespace CarsStorageApi.Middlewares
 			}
 		}
 
+
+		/// <summary>
+		/// Метод обработки исключения, возвращает объект, содержащий статус код ошибки и ее сообщение.
+		/// </summary>
+		/// <param name="httpContext">Объект http-контекста.</param>
+		/// <param name="exception">Объект исключения.</param>
 		private static async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
 		{
 			var response = httpContext.Response;

@@ -15,17 +15,18 @@ using System.Security.Cryptography;
 namespace CarsStorage.BLL.Services.Services
 {
 	/// <summary>
-	/// Сервис для методов токенов доступа.
+	/// Класс сервиса токенов доступа.
 	/// </summary>
-	/// <param name="jwtConfig"></param>
+	/// <param name="tokensRepository">Репозиторий токенов.</param>
+	/// <param name="mapper">Объект меппера.</param>
+	/// <param name="jwtOptions">Объект конфигураций jwt-токена.</param>
 	public class TokensService(ITokensRepository tokensRepository, IMapper mapper, IOptions<JWTConfig> jwtOptions) : ITokensService
 	{
 		/// <summary>
 		/// Метод генерации токена доступа.
 		/// </summary>
-		/// <param name="claims">Коллекция клаймов, на основе которых генерируется токен.</param>
-		/// <param name="expires">Возвращаемое значение даты и времени истечения жизни сгенерированного токена.</param>
-		/// <returns></returns>
+		/// <param name="claims">Список утверждений роли пользователя.</param>
+		/// <returns>Строка токена доступа.</returns>
 		public ServiceResult<string> GetAccessToken(IEnumerable<Claim> claims)
 		{
 			try
@@ -51,9 +52,9 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод обновления токена доступа, генерация генератором случайных чисел с преобразованием в строку.
+		/// Метод обновления токена доступа (генерация генератором случайных чисел с преобразованием в строку).
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>Строка токена обновления.</returns>
 		public ServiceResult<string> GetRefreshToken()
 		{
 			try
@@ -71,8 +72,11 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод получения из токена доступа с истекшим сроком жизни объекта ClaimsPrincipal для получения клаймов.
+		/// Метод для получения из токена доступа с истекшим сроком жизни объекта ClaimsPrincipal для получения клаймов.
 		/// </summary>
+		/// <param name="experedToken">Строка токена доступа с истекшим временем жизни.</param>
+		/// <returns>Объект ClaimsPrincipal.</returns>
+		/// <exception cref="SecurityTokenException">Исключение о получении неверного значения токена доступа.</exception>
 		public ServiceResult<ClaimsPrincipal> GetClaimsPrincipalFromExperedToken(string experedToken)
 		{
 			try
@@ -101,9 +105,12 @@ namespace CarsStorage.BLL.Services.Services
 			}
 		}
 
+
 		/// <summary>
-		/// Метод возвращает токен по id пользователя.
+		/// Метод для получения объекта токена по идентификатору пользователя.
 		/// </summary>
+		/// <param name="userId">Идентификатор пользователя.</param>
+		/// <returns>Объект токена доступа.</returns>
 		public async Task<ServiceResult<JWTTokenDTO>> GetTokenByUserId(int userId)
 		{
 			try 
@@ -119,8 +126,11 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод обновляет токен для пользователя с id.
+		/// Метод для обновления объекта токена для пользователя по его идентификатору.
 		/// </summary>
+		/// <param name="userId">Идентификатор пользователя.</param>
+		/// <param name="jwtTokenDTO">Объект токена доступа.</param>
+		/// <returns>Обновленный объект токена.</returns>
 		public async Task<ServiceResult<JWTTokenDTO>> UpdateToken(int userId, JWTTokenDTO jwtTokenDTO)
 		{
 			try
@@ -136,8 +146,10 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод очищает токен в БД при выходе пользователя из системы.
+		/// Метод для очистки объекта токена доступа (устанавливается null) по строке токена доступа.
 		/// </summary>
+		/// <param name="accessToken">Строка токена доступа.</param>
+		/// <returns>Идентификатор пользователя, у которого очищен токен.</returns>
 		public async Task<ServiceResult<int>> ClearToken(string accessToken)
 		{
 			try

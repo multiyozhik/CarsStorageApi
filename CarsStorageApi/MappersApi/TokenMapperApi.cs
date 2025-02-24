@@ -5,10 +5,13 @@ using CarsStorageApi.Models.TokenModels;
 namespace CarsStorageApi.MappersApi
 {
 	/// <summary>
-	/// Класс меппера при аутентификации пользователя.
+	/// Класс меппера для объектов токенов.
 	/// </summary>
 	public class TokenMapperApi: Profile
 	{
+		/// <summary>
+		/// Конструктор меппера для объектов токенов.
+		/// </summary>
 		public TokenMapperApi() 
 		{
 			CreateMap<JWTTokenDTO, JWTTokenRequestResponse>();

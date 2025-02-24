@@ -5,10 +5,13 @@ using CarsStorage.DAL.Entities;
 namespace CarsStorage.BLL.Services.MappersBLL
 {
 	/// <summary>
-	/// Класс меппера для ролей.
+	/// Класс меппера для объектов ролей.
 	/// </summary>
 	public class RoleMapperBLL : Profile
 	{
+		/// <summary>
+		/// Конструктор меппера для объектов ролей.
+		/// </summary>
 		public RoleMapperBLL()
 		{
 			CreateMap<RoleEntity, RoleDTO>()

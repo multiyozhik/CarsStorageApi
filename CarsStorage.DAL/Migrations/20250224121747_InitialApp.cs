@@ -133,6 +133,24 @@ namespace CarsStorage.DAL.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Roles_Name",
+                table: "Roles",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_UserName",
+                table: "Users",
+                column: "UserName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UsersRoles_RoleEntityId",
                 table: "UsersRoles",
                 column: "RoleEntityId");

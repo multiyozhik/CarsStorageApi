@@ -4,17 +4,21 @@ using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Services.MappersBLL
 {
+	/// <summary>
+	/// Класс меппера объектов автомобилей.
+	/// </summary>
 	public class CarMapperBLL : Profile
 	{
+		/// <summary>
+		/// Конструктор меппера.
+		/// </summary>
 		public CarMapperBLL() 
 		{
-			//CreateMap<CarCreaterDTO, CarDTO>();
-
 			CreateMap<CarEntity, CarDTO>();
 
 			CreateMap<CarDTO, CarEntity>();
 
-			//CreateMap<CarCreaterDTO, CarEntity>();
+			CreateMap<CarCreaterDTO, CarEntity>();
 		}
 	}
 }

@@ -8,15 +8,18 @@ using Microsoft.AspNetCore.Mvc;
 namespace CarsStorageApi.Controllers
 {
 	/// <summary>
-	/// Класс контроллера для автмобилей.
+	/// Класс контроллера для автомобилей.
 	/// </summary>
+	/// <param name="carsService">Объект сервиса автомобилей.</param>
+	/// <param name="mapper">Объект меппера.</param>
 	[ApiController]
 	[Route("[controller]/[action]")]
 	public class CarsController(ICarsService carsService, IMapper mapper) : ControllerBase
 	{
 		/// <summary>
-		/// Метод возвращает задачу с списком всех автомобилей.
+		/// Метод возвращает список автомобилей.
 		/// </summary>
+		/// <returns>Список объектов автомобилей, возвращаемый клиенту.</returns>
 		[Authorize(Policy = "RequierBrowseCars")]
 		[HttpGet]
 		public async Task<ActionResult<List<CarResponse>>> GetList()
@@ -35,8 +38,10 @@ namespace CarsStorageApi.Controllers
 
 
 		/// <summary>
-		/// Метод возвращает задачу с созданной записью автомобиля.
+		/// Метод для создания объекта автомобиля.
 		/// </summary>
+		/// <param name="carRequest">Объект данных автомобиля, передаваемых клиентом.</param>
+		/// <returns>Созданный объект данных автомобиля, возвращаемых клиенту.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPost]
 		public async Task<ActionResult<CarResponse>> Create([FromBody] CarRequest carRequest)
@@ -49,9 +54,12 @@ namespace CarsStorageApi.Controllers
 				throw serviceResult.ServiceError;
 		}
 
+
 		/// <summary>
-		/// Метод возвращает задачу с измененной записью автомобиля.
+		/// Метод для изменения объекта автомобиля.
 		/// </summary>
+		/// <param name="carResponse">Объект автомобиля.</param>
+		/// <returns>Измененный объект данных автомобиля, возвращаемых клиенту.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
 		public async Task<ActionResult<CarResponse>> Update([FromBody] CarResponse carResponse)
@@ -63,9 +71,12 @@ namespace CarsStorageApi.Controllers
 			throw serviceResult.ServiceError;
 		}
 
+
 		/// <summary>
-		/// Метод возвращает задачу с id удаленной записи автомобиля.
+		/// Метод для удаления объекта автомобиля по его идентификатору.
 		/// </summary>
+		/// <param name="id">Идентификатор объекта автомобиля.</param>
+		/// <returns>Идентификатор удаленного объекта автомобиля.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpDelete]
 		public async Task<ActionResult<int>> Delete([FromQuery] int id)
@@ -77,9 +88,12 @@ namespace CarsStorageApi.Controllers
 			throw serviceResult.ServiceError;
 		}
 
+
 		/// <summary>
-		/// Метод возвращает задачу с измененной записью автомобиля (изменено количество автомобилей).
+		/// Метод для изменения количества у объекта автомобиля с идентификатором id.
 		/// </summary>
+		/// <param name="carCountRequest">Объект данных автомобиля, передаваемых клиентом.</param>
+		/// <returns>Измененный объект автомобиля, возвращаемый клиенту.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
 		public async Task<ActionResult<CarResponse>> UpdateCount([FromBody] CarCountRequest carCountRequest)
@@ -92,9 +106,12 @@ namespace CarsStorageApi.Controllers
 				return BadRequest(serviceResult.ServiceError);
 		}
 
+
 		/// <summary>
-		/// Метод возвращает задачу с измененной записью автомобиля (запись сделана недоступной для просмотра обычным пользователем).
+		/// Метод для изменения объекта автомобиля так, чтобы объект был недоступен для просмотра (обычным пользователем).
 		/// </summary>
+		/// <param name="id">Идентификатор объекта автомобиля.</param>
+		/// <returns>Измененный объект автомобиля, возвращаемый клиенту.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
 		public async Task<ActionResult<CarResponse>> MakeInaccessible([FromQuery]int id)

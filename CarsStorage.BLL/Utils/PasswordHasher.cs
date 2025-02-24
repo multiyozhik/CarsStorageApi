@@ -3,14 +3,14 @@
 namespace CarsStorage.BLL.Services.Utils
 {
 	/// <summary>
-	/// Класс для  хеширования пароля с использованием Rfc2898DeriveBytes и рандомной соли с помощью RandomNumberGenerator. 
+	/// Класс для хеширования пароля. 
 	/// </summary>
 	public class PasswordHasher : IPasswordHasher
 	{
 		/// <summary>
 		/// Метод хеширования пароля с использованием Rfc2898DeriveBytes и рандомной соли с помощью RandomNumberGenerator.
 		/// </summary>
-		/// <returns>Возвращает хеш и соль пароля.</returns>
+		/// <returns>Объект пароля.</returns>
 		public Password HashPassword(string password)
 		{
 			var salt = GenerateSalt();
@@ -20,12 +20,12 @@ namespace CarsStorage.BLL.Services.Utils
 
 
 		/// <summary>
-		/// Метод проверки соответствия проверяемого пароля хранимому паролю (поэлементное сравнение массива байтов проверяемого пароля, захешированного хранимой солью, с захешированным паролем в БД).
+		/// Метод для проверки входящего пароля на соответствие хранимому паролю в БД. 
 		/// </summary>
-		/// <param name="password">Проверяемый пароль.</param>
-		/// <param name="storedHash">Захешированный пароль, сохраненный в БД, с которым будет сравниваться хеш проверяемого пароля.</param>
-		/// <param name="storedSalt">Соль, хранимая вместе с захешированным паролем в БД.</param>
-		/// <returns>Возвращает булево значение соответствия проверяемого пароля сохраненному паролю в БД.</returns>
+		/// <param name="password">Строка проверяемого пароля.</param>
+		/// <param name="storedHash">Строка хеша пароля, хранимого в БД.</param>
+		/// <param name="storedSalt">Строка соли для пароля, хранимого в  БД.</param>
+		/// <returns>Булево значение соответствия проверяемого пароля хранимому паролю в БД.</returns>
 		public bool VerifyPassword(string password, string storedHash, string storedSalt)
 		{
 			var salt = Convert.FromBase64String(storedSalt);
@@ -38,7 +38,8 @@ namespace CarsStorage.BLL.Services.Utils
 		/// <summary>
 		/// Метод генерации соли с помощью генератора рандомных чисел (побайтно).
 		/// </summary>
-		/// <returns>Возвращает соль в виде массива байтов.</returns>
+		/// <param name="size">Размер массива байтов.</param>
+		/// <returns>Соль в виде массива байтов.</returns>
 		private static byte[] GenerateSalt(int size = 16)
 		{
 			byte[] salt = new byte[size];

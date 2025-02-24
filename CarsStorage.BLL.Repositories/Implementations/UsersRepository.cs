@@ -6,12 +6,15 @@ using Microsoft.EntityFrameworkCore;
 namespace CarsStorage.DAL.Repositories.Implementations
 {
 	/// <summary>
-	/// Класс репозитория для пользователей (использует сущность пользователя и возвращает данные пользователя без пароля).
+	/// Класс репозитория пользователей.
 	/// </summary>
+	/// <param name="dbContext">Объект контекста данных.</param>
 	public class UsersRepository(AppDbContext dbContext) : IUsersRepository
 	{
 		/// <summary>
-		/// Метод возвращает список всех пользователей из БД.
+		/// Метод для получения списка объектов пользователей.
+		/// </summary>
+		/// <returns>Список объектов пользователей.</returns>
 		public async Task<List<UserEntity>> GetList()
 		{
 			return await dbContext.Users.Include(u => u.RolesList).ToListAsync();
@@ -19,8 +22,10 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод возвращает dto-пользователя по id пользователя.
+		/// Метод для получения объекта пользователя по его идентификатору.
 		/// </summary>
+		/// <param name="id">Идентификатор пользователя.</param>
+		/// <returns>Объект пользователя.</returns>
 		public async Task<UserEntity> GetUserByUserId(int id)
 		{
 			return await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserEntityId == id)
@@ -29,8 +34,10 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод возвращает dto-пользователя по id пользователя.
+		/// Метод для получения объекта пользователя по его имени.
 		/// </summary>
+		/// <param name="userName">Имя пользователя.</param>
+		/// <returns>Объект пользователя.</returns>
 		public async Task<UserEntity?> GetUserByUserName(string userName)
 		{
 			return await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserName == userName);
@@ -38,8 +45,10 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод возвращает список сущностей ролей по списку имен ролей для пользователя.
+		/// Метод для получения списка объектов ролей по списку наименований этих ролей.
 		/// </summary>
+		/// <param name="roleNamesList">Список наименований ролей.</param>
+		/// <returns></returns>
 		public async Task<List<RoleEntity>> GetRolesByRoleNames(List<string> roleNamesList)
 		{
 			return await dbContext.Roles.Where(r => roleNamesList.Contains(r.Name)).ToListAsync();
@@ -47,18 +56,22 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод возвращает пользователя по refresh токену.
+		/// Метод для получения объекта пользователя по его токену обновления.
 		/// </summary>
+		/// <param name="refreshToken">Токен обновления для пользователя.</param>
+		/// <returns>Объект пользователя.</returns>
 		public async Task<UserEntity> GetUserByRefreshToken(string refreshToken)
 		{
-			return await dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken)
+			return await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.RefreshToken == refreshToken)
 				?? throw new Exception("Пользователь с заданным токеном не найден");
 		}
 
 
 		/// <summary>
-		/// Метод возвращает созданного пользователя в БД (пароль хешируется перед сохранением в БД).
+		/// Метод для создания объекта пользователя.
 		/// </summary>
+		/// <param name="userEntity">Объект пользователя для создания.</param>
+		/// <returns>Созданный объект пользователя.</returns>
 		public async Task<UserEntity> Create(UserEntity userEntity)
 		{			
 			await dbContext.Users.AddAsync(userEntity);
@@ -68,27 +81,39 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод возвращает обновленного пользователя из БД.
+		/// Метод для изменения объекта пользователя.
 		/// </summary>
+		/// <param name="userEntity">Объект пользователя для изменения.</param>
+		/// <returns>Измененный объект пользователя.</returns>
 		public async Task<UserEntity> Update(UserEntity userEntity)
 		{
-			var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userEntity.UserEntityId)
+			try
+			{
+				var user = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserEntityId == userEntity.UserEntityId)
 				?? throw new Exception("Пользователь с заданным Id не найден");
-			user.UserName = userEntity.UserName;
-			user.Email = userEntity.Email;
-			user.RolesList = userEntity.RolesList;
-			dbContext.Users.Update(user);
-			await dbContext.SaveChangesAsync();
-			return user;
+				user.UserName = userEntity.UserName;
+				user.Email = userEntity.Email;
+				user.RolesList = userEntity.RolesList;
+				dbContext.Users.Update(user);
+				await dbContext.SaveChangesAsync();
+				return user;
+			}
+			catch (Exception ex)
+			{
+				var message = ex.Message;
+				throw new Exception(message);
+			}
 		}
 
 
 		/// <summary>
-		/// Метод удаляет из БД по id пользователя.
+		/// Метод для удаления объекта пользователя по его идентификатору.
 		/// </summary>
+		/// <param name="id">Идентификатор пользователя.</param>
+		/// <returns>Идентификатор удаленного пользователя.</returns>
 		public async Task Delete(int id)
 		{
-			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == id)
+			var userEntity = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserEntityId == id)
 				?? throw new Exception("Пользователь с заданным Id не найден");
 			dbContext.Users.Remove(userEntity);
 			await dbContext.SaveChangesAsync();

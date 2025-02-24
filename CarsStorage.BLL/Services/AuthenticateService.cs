@@ -14,13 +14,19 @@ using System.Security.Claims;
 namespace CarsStorage.BLL.Services.Services
 {
 	/// <summary>
-	/// Сервис для аутентификации.
+	/// Класс сервиса для аутентификации пользователей.
 	/// </summary>
+	/// <param name="usersRepository">Репозиторий пользователей.</param>
+	/// <param name="tokenService">Сервис токенов.</param>
+	/// <param name="mapper">Объект меппера.</param>
+	/// <param name="passwordHasher">Объект для хеширования паролей.</param>
 	public class AuthenticateService(IUsersRepository usersRepository,  ITokensService tokenService, IMapper mapper, IPasswordHasher passwordHasher) : IAuthenticateService
 	{
 		/// <summary>
-		/// Метод сервиса для входа пользователя в приложение и возврата токена клиенту.
+		/// Метод для входа пользователя в приложение.
 		/// </summary>
+		/// <param name="userLoginDTO">Объект, представляющий данные пользователя для входа в приложение.</param>
+		/// <returns>Объект токена доступа.</returns>
 		public async Task<ServiceResult<JWTTokenDTO>> LogIn(UserLoginDTO userLoginDTO) 
 		{
 			try
@@ -41,8 +47,10 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод сервиса для входа аутентифицированного пользователя в приложение.
+		/// Метод для входа аутентифицированного пользователя в приложение.
 		/// </summary>
+		/// <param name="authUserDataDTO">Объект, представляющий данные об аутентифицированном пользователе.</param>
+		/// <returns>Объект токена доступа.</returns>
 		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUserDataDTO authUserDataDTO)
 		{
 			try
@@ -73,13 +81,12 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод сервиса возвращает как результат объект токена с обновленным refresh токеном.
+		/// Метод для обновления refresh токена.
 		/// </summary>
+		/// <param name="jwtTokenDTO">Объект токена.</param>
+		/// <returns>Объект токена с обновленным refresh токеном.</returns>
 		public async Task<ServiceResult<JWTTokenDTO>> RefreshToken(JWTTokenDTO jwtTokenDTO)
 		{
-			//по refresh токену нашли userDTO, по userId возвращаем истекший access токен,
-			//из кот. получаем список клаймов из ClaimsPrincipal для генерации нового access токена,
-			//refreshToken - просто обновляется рандомная строка (без полезной нагрузки)
 			try
 			{
 				var userEntity = await usersRepository.GetUserByRefreshToken(jwtTokenDTO.RefreshToken);
@@ -112,8 +119,10 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Метод сервиса для выхода пользователя из приложения, возвращает как результат id вышедшего пользователя.
+		/// Метод сервиса для выхода пользователя из приложения.
 		/// </summary>
+		/// <param name="accessToken">Строка токена доступа.</param>
+		/// <returns>Идентификатор пользователя, вышедшего из приложения.</returns>
 		public async Task<ServiceResult<int>> LogOut(string accessToken) 
 		{
 			try
@@ -131,8 +140,10 @@ namespace CarsStorage.BLL.Services.Services
 
 
 		/// <summary>
-		/// Закрытый метод сервиса возвращает токен для входа пользователя в приложение.
+		/// Закрытый метод сервиса для получения объекта токена доступа.
 		/// </summary>
+		/// <param name="userDTO">Объект пользователя.</param>
+		/// <returns>Объект токена для входа пользователя в приложение.</returns>
 		private async Task<JWTTokenDTO> GetJWTTokenDTO(UserDTO userDTO)
 		{
 			var roleClaims = userDTO.RolesList.SelectMany(role => role.RoleClaims).Distinct().ToList();

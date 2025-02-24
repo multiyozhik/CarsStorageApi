@@ -6,10 +6,13 @@ using CarsStorageApi.Models.UserModels;
 namespace CarsStorageApi.MappersApi
 {
 	/// <summary>
-	/// Класс меппера для пользователей.
+	/// Класс меппера для объектов пользователей.
 	/// </summary>
 	public class UserMapperApi: Profile
 	{
+		/// <summary>
+		/// Конструктор меппера для объектов пользователей.
+		/// </summary>
 		public UserMapperApi() 
 		{
 			CreateMap<RegisterUserRequest, UserCreaterDTO>()

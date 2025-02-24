@@ -5,15 +5,36 @@ using Microsoft.EntityFrameworkCore;
 namespace CarsStorage.DAL.DbContexts
 {
 	/// <summary>
-	///  DbContext приложения. 
+	/// Класс контекста данных приложения. 
 	/// </summary>
+	/// <param name="options">Параметры, используемые контекстом данных.</param>
 	public class AppDbContext(DbContextOptions<AppDbContext> options): DbContext(options)
 	{
+		/// <summary>
+		/// Набор пользователей, хранящихся в БД.
+		/// </summary>
 		public DbSet<UserEntity> Users { get; set; }
+
+		/// <summary>
+		/// Набор пользователей, хранящихся в БД.
+		/// </summary>
 		public DbSet<RoleEntity> Roles { get; set; }
+
+		/// <summary>
+		/// Набор ролей пользователей, хранящихся в БД.
+		/// </summary>
 		public DbSet<UsersRolesEntity> UsersRoles { get; set; }
+
+		/// <summary>
+		/// Набор автомобилей, хранящихся в БД.
+		/// </summary>
 		public DbSet<CarEntity> Cars { get; set; }
 
+
+		/// <summary>
+		/// Метод для конфигурирования и инициализации БД.
+		/// </summary>
+		/// <param name="modelBuilder">Объект API конфигурирования.</param>
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);

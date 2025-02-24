@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using CarsStorage.Abstractions.DAL.Repositories;
-using CarsStorage.Abstractions.ModelsDTO.Car;
+﻿using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +8,7 @@ namespace CarsStorage.DAL.Repositories.Implementations
 	/// <summary>
 	/// Класс репозитория автомобилей.
 	/// </summary>
+	/// <param name="dbContext">Объект контекста данных.</param>
 	public class CarsRepository(AppDbContext dbContext) : ICarsRepository
 	{
 		private readonly AppDbContext dbContext = dbContext;
@@ -17,15 +16,18 @@ namespace CarsStorage.DAL.Repositories.Implementations
 		/// <summary>
 		/// Метод получения всего списка автомобилей.
 		/// </summary>
+		/// <returns>Список всех пользователей.</returns>
 		public async Task<List<CarEntity>> GetList()
 		{
 			return await dbContext.Cars.ToListAsync();
-		}			
+		}
 
 
 		/// <summary>
-		/// Метод создания новой записи автомобиля в БД.
+		/// Метод для создания объекта автомобиля.
 		/// </summary>
+		/// <param name="carEntity">Объект автомобиля.</param>
+		/// <returns>Созданный объект автомобиля.</returns>
 		public async Task<CarEntity> Create(CarEntity carEntity)
 		{
 			await dbContext.Cars.AddAsync(carEntity);
@@ -35,8 +37,10 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод изменения записи данных автомобиля в БД.
+		/// Метод для изменения объекта автомобиля.
 		/// </summary>
+		/// <param name="carEntity">Объект автомобиля.</param>
+		/// <returns>Измененный объект автомобиля.</returns>
 		public async Task<CarEntity> Update(CarEntity carEntity)
 		{
 			var car = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == carEntity.Id)
@@ -53,9 +57,11 @@ namespace CarsStorage.DAL.Repositories.Implementations
 			return car;	
 		}
 
+
 		/// <summary>
-		/// Метод удаления записи автомобиля по id.
+		/// Метод для удаления объекта автомобиля по его идентификатору.
 		/// </summary>
+		/// <param name="id">Идентификатор объекта автомобиля.</param>
 		public async Task Delete(int id)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id)
@@ -66,8 +72,11 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод для изменения количества автомобилей для id записи автомобиля в БД.
+		/// Метод для изменения количества объекта автомобиля.
 		/// </summary>
+		/// <param name="id">Идентификатор объекта автомобиля.</param>
+		/// <param name="count">Новое значение количества автомобилей.</param>
+		/// <returns>Измененный объект автомобиля.</returns>
 		public async Task<CarEntity> UpdateCount(int id, int count)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id)
@@ -80,8 +89,10 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод для того, чтобы сделать запись об автомобиле с id недоступным для просмотра.
+		/// Метод для указания, что объект автомобиля недоступен к просмотру.
 		/// </summary>
+		/// <param name="id">Идентификатор объекта автомобиля.</param>
+		/// <returns>Измененный объект автомобиля.</returns>
 		public async Task<CarEntity> MakeInaccessible(int id)
 		{
 			var carEntity = await dbContext.Cars.FirstOrDefaultAsync(c => c.Id == id)

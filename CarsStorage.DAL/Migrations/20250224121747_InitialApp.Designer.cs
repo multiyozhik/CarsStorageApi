@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CarsStorage.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250211151518_InitialApp")]
+    [Migration("20250224121747_InitialApp")]
     partial class InitialApp
     {
         /// <inheritdoc />
@@ -122,6 +122,9 @@ namespace CarsStorage.DAL.Migrations
 
                     b.HasKey("RoleEntityId");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("Roles", (string)null);
 
                     b.HasData(
@@ -174,6 +177,12 @@ namespace CarsStorage.DAL.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("UserEntityId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
 
                     b.ToTable("Users", (string)null);
 

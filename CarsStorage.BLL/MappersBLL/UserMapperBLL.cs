@@ -5,8 +5,14 @@ using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Services.MappersBLL
 {
+	/// <summary>
+	/// Класс меппера для объектов пользователей.
+	/// </summary>
 	public class UserMapperBLL : Profile
 	{
+		/// <summary>
+		/// Конструктор меппера для объектов пользователей.
+		/// </summary>
 		public UserMapperBLL() 
 		{
 			CreateMap<UserCreaterDTO, UserDTO>()

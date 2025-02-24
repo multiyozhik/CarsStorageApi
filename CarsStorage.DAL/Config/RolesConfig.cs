@@ -6,15 +6,23 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace CarsStorage.DAL.Config
 {
 	/// <summary>
-	/// Класс определяет конфигурацию для RoleEntity сущности. 
+	/// Класс конфигурации для сущности роли пользователя. 
 	/// </summary>
 	public class RolesConfig : IEntityTypeConfiguration<RoleEntity>
 	{
+		/// <summary>
+		/// Начальный список ролей в БД.
+		/// </summary>
 		private readonly List<RoleEntity> allRolesList = [
 			new RoleEntity("admin") { RoleEntityId = 1, RoleClaims = [RoleClaimType.CanManageUsers, RoleClaimType.CanManageRoles] },
 			new RoleEntity("manager") { RoleEntityId = 2, RoleClaims = [RoleClaimType.CanManageCars, RoleClaimType.CanBrowseCars] },
 			new RoleEntity("user") { RoleEntityId = 3, RoleClaims = [RoleClaimType.CanBrowseCars] }];
 
+
+		/// <summary>
+		/// Метод конфигурирования сущности роли.
+		/// </summary>
+		/// <param name="builder">Объект API для конфигурирования.</param>
 		public void Configure(EntityTypeBuilder<RoleEntity> builder)
 		{
 			builder.HasData(allRolesList);

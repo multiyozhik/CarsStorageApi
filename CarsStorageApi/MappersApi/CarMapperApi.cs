@@ -5,10 +5,13 @@ using CarsStorageApi.Models.CarModels;
 namespace CarsStorageApi.MappersApi
 {
 	/// <summary>
-	/// Класс меппера для автомобилей.
+	/// Класс меппера для объектов автомобилей.
 	/// </summary>
 	public class CarMapperApi : Profile
 	{
+		/// <summary>
+		/// Конструктор меппера для объектов автомобилей.
+		/// </summary>
 		public CarMapperApi()
 		{
 			CreateMap<CarResponse, CarDTO>();

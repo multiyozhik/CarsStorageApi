@@ -64,7 +64,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.TokenValidationParameters = new TokenValidationParameters
 		{
 			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"]
-				?? throw new Exception("Опять НОВОЕ Не определен секретный ключ токена в конфигурации приложения."))),
+				?? throw new Exception("Не определен секретный ключ токена в конфигурации приложения."))),
 			ValidIssuer = jwt["Issuer"],
 			ValidAudience = jwt["Audience"],
 			ValidateIssuer = GetParameterValue(jwt["ValidateIssuer"] ?? "true"),
@@ -105,7 +105,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 			OnCreatingTicket = async context =>
 			{
 				var token = context.AccessToken;
-				var githubClient = new GitHubClient(new Octokit.ProductHeaderValue("CarsStorageApi"))
+				var githubClient = new GitHubClient(new ProductHeaderValue("CarsStorageApi"))
 				{
 					Credentials = new Credentials(token)
 				};
@@ -148,10 +148,14 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Services"));
 	services.AddAutoMapper(Assembly.Load("CarsStorage.DAL.Repositories"));
 
-	services.AddSwaggerGen();
 	services.AddSwaggerGen(option =>
 	{
-		option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
+		option.SwaggerDoc("v1", new OpenApiInfo { Title = "CarsStorageAPI", Version = "v1", Description = "ASP.NET Core Web API для управления данными о хранящихся на складе автомобилях." });
+		
+		var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+		var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+		option.IncludeXmlComments(xmlPath);
+
 		option.AddSecurityDefinition(
 			"Bearer",
 			new OpenApiSecurityScheme
@@ -162,24 +166,20 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 				Type = SecuritySchemeType.Http,
 				BearerFormat = "JWT",
 				Scheme = "Bearer"
-			}
-		);
-		option.AddSecurityRequirement(
-			new OpenApiSecurityRequirement
+			});
+		option.AddSecurityRequirement(new OpenApiSecurityRequirement{
+		{
+			new OpenApiSecurityScheme
 			{
+				Reference = new OpenApiReference
 				{
-					new OpenApiSecurityScheme
-					{
-						Reference = new OpenApiReference
-						{
-							Type = ReferenceType.SecurityScheme,
-							Id = "Bearer"
-						}
-					},
-					Array.Empty<string>()
+					Type = ReferenceType.SecurityScheme,
+					Id = "Bearer"
 				}
-			}
-		);
+			},
+			Array.Empty<string>()
+		}
+		});
 	});
 
 	services.AddCors();
@@ -195,7 +195,7 @@ static void Configure(WebApplication app, IHostEnvironment env)
 		app.UseSwagger();
 		app.UseSwaggerUI(c =>
 		{
-			c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+			c.SwaggerEndpoint("/swagger/v1/swagger.json", "CarsStorage Api V1");
 		});
 	}
 
@@ -212,7 +212,7 @@ static void Configure(WebApplication app, IHostEnvironment env)
 	app.UseAuthentication();
 
 	app.UseAuthorization();
-	
+
 	app.MapControllers();
 
 	app.UseRouting();	
@@ -241,5 +241,5 @@ static void ValidateAppConfigs(IConfiguration jwtConfig)
 
 static bool GetParameterValue(string jwtParameter) 
 	=> (bool.TryParse(jwtParameter, out bool parameterValue)) 
-		? parameterValue
-		: throw new Exception("Параметр валидации токена должен быть равным true или false.");
+	? parameterValue
+	: throw new Exception("Параметр валидации токена должен быть равным true или false.");

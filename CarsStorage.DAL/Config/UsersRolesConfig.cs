@@ -5,10 +5,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace CarsStorage.DAL.Config
 {
 	/// <summary>
-	/// Класс определяет конфигурацию для UsersRolesEntity сущности. 
+	/// Класс конфигурации промежуточной сущности UsersRolesEntity.
 	/// </summary>
 	public class UsersRolesConfig() : IEntityTypeConfiguration<UsersRolesEntity>
 	{
+		/// <summary>
+		/// Метод конфигурирования промежуточной сущности UsersRolesEntity.
+		/// </summary>
+		/// <param name="builder">Объект API для конфигурирования.</param>
 		public void Configure(EntityTypeBuilder<UsersRolesEntity> builder)
 		{			
 			builder.HasData(

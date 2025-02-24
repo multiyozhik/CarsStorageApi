@@ -16,15 +16,21 @@ using System.Security.Claims;
 namespace CarsStorageApi.Controllers
 {
 	/// <summary>
-	/// Класс контроллер для аутентификации пользователя.
+	/// Класс контроллера для аутентификации пользователя.
 	/// </summary>
+	/// <param name="authService">Объект сервиса для аутентификации.</param>
+	/// <param name="usersService">Объект сервиса для пользователей.</param>
+	/// <param name="mapper">Объект меппера.</param>
+	/// <param name="initialConfig">Объект начальной конфигурации.</param>
 	[ApiController]
 	[Route("[controller]")]
 	public class AuthenticateController(IAuthenticateService authService, IUsersService usersService, IMapper mapper, IOptions<InitialConfig> initialConfig) : ControllerBase
 	{
 		/// <summary>
-		/// Метод контроллера регистрации пользователя (для нового пользователя устанавливается начальный спсиок ролей из начальной конфигурации приложения).
+		/// Метод контроллера для регистрации пользователя в приложении.
 		/// </summary>
+		/// <param name="registerUserRequest">Объект данных пользователя для его регистрации.</param>
+		/// <returns>Объект данных пользователя, возвращаемых клиенту.</returns>
 		[AllowAnonymous]
 		[HttpPost("Register")]
 		public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterUserRequest registerUserRequest)
@@ -39,8 +45,10 @@ namespace CarsStorageApi.Controllers
 
 
 		/// <summary>
-		/// Метод контроллера для входа пользователя в приложение возвращает токен.
+		/// Метод контроллера для входа пользователя в приложение.
 		/// </summary>
+		/// <param name="loginDataRequest">Объект данных пользователя для входа в приложение.</param>
+		/// <returns>Объект токена доступа.</returns>
 		[AllowAnonymous]
 		[HttpPost("LogIn")]
 		public async Task<ActionResult<JWTTokenRequestResponse>> LogIn([FromBody] LoginUserRequest loginDataRequest)
@@ -81,8 +89,10 @@ namespace CarsStorageApi.Controllers
 
 
 		/// <summary>
-		/// Метод обработки ответа от стороннего провайдера аутентификации с получением токена доступа.
+		/// Метод обработки ответа от стороннего провайдера аутентификации для получения токена доступа.
 		/// </summary>
+		/// <param name="authScheme">Схема аутентификации.</param>
+		/// <returns>Объект токена доступа.</returns>
 		[HttpGet("AuthResponseHandler")]
 		public async Task<ActionResult<JWTTokenRequestResponse>> AuthResponseHandler([FromQuery] string authScheme)
 		{
@@ -107,6 +117,8 @@ namespace CarsStorageApi.Controllers
 		/// <summary>
 		/// Метод контроллера для обновления токена при истечении срока токена доступа.
 		/// </summary>
+		/// <param name="jwtTokenRequestResponse">Объект токена.</param>
+		/// <returns>Обновленный объект токена.</returns>
 		[AllowAnonymous]
 		[HttpPut("RefreshToken")]
 		public async Task<ActionResult<JWTTokenRequestResponse>> RefreshToken([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
@@ -122,8 +134,10 @@ namespace CarsStorageApi.Controllers
 
 
 		/// <summary>
-		/// Метод контроллера для выхода из приложения (в заголовке передаем токен доступа).
+		/// Метод контроллера для выхода из приложения.
 		/// </summary>
+		/// <param name="accessToken">Строка токена доступа.</param>
+		/// <returns>Идентификатор пользователя, вышедшего из приложения.</returns>
 		[Authorize]
 		[HttpGet("LogOut")]
 		public async Task<ActionResult<int>> LogOut([FromHeader] string accessToken)

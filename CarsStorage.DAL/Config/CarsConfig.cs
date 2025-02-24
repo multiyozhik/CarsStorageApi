@@ -5,10 +5,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace CarsStorage.DAL.Config
 {
 	/// <summary>
-	/// Класс определяет конфигурацию для CarEntity сущности. 
+	/// Класс конфигурации для сущности автомобиля.
 	/// </summary>
 	public class CarsConfig : IEntityTypeConfiguration<CarEntity>
     {
+        /// <summary>
+        /// Метод конфигурирования сущности автомобиля.
+        /// </summary>
+        /// <param name="builder">Объект API для конфигурирования.</param>
         public void Configure(EntityTypeBuilder<CarEntity> builder)
         {
             builder.HasData(

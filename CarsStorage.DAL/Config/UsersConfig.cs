@@ -5,10 +5,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace CarsStorage.DAL.Config
 {
 	/// <summary>
-	/// Класс определяет конфигурацию для UserEntity сущности. 
+	/// Класс конфигурации для сущности пользователей.
 	/// </summary>
 	public class UsersConfig : IEntityTypeConfiguration<UserEntity>
     {
+		/// Начальные значения хеша и соли паролей в БД.
 		private readonly string hash1 = "JRxt+pwxtgCpgGS7TLXEjsPxV1ll/IZhLZSvN6QDzdc=";
 		private readonly string hash2 = "adA8MaXGA/uwLaAtQ+ikggavMypELr5NK+V+KyB4l4U=";
 		private readonly string hash3 = "Y0M0qRE2drIzyrcznkG1DsEhkrCDmI1GzkzXEpsv9yU=";
@@ -22,6 +23,10 @@ namespace CarsStorage.DAL.Config
 		private readonly string salt5 = "tQwRgbrUoOK519vJt2X10Q==";
 
 
+		/// <summary>
+		/// Метод конфигурирования сущности пользователя.
+		/// </summary>
+		/// <param name="builder">Объект API для конфигурирования.</param>
 		public void Configure(EntityTypeBuilder<UserEntity> builder)
 		{
 			var user1 = new UserEntity { UserEntityId = 1, UserName = "admin", Email = "admin@mail.ru", Hash = hash1, Salt = salt1 };

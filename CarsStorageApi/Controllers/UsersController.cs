@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CarsStorageApi.Controllers
 {
 	/// <summary>
-	/// Класс контролллера пользователей.
+	/// Класс контроллера пользователей.
 	/// </summary>
 	[ApiController]
 	[Authorize(Policy = "RequierManageUsers")]
@@ -16,8 +16,9 @@ namespace CarsStorageApi.Controllers
 	public class UsersController(IUsersService usersService, IMapper mapper) : ControllerBase
 	{
 		/// <summary>
-		/// Метод возвращает задачу с списком всех пользователей.
+		/// Метод возвращает список всех пользователей.
 		/// </summary>
+		/// <returns>Список всех пользователей.</returns>
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<UserResponse>>> GetList()
 		{
@@ -28,9 +29,12 @@ namespace CarsStorageApi.Controllers
 			throw serviceResult.ServiceError;
 		}
 
+
 		/// <summary>
-		/// Метод возвращает задачу с пользователем по его id.
+		/// Метод возвращает пользователя по его идентификатору.
 		/// </summary>
+		/// <param name="id">Идентификатор пользователя.</param>
+		/// <returns>Объект пользователя, возвращаемый клиенту.</returns>
 		[HttpGet("{id}")]
 		public async Task<ActionResult<UserResponse>> GetById([FromRoute] int id)
 		{
@@ -41,9 +45,12 @@ namespace CarsStorageApi.Controllers
 			throw serviceResult.ServiceError;
 		}
 
+
 		/// <summary>
-		/// Метод возвращает задачу с созданным пользователем.
+		/// Метод для создания объекта пользователя.
 		/// </summary>
+		/// <param name="userRequest">Объект данных пользователя, передаваемых клиентом при создании нового пользователя с ролью.</param>
+		/// <returns>Созданный объект пользователя, возвращаемый клиенту.</returns>
 		[HttpPost]
 		public async Task<ActionResult<UserResponse>> Create([FromBody] UserRequest userRequest)			
 		{
@@ -54,9 +61,12 @@ namespace CarsStorageApi.Controllers
 			throw serviceResult.ServiceError;
 		}
 
+
 		/// <summary>
-		/// Метод возвращает задачу с измененным пользователем.
+		/// Метод для изменения объекта пользователя.
 		/// </summary>
+		/// <param name="userResponse">Объект пользователя.</param>
+		/// <returns>Измененный объект пользователя, возвращаемый клиенту.</returns>
 		[HttpPut]
 		public async Task<ActionResult<UserResponse>> Update([FromBody] UserResponse userResponse)
 		{
@@ -67,9 +77,12 @@ namespace CarsStorageApi.Controllers
 			throw serviceResult.ServiceError;
 		}
 
+
 		/// <summary>
-		/// Метод возвращает задачу с id удаленного пользователя.
+		/// Метод для удаления пользователя по его идентификатору.
 		/// </summary>
+		/// <param name="id">Идентификатор пользователя.</param>
+		/// <returns>Идентификатор удаленного  пользователя.</returns>
 		[HttpDelete("{id}")]
 		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{

@@ -5,11 +5,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.DAL.Repositories.Implementations
 {
+	/// <summary>
+	/// Класс репозитория токена.
+	/// </summary>
+	/// <param name="dbContext">Объект контекста данных.</param>
 	public class TokensRepository(AppDbContext dbContext) : ITokensRepository
 	{
 		/// <summary>
-		/// Метод возвращает токен по id пользователя.
+		/// Метод для получения объекта токена доступа по идентификатору пользователя.
 		/// </summary>
+		/// <param name="userId">Идентификатор пользователя.</param>
+		/// <returns>Объект токена доступа.</returns>
 		public async Task<JWTToken> GetTokenByUserId(int userId)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userId)
@@ -23,8 +29,11 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод обновляет токен для пользователя с id.
+		/// Метод для обновления объекта токена доступа.
 		/// </summary>
+		/// <param name="userId">Идентификатор пользователя.</param>
+		/// <param name="jwtToken">Объект токена доступа для обновления значений.</param>
+		/// <returns>Обновленный объект токена доступа.</returns>
 		public async Task<JWTToken> UpdateToken(int userId, JWTToken jwtToken)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userId)
@@ -38,8 +47,10 @@ namespace CarsStorage.DAL.Repositories.Implementations
 
 
 		/// <summary>
-		/// Метод очищает токен в БД при выходе пользователя из системы.
+		/// Метод для очистки объекта токена доступа (устанавливается null) по строке токена доступа.
 		/// </summary>
+		/// <param name="accessToken">Строка токена доступа.</param>
+		/// <returns>Идентификатор пользователя, у которого очищены токены.</returns>
 		public async Task<int> ClearToken(string accessToken)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.AccessToken == accessToken)
