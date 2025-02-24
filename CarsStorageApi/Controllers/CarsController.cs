@@ -1,4 +1,4 @@
-using AutoMapper;
+п»їusing AutoMapper;
 using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.ModelsDTO.Car;
 using CarsStorageApi.Models.CarModels;
@@ -8,14 +8,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace CarsStorageApi.Controllers
 {
 	/// <summary>
-	/// Класс контроллера для автмобилей.
+	/// РљР»Р°СЃСЃ РєРѕРЅС‚СЂРѕР»Р»РµСЂР° РґР»СЏ Р°РІС‚РјРѕР±РёР»РµР№.
 	/// </summary>
 	[ApiController]
 	[Route("[controller]/[action]")]
 	public class CarsController(ICarsService carsService, IMapper mapper) : ControllerBase
 	{
 		/// <summary>
-		/// Метод возвращает задачу с списком всех автомобилей.
+		/// РњРµС‚РѕРґ РІРѕР·РІСЂР°С‰Р°РµС‚ Р·Р°РґР°С‡Сѓ СЃ СЃРїРёСЃРєРѕРј РІСЃРµС… Р°РІС‚РѕРјРѕР±РёР»РµР№.
 		/// </summary>
 		[Authorize(Policy = "RequierBrowseCars")]
 		[HttpGet]
@@ -35,7 +35,7 @@ namespace CarsStorageApi.Controllers
 
 
 		/// <summary>
-		/// Метод возвращает задачу с созданной записью автомобиля.
+		/// РњРµС‚РѕРґ РІРѕР·РІСЂР°С‰Р°РµС‚ Р·Р°РґР°С‡Сѓ СЃ СЃРѕР·РґР°РЅРЅРѕР№ Р·Р°РїРёСЃСЊСЋ Р°РІС‚РѕРјРѕР±РёР»СЏ.
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPost]
@@ -50,7 +50,7 @@ namespace CarsStorageApi.Controllers
 		}
 
 		/// <summary>
-		/// Метод возвращает задачу с измененной записью автомобиля.
+		/// РњРµС‚РѕРґ РІРѕР·РІСЂР°С‰Р°РµС‚ Р·Р°РґР°С‡Сѓ СЃ РёР·РјРµРЅРµРЅРЅРѕР№ Р·Р°РїРёСЃСЊСЋ Р°РІС‚РѕРјРѕР±РёР»СЏ.
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
@@ -64,7 +64,7 @@ namespace CarsStorageApi.Controllers
 		}
 
 		/// <summary>
-		/// Метод возвращает задачу с id удаленной записи автомобиля.
+		/// РњРµС‚РѕРґ РІРѕР·РІСЂР°С‰Р°РµС‚ Р·Р°РґР°С‡Сѓ СЃ id СѓРґР°Р»РµРЅРЅРѕР№ Р·Р°РїРёСЃРё Р°РІС‚РѕРјРѕР±РёР»СЏ.
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpDelete]
@@ -78,7 +78,7 @@ namespace CarsStorageApi.Controllers
 		}
 
 		/// <summary>
-		/// Метод возвращает задачу с измененной записью автомобиля (изменено количество автомобилей).
+		/// РњРµС‚РѕРґ РІРѕР·РІСЂР°С‰Р°РµС‚ Р·Р°РґР°С‡Сѓ СЃ РёР·РјРµРЅРµРЅРЅРѕР№ Р·Р°РїРёСЃСЊСЋ Р°РІС‚РѕРјРѕР±РёР»СЏ (РёР·РјРµРЅРµРЅРѕ РєРѕР»РёС‡РµСЃС‚РІРѕ Р°РІС‚РѕРјРѕР±РёР»РµР№).
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
@@ -93,7 +93,7 @@ namespace CarsStorageApi.Controllers
 		}
 
 		/// <summary>
-		/// Метод возвращает задачу с измененной записью автомобиля (запись сделана недоступной для просмотра обычным пользователем).
+		/// РњРµС‚РѕРґ РІРѕР·РІСЂР°С‰Р°РµС‚ Р·Р°РґР°С‡Сѓ СЃ РёР·РјРµРЅРµРЅРЅРѕР№ Р·Р°РїРёСЃСЊСЋ Р°РІС‚РѕРјРѕР±РёР»СЏ (Р·Р°РїРёСЃСЊ СЃРґРµР»Р°РЅР° РЅРµРґРѕСЃС‚СѓРїРЅРѕР№ РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР° РѕР±С‹С‡РЅС‹Рј РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј).
 		/// </summary>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]

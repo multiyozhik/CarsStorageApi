@@ -1,4 +1,4 @@
-﻿using CarsStorage.Abstractions.ModelsDTO.Car;
+﻿using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.Abstractions.DAL.Repositories
 {
@@ -7,11 +7,11 @@ namespace CarsStorage.Abstractions.DAL.Repositories
 	/// </summary>
 	public interface ICarsRepository
 	{
-		public Task<List<CarDTO>> GetList();
-		public Task<CarDTO> Create(CarDTO car);
-		public Task<CarDTO> Update(CarDTO car);
+		public Task<List<CarEntity>> GetList();
+		public Task<CarEntity> Create(CarEntity carEntity);
+		public Task<CarEntity> Update(CarEntity carEntity);
 		public Task Delete(int id);
-		public Task<CarDTO> UpdateCount(int id, int count);
-		public Task<CarDTO> MakeInaccessible(int id);
+		public Task<CarEntity> UpdateCount(int id, int count);
+		public Task<CarEntity> MakeInaccessible(int id);
 	}
 }

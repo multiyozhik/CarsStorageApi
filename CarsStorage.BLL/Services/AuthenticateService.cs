@@ -1,4 +1,5 @@
-﻿using CarsStorage.Abstractions.BLL.Services;
+﻿using AutoMapper;
+using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.General;
@@ -6,6 +7,8 @@ using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
+using CarsStorage.BLL.Services.Utils;
+using CarsStorage.DAL.Entities;
 using System.Security.Claims;
 
 namespace CarsStorage.BLL.Services.Services
@@ -13,7 +16,7 @@ namespace CarsStorage.BLL.Services.Services
 	/// <summary>
 	/// Сервис для аутентификации.
 	/// </summary>
-	public class AuthenticateService(IUsersRepository usersRepository,  ITokensService tokenService) : IAuthenticateService
+	public class AuthenticateService(IUsersRepository usersRepository,  ITokensService tokenService, IMapper mapper, IPasswordHasher passwordHasher) : IAuthenticateService
 	{
 		/// <summary>
 		/// Метод сервиса для входа пользователя в приложение и возврата токена клиенту.
@@ -22,9 +25,13 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				await usersRepository.IsUserValid(userLoginDTO);
-				var userDTO = await usersRepository.GetUserWithRoles(userLoginDTO);
-				return new ServiceResult<JWTTokenDTO>(await GetJWTTokenDTO(userDTO));
+				var userEntity = await usersRepository.GetUserByUserName(userLoginDTO.UserName)
+					?? throw new Exception("Неверный логин.");
+				if (string.IsNullOrEmpty(userEntity.Hash) || string.IsNullOrEmpty(userEntity.Salt))
+					throw new Exception("Не определены пароль и соль.");
+				if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.Hash, userEntity.Salt))
+					throw new Exception("Неверный пароль.");
+				return new ServiceResult<JWTTokenDTO>(await GetJWTTokenDTO(mapper.Map<UserDTO>(userEntity)));
 			}
 			catch (Exception exception)
 			{
@@ -36,11 +43,22 @@ namespace CarsStorage.BLL.Services.Services
 		/// <summary>
 		/// Метод сервиса для входа аутентифицированного пользователя в приложение.
 		/// </summary>
-		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUserData authUserData)
+		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUserDataDTO authUserDataDTO)
 		{
 			try
 			{
-				var userDTO = await usersRepository.GetUserByAuthUserData(authUserData);
+				var userEntity = await usersRepository.GetUserByUserName(authUserDataDTO.UserName);
+				if (userEntity is null)
+				{
+					userEntity = new UserEntity()
+					{
+						UserName = authUserDataDTO.UserName,
+						Email = authUserDataDTO.Email,
+						RolesList = await usersRepository.GetRolesByRoleNames(authUserDataDTO.RolesNamesList)
+					};
+					userEntity = await usersRepository.Create(userEntity);
+				}
+				var userDTO = mapper.Map<UserDTO>(userEntity);
 				var jwtTokenDTO = await GetJWTTokenDTO(userDTO);
 				var updateTokenResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
 				if (!updateTokenResult.IsSuccess)
@@ -64,7 +82,8 @@ namespace CarsStorage.BLL.Services.Services
 			//refreshToken - просто обновляется рандомная строка (без полезной нагрузки)
 			try
 			{
-				var userDTO = await usersRepository.GetUserByRefreshToken(jwtTokenDTO.RefreshToken);
+				var userEntity = await usersRepository.GetUserByRefreshToken(jwtTokenDTO.RefreshToken);
+				var userDTO = mapper.Map<UserDTO>(userEntity);
 				var jwtTokenResult = await tokenService.GetTokenByUserId(userDTO.Id);
 
 				if (!jwtTokenResult.IsSuccess)

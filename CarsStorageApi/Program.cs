@@ -3,9 +3,9 @@ using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Services.Config;
 using CarsStorage.BLL.Services.Services;
+using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Repositories.Implementations;
-using CarsStorage.DAL.Repositories.Utils;
 using CarsStorageApi.Config;
 using CarsStorageApi.Filters;
 using CarsStorageApi.Middlewares;
@@ -64,7 +64,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.TokenValidationParameters = new TokenValidationParameters
 		{
 			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"]
-				?? throw new Exception("Не определен секретный ключ токена в конфигурации приложения."))),
+				?? throw new Exception("Опять НОВОЕ Не определен секретный ключ токена в конфигурации приложения."))),
 			ValidIssuer = jwt["Issuer"],
 			ValidAudience = jwt["Audience"],
 			ValidateIssuer = GetParameterValue(jwt["ValidateIssuer"] ?? "true"),
@@ -119,9 +119,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	.AddGoogle(options =>
 	{
 		options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-		options.ClientId = config["GoogleConfig:ClientId"]
+
+		var googleConfig = config.GetSection("GoogleConfig")
+			?? throw new Exception("Не определены конфигурации Google провайдера аутентификации");
+		options.ClientId = googleConfig["ClientId"]
 			?? throw new Exception("Не определен идентификатор клиента");
-		options.ClientSecret = config["GoogleConfig:ClientSecret"]
+		options.ClientSecret = googleConfig["ClientSecret"]
 			?? throw new Exception("Не определен секретный ключ клиента");
 		options.Scope.Add("email");
 		options.Scope.Add("profile");
@@ -236,7 +239,7 @@ static void ValidateAppConfigs(IConfiguration jwtConfig)
 		throw new Exception("Не определено время жизни токена в конфигурациях приложения.");
 }
 
-static bool GetParameterValue(string jwtParameter)
-	=> (bool.TryParse(jwtParameter, out bool parameterValue))
+static bool GetParameterValue(string jwtParameter) 
+	=> (bool.TryParse(jwtParameter, out bool parameterValue)) 
 		? parameterValue
 		: throw new Exception("Параметр валидации токена должен быть равным true или false.");

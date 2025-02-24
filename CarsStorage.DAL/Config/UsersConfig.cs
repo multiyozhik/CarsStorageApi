@@ -38,13 +38,9 @@ namespace CarsStorage.DAL.Config
 			builder.Property(u => u.UserEntityId).ValueGeneratedOnAdd();
 			builder.ToTable("Users");
 			builder.Property(r => r.UserName).IsRequired();
+			builder.HasIndex(u => u.UserName).IsUnique();
 			builder.Property(r => r.Email).IsRequired();
-
-			//builder
-			//	.HasMany(u => u.RolesList)
-			//	.WithMany(r => r.UsersList)
-			//	.UsingEntity<UsersRolesEntity>();
-
+			builder.HasIndex(u => u.Email).IsUnique();
 
 			builder
 				.HasMany(u => u.RolesList)

@@ -4,6 +4,7 @@ using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.General;
 using CarsStorage.Abstractions.ModelsDTO.Car;
+using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Services.Services
 {
@@ -19,7 +20,8 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var carsDTOList = await carsRepository.GetList();
+				var carEntityList = await carsRepository.GetList();
+				var carsDTOList = carEntityList.Select(mapper.Map<CarDTO>).ToList();
 				return new ServiceResult<List<CarDTO>>(carsDTOList);
 			}
 			catch (Exception exception)
@@ -36,8 +38,8 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var carDTO = await carsRepository.Create(mapper.Map<CarDTO>(carCreaterDTO));
-				return new ServiceResult<CarDTO>(carDTO);
+				var carEntity = await carsRepository.Create(mapper.Map<CarEntity>(carCreaterDTO));
+				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity));
 			}
 			catch (Exception exception)
 			{
@@ -53,8 +55,8 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var car = await carsRepository.Update(carDTO);
-				return new ServiceResult<CarDTO>(car);
+				var carEntity = await carsRepository.Update(mapper.Map<CarEntity>(carDTO));
+				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity));
 			}
 			catch (Exception exception)
 			{
@@ -86,8 +88,8 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var carDTO = await carsRepository.UpdateCount(id, count);
-				return new ServiceResult<CarDTO>(carDTO);
+				var carEntity = await carsRepository.UpdateCount(id, count);
+				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity));
 			}
 			catch (Exception exception)
 			{
@@ -103,8 +105,8 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var carDTO = await carsRepository.MakeInaccessible(id);
-				return new ServiceResult<CarDTO>(carDTO);
+				var carEntity = await carsRepository.MakeInaccessible(id);
+				return new ServiceResult<CarDTO>(mapper.Map<CarDTO>(carEntity));
 			}
 			catch (Exception exception)
 			{

@@ -91,13 +91,13 @@ namespace CarsStorageApi.Controllers
 			{
 				return BadRequest();
 			}
-			var authUserData = new AuthUserData
+			var authUserDataDTO = new AuthUserDataDTO
 			{
 				UserName = authResult.Principal.FindFirst(ClaimTypes.Name)?.Value,
 				Email = authResult.Principal.FindFirst(ClaimTypes.Email)?.Value,
 				RolesNamesList = [initialConfig.Value.InitialRoleName]
 			};
-			var serviceResult = await authService.LogInAuthUser(authUserData);
+			var serviceResult = await authService.LogInAuthUser(authUserDataDTO);
 			if (serviceResult.IsSuccess)
 				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
 			throw serviceResult.ServiceError;

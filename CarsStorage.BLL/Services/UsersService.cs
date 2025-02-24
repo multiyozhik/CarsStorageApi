@@ -1,18 +1,19 @@
-﻿using CarsStorage.Abstractions.BLL.Services;
+﻿using AutoMapper;
+using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.General;
-using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
-using System;
+using CarsStorage.BLL.Services.Utils;
+using CarsStorage.DAL.Entities;
 
 namespace CarsStorage.BLL.Services.Services
 {
 	/// <summary>
 	/// Класс сервиса пользователей.
 	/// </summary>
-	public class UsersService(IUsersRepository usersRepository) : IUsersService
+	public class UsersService(IUsersRepository usersRepository, IMapper mapper, IPasswordHasher passwordHasher) : IUsersService
 	{
 		/// <summary>
 		/// Метод возвращает результат с списком всех пользователей.
@@ -21,7 +22,8 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var userDTOList = await usersRepository.GetList();
+				var userEntityList = await usersRepository.GetList();
+				var userDTOList = userEntityList.Select(mapper.Map<UserDTO>).ToList();
 				return new ServiceResult<List<UserDTO>>(userDTOList);
 			}
 			catch (Exception exception)
@@ -38,8 +40,8 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var userDTO = await usersRepository.GetById(id);
-				return new ServiceResult<UserDTO>(userDTO);
+				var userEntity = await usersRepository.GetUserByUserId(id);
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(userEntity));
 			}
 			catch (Exception exception)
 			{
@@ -55,8 +57,15 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var userDTO = await usersRepository.Create(userCreaterDTO);
-				return new ServiceResult<UserDTO>(userDTO);
+				var userEntity = mapper.Map<UserEntity>(userCreaterDTO);
+				var hashedPassword = passwordHasher.HashPassword(userCreaterDTO.Password);
+				userEntity.Hash = hashedPassword.Hash;
+				userEntity.Salt = hashedPassword.Salt;
+				if (userCreaterDTO.RoleNamesList is null)
+					throw new Exception("Не определены роли пользователя.");
+				userEntity.RolesList = await usersRepository.GetRolesByRoleNames(userCreaterDTO.RoleNamesList);
+				var createdUserEntity = await usersRepository.Create(userEntity);
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(createdUserEntity));
 			}
 			catch (Exception exception)
 			{
@@ -72,8 +81,12 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var user = await usersRepository.Update(userUpdaterDTO);
-				return new ServiceResult<UserDTO>(user);
+				var userEntity = mapper.Map<UserEntity>(userUpdaterDTO);
+				if (userUpdaterDTO.RoleNamesList is null)
+					throw new Exception("Не определены роли пользователя.");
+				userEntity.RolesList = await usersRepository.GetRolesByRoleNames(userUpdaterDTO.RoleNamesList);
+				var updatedUserEntity = await usersRepository.Update(userEntity);
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(updatedUserEntity));
 			}
 			catch (Exception exception)
 			{

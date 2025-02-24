@@ -1,6 +1,6 @@
 ﻿using CarsStorage.Abstractions.DAL.Repositories;
-using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.DAL.DbContexts;
+using CarsStorage.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarsStorage.DAL.Repositories.Implementations
@@ -10,11 +10,11 @@ namespace CarsStorage.DAL.Repositories.Implementations
 		/// <summary>
 		/// Метод возвращает токен по id пользователя.
 		/// </summary>
-		public async Task<JWTTokenDTO> GetTokenByUserId(int userId)
+		public async Task<JWTToken> GetTokenByUserId(int userId)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userId)
 				?? throw new Exception("Пользователь с заданным id не найден");
-			return new JWTTokenDTO
+			return new JWTToken
 			{
 				AccessToken = userEntity.AccessToken ?? throw new Exception("Токен доступа не определен."),
 				RefreshToken = userEntity.RefreshToken ?? throw new Exception("Токен обновления не определен.")
@@ -25,15 +25,15 @@ namespace CarsStorage.DAL.Repositories.Implementations
 		/// <summary>
 		/// Метод обновляет токен для пользователя с id.
 		/// </summary>
-		public async Task<JWTTokenDTO> UpdateToken(int userId, JWTTokenDTO jwtTokenDTO)
+		public async Task<JWTToken> UpdateToken(int userId, JWTToken jwtToken)
 		{
 			var userEntity = await dbContext.Users.FirstOrDefaultAsync(u => u.UserEntityId == userId)
 				?? throw new Exception("Пользователь с заданным Id не найден");
-			userEntity.AccessToken = jwtTokenDTO.AccessToken;
-			userEntity.RefreshToken = jwtTokenDTO.RefreshToken;
+			userEntity.AccessToken = jwtToken.AccessToken;
+			userEntity.RefreshToken = jwtToken.RefreshToken;
 			dbContext.Update(userEntity);
 			await dbContext.SaveChangesAsync();
-			return new JWTTokenDTO { AccessToken = jwtTokenDTO.AccessToken, RefreshToken = jwtTokenDTO.RefreshToken };
+			return new JWTToken { AccessToken = jwtToken.AccessToken, RefreshToken = jwtToken.RefreshToken };
 		}
 
 

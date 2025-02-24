@@ -1,9 +1,11 @@
-﻿using CarsStorage.Abstractions.BLL.Services;
+﻿using AutoMapper;
+using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.General;
 using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.BLL.Services.Config;
+using CarsStorage.DAL.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,7 +18,7 @@ namespace CarsStorage.BLL.Services.Services
 	/// Сервис для методов токенов доступа.
 	/// </summary>
 	/// <param name="jwtConfig"></param>
-	public class TokensService(ITokensRepository tokensRepository, IOptions<JWTConfig> jwtOptions) : ITokensService
+	public class TokensService(ITokensRepository tokensRepository, IMapper mapper, IOptions<JWTConfig> jwtOptions) : ITokensService
 	{
 		/// <summary>
 		/// Метод генерации токена доступа.
@@ -107,7 +109,7 @@ namespace CarsStorage.BLL.Services.Services
 			try 
 			{
 				var jwtToken = await tokensRepository.GetTokenByUserId(userId);
-				return new ServiceResult<JWTTokenDTO>(jwtToken);
+				return new ServiceResult<JWTTokenDTO>(mapper.Map<JWTTokenDTO>(jwtToken));
 			}
 			catch (Exception exception)
 			{
@@ -123,8 +125,8 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			try
 			{
-				var jwtToken = await tokensRepository.UpdateToken(userId, jwtTokenDTO);
-				return new ServiceResult<JWTTokenDTO>(jwtToken);
+				var jwtToken = await tokensRepository.UpdateToken(userId, mapper.Map<JWTToken>(jwtTokenDTO));
+				return new ServiceResult<JWTTokenDTO>(mapper.Map<JWTTokenDTO>(jwtToken));
 			}
 			catch (Exception exception)
 			{
