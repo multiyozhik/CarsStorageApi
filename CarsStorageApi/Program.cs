@@ -7,7 +7,6 @@ using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Repositories.Implementations;
 using CarsStorageApi.Config;
-using CarsStorageApi.Filters;
 using CarsStorageApi.Middlewares;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -19,9 +18,13 @@ using Microsoft.OpenApi.Models;
 using Octokit;
 using System.Reflection;
 using System.Security.Claims;
+using Serilog;
+using CarsStorage.Abstractions.Exceptions;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((hostBuilderContext, logConfig) => logConfig.ReadFrom.Configuration(hostBuilderContext.Configuration));
 
 ConfigureServices(builder.Services, builder.Configuration);
 
@@ -64,7 +67,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.TokenValidationParameters = new TokenValidationParameters
 		{
 			IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt["Key"]
-				?? throw new Exception("Не определен секретный ключ токена в конфигурации приложения."))),
+				?? throw new ServerException("Не определен секретный ключ токена в конфигурации приложения."))),
 			ValidIssuer = jwt["Issuer"],
 			ValidAudience = jwt["Audience"],
 			ValidateIssuer = GetParameterValue(jwt["ValidateIssuer"] ?? "true"),
@@ -80,13 +83,13 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	.AddOAuth("GitHub", options =>
 	{
 		var gitHubConfig = config.GetSection("GitHubConfig")
-			?? throw new Exception("Не определены конфигурации GitHub провайдера аутентификации");
+			?? throw new ServerException("Не определены конфигурации GitHub провайдера аутентификации");
 		options.ClientId = gitHubConfig["ClientId"]
-			?? throw new Exception("Не определен идентификатор клиента");
+			?? throw new ServerException("Не определен идентификатор клиента");
 		options.ClientSecret = gitHubConfig["ClientSecret"]
-			?? throw new Exception("Не определен секретный ключ клиента");
+			?? throw new ServerException("Не определен секретный ключ клиента");
 		options.CallbackPath = gitHubConfig["RedirectUri"]
-			?? throw new Exception("Не определен коллбек путь после GitHub аутентификации");
+			?? throw new ServerException("Не определен коллбек путь после GitHub аутентификации");
 		options.Scope.Add(gitHubConfig["Scope"] ?? "");
 		options.SaveTokens = true;
 
@@ -121,11 +124,11 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
 		var googleConfig = config.GetSection("GoogleConfig")
-			?? throw new Exception("Не определены конфигурации Google провайдера аутентификации");
+			?? throw new ServerException("Не определены конфигурации Google провайдера аутентификации");
 		options.ClientId = googleConfig["ClientId"]
-			?? throw new Exception("Не определен идентификатор клиента");
+			?? throw new ServerException("Не определен идентификатор клиента");
 		options.ClientSecret = googleConfig["ClientSecret"]
-			?? throw new Exception("Не определен секретный ключ клиента");
+			?? throw new ServerException("Не определен секретный ключ клиента");
 		options.Scope.Add("email");
 		options.Scope.Add("profile");
 	});
@@ -137,12 +140,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddPolicy("RequierBrowseCars", policy => { policy.RequireClaim(typeof(RoleClaimTypeBLL).ToString(), RoleClaimTypeBLL.CanBrowseCars.ToString()); });
 
 	services.AddControllers();
-	services.AddEndpointsApiExplorer();
 
-	services.AddControllersWithViews(options =>
-	{
-		options.Filters.Add<GlobalExceptionFilter>();
-	});
+	//отключаем фильтр, чтобы обработка шла через middleware, и там реализовано логирование
+	//services.AddControllersWithViews(options =>
+	//{
+	//	options.Filters.Add<GlobalExceptionFilter>();
+	//});
 
 	services.AddAutoMapper(Assembly.Load("CarsStorageApi"));
 	services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Services"));
@@ -223,23 +226,23 @@ static void Configure(WebApplication app, IHostEnvironment env)
 static void ValidateAppConfigs(IConfiguration jwtConfig)
 {
 	var initialConfig = jwtConfig.GetSection("InitialConfig")
-		?? throw new Exception("Отсутствуют начальные конфигурации.");
+		?? throw new ServerException("Отсутствуют начальные конфигурации.");
 	if (string.IsNullOrEmpty(initialConfig["InitialRoleName"]))
-		throw new Exception("Не определена роль пользователя при его регистрации в конфигурациях приложения.");
+		throw new ServerException("Не определена роль пользователя при его регистрации в конфигурациях приложения.");
 
 	var config = jwtConfig.GetSection("JWTConfig")
-		?? throw new Exception("Отсутствуют конфигурации для токена.");
+		?? throw new ServerException("Отсутствуют конфигурации для токена.");
 	if (string.IsNullOrEmpty(config["Key"]))
-		throw new Exception("Не определен секретный ключ токена в конфигурации приложения.");
+		throw new ServerException("Не определен секретный ключ токена в конфигурации приложения.");
 	if (string.IsNullOrEmpty(config["Issuer"]))
-		throw new Exception("Не определен издатель токена в конфигурациях приложения.");
+		throw new ServerException("Не определен издатель токена в конфигурациях приложения.");
 	if (string.IsNullOrEmpty(config["Audience"]))
-		throw new Exception("Не определен получатель токена в конфигурациях приложения.");
+		throw new ServerException("Не определен получатель токена в конфигурациях приложения.");
 	if (string.IsNullOrEmpty(config["ExpireMinutes"]))
-		throw new Exception("Не определено время жизни токена в конфигурациях приложения.");
+		throw new ServerException("Не определено время жизни токена в конфигурациях приложения.");
 }
 
 static bool GetParameterValue(string jwtParameter) 
 	=> (bool.TryParse(jwtParameter, out bool parameterValue)) 
 	? parameterValue
-	: throw new Exception("Параметр валидации токена должен быть равным true или false.");
+	: throw new ServerException("Параметр валидации токена должен быть равным true или false.");

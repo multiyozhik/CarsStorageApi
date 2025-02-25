@@ -9,6 +9,7 @@ using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Abstractions.ModelsDTO.User;
 using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.Entities;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace CarsStorage.BLL.Services.Services
@@ -20,7 +21,8 @@ namespace CarsStorage.BLL.Services.Services
 	/// <param name="tokenService">Сервис токенов.</param>
 	/// <param name="mapper">Объект меппера.</param>
 	/// <param name="passwordHasher">Объект для хеширования паролей.</param>
-	public class AuthenticateService(IUsersRepository usersRepository,  ITokensService tokenService, IMapper mapper, IPasswordHasher passwordHasher) : IAuthenticateService
+	/// <param name="logger">Объект для выполнения логирования.</param>
+	public class AuthenticateService(IUsersRepository usersRepository,  ITokensService tokenService, IMapper mapper, IPasswordHasher passwordHasher, ILogger<AuthenticateService> logger) : IAuthenticateService
 	{
 		/// <summary>
 		/// Метод для входа пользователя в приложение.
@@ -37,10 +39,11 @@ namespace CarsStorage.BLL.Services.Services
 					throw new Exception("Не определены пароль и соль.");
 				if (!passwordHasher.VerifyPassword(userLoginDTO.Password, userEntity.Hash, userEntity.Salt))
 					throw new Exception("Неверный пароль.");
-				return new ServiceResult<JWTTokenDTO>(await GetJWTTokenDTO(mapper.Map<UserDTO>(userEntity)));
+				return new ServiceResult<JWTTokenDTO>(await GetJWTToken(mapper.Map<UserDTO>(userEntity)));
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при входе пользователя в приложение: {errorMessage}", this, nameof(this.LogIn), exception.Message);
 				return new ServiceResult<JWTTokenDTO>(new UnauthorizedAccessException(exception.Message));
 			}
 		}
@@ -67,7 +70,7 @@ namespace CarsStorage.BLL.Services.Services
 					userEntity = await usersRepository.Create(userEntity);
 				}
 				var userDTO = mapper.Map<UserDTO>(userEntity);
-				var jwtTokenDTO = await GetJWTTokenDTO(userDTO);
+				var jwtTokenDTO = await GetJWTToken(userDTO);
 				var updateTokenResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
 				if (!updateTokenResult.IsSuccess)
 					throw updateTokenResult.ServiceError;
@@ -75,6 +78,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при входе аутентифицированного пользователя в приложение: {errorMessage}", this, nameof(this.LogInAuthUser), exception.Message);
 				return new ServiceResult<JWTTokenDTO>(new NotFoundException(exception.Message));
 			}
 		}
@@ -113,6 +117,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при обновлении токена доступа: {errorMessage}", this, nameof(this.RefreshToken), exception.Message);
 				return new ServiceResult<JWTTokenDTO>(new UnauthorizedAccessException(exception.Message));
 			}
 		}
@@ -134,6 +139,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при выходе пользователя из приложения: {errorMessage}", this, nameof(this.LogOut), exception.Message);
 				return new ServiceResult<int>(new BadRequestException(exception.Message));
 			}
 		}
@@ -144,26 +150,34 @@ namespace CarsStorage.BLL.Services.Services
 		/// </summary>
 		/// <param name="userDTO">Объект пользователя.</param>
 		/// <returns>Объект токена для входа пользователя в приложение.</returns>
-		private async Task<JWTTokenDTO> GetJWTTokenDTO(UserDTO userDTO)
+		private async Task<JWTTokenDTO> GetJWTToken(UserDTO userDTO)
 		{
-			var roleClaims = userDTO.RolesList.SelectMany(role => role.RoleClaims).Distinct().ToList();
-			var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
-
-			roleClaims.ForEach(roleClaim => userClaims.Add(new Claim(typeof(RoleClaimTypeBLL).ToString(), roleClaim.ToString())));
-
-			var accessTokenFromService = tokenService.GetAccessToken(userClaims);
-			var refreshTokenFromService = tokenService.GetRefreshToken();
-
-			var jwtTokenDTO = new JWTTokenDTO()
+			try
 			{
-				AccessToken = accessTokenFromService.Result,
-				RefreshToken = refreshTokenFromService.Result
-			};
-			var tokenServiceResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
+				var roleClaims = userDTO.RolesList.SelectMany(role => role.RoleClaims).Distinct().ToList();
+				var userClaims = new List<Claim> { new(ClaimTypes.Name, userDTO.UserName) };
 
-			if (!tokenServiceResult.IsSuccess)
-				throw tokenServiceResult.ServiceError;
-			return tokenServiceResult.Result;
+				roleClaims.ForEach(roleClaim => userClaims.Add(new Claim(typeof(RoleClaimTypeBLL).ToString(), roleClaim.ToString())));
+
+				var accessTokenFromService = tokenService.GetAccessToken(userClaims);
+				var refreshTokenFromService = tokenService.GetRefreshToken();
+
+				var jwtTokenDTO = new JWTTokenDTO()
+				{
+					AccessToken = accessTokenFromService.Result,
+					RefreshToken = refreshTokenFromService.Result
+				};
+				var tokenServiceResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
+
+				if (!tokenServiceResult.IsSuccess)
+					throw tokenServiceResult.ServiceError;
+				return tokenServiceResult.Result;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {service} в {method} при получении объекта токена доступа: {errorMessage}", this, nameof(this.GetJWTToken), exception.Message);
+				throw new ServerException(exception.Message);
+			}
 		}
 	}
 }

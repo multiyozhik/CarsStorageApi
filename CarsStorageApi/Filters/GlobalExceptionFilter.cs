@@ -7,8 +7,9 @@ namespace CarsStorageApi.Filters
 	/// <summary>
 	/// Класс глобального фильтра исключений.
 	/// </summary>
+	/// <param name="logger">Объект для выполнения логирования.</param>
 	[AttributeUsage(AttributeTargets.All)]
-	public class GlobalExceptionFilter : Attribute, IAsyncExceptionFilter
+	public class GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger) : Attribute, IAsyncExceptionFilter
 	{		
 		/// <summary>
 		/// Метод обработки исключения.
@@ -17,8 +18,19 @@ namespace CarsStorageApi.Filters
 		/// <returns></returns>
 		public async Task OnExceptionAsync(ExceptionContext context)
 		{
+
 			var exception = context.Exception;
 			var response = context.HttpContext.Response;
+
+			var error = exception switch
+			{
+				BadRequestException badRequestException => $"Некорректный запрос при обработке запроса: {badRequestException.Message}",
+				ForbiddenException forbiddenException => $"Запрет доступа к ресурсу при обработке запроса: {forbiddenException.Message}",
+				NotFoundException notFoundException => $"Ресурс не найден при обработке запроса: {notFoundException.Message}",
+				UnauthorizedAccessException unauthorizedAccessException => $"Ошибка аутентификации при обработке запроса: {unauthorizedAccessException.Message}",
+				_ => $"Необработанное исключение: {exception.Message}"
+			};
+			logger.LogError(error);
 
 			var statusCode = exception switch
 			{

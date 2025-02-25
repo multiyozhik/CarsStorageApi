@@ -10,10 +10,13 @@ namespace CarsStorageApi.Controllers
 	/// <summary>
 	/// Класс контроллера пользователей.
 	/// </summary>
+	/// <param name="usersService">Сервис пользователей.</param>
+	/// <param name="mapper">Объект меппера.</param>
+	/// <param name="logger">Объект для выполнения логирования.</param>
 	[ApiController]
 	[Authorize(Policy = "RequierManageUsers")]
 	[Route("[controller]/[action]")]	
-	public class UsersController(IUsersService usersService, IMapper mapper) : ControllerBase
+	public class UsersController(IUsersService usersService, IMapper mapper, ILogger<UsersController> logger) : ControllerBase
 	{
 		/// <summary>
 		/// Метод возвращает список всех пользователей.
@@ -22,11 +25,19 @@ namespace CarsStorageApi.Controllers
 		[HttpGet]
 		public async Task<ActionResult<IEnumerable<UserResponse>>> GetList()
 		{
-			var serviceResult = await usersService.GetList();
+			try
+			{
+				var serviceResult = await usersService.GetList();
 
-			if (serviceResult.IsSuccess)
-				return serviceResult.Result.Select(mapper.Map<UserResponse>).ToList();
-			throw serviceResult.ServiceError;
+				if (serviceResult.IsSuccess)
+					return serviceResult.Result.Select(mapper.Map<UserResponse>).ToList();
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при получении списка пользователей: {errorMessage}", this, nameof(this.GetList), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -38,11 +49,19 @@ namespace CarsStorageApi.Controllers
 		[HttpGet("{id}")]
 		public async Task<ActionResult<UserResponse>> GetById([FromRoute] int id)
 		{
-			var serviceResult = await usersService.GetById(id);
+			try
+			{
+				var serviceResult = await usersService.GetById(id);
 
-			if (serviceResult.IsSuccess)
-				return mapper.Map<UserResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+				if (serviceResult.IsSuccess)
+					return mapper.Map<UserResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при получении пользователя по его идентификатору: {errorMessage}", this, nameof(this.GetById), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -54,11 +73,19 @@ namespace CarsStorageApi.Controllers
 		[HttpPost]
 		public async Task<ActionResult<UserResponse>> Create([FromBody] UserRequest userRequest)			
 		{
-			var userCreaterDTO = mapper.Map<UserCreaterDTO>(userRequest);
-			var serviceResult = await usersService.Create(userCreaterDTO);
-			if (serviceResult.IsSuccess)
-				return mapper.Map<UserResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+			try
+			{
+				var userCreaterDTO = mapper.Map<UserCreaterDTO>(userRequest);
+				var serviceResult = await usersService.Create(userCreaterDTO);
+				if (serviceResult.IsSuccess)
+					return mapper.Map<UserResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при создании объекта пользователя: {errorMessage}", this, nameof(this.Create), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -70,11 +97,19 @@ namespace CarsStorageApi.Controllers
 		[HttpPut]
 		public async Task<ActionResult<UserResponse>> Update([FromBody] UserResponse userResponse)
 		{
-			var serviceResult = await usersService.Update(mapper.Map<UserUpdaterDTO>(userResponse));
+			try
+			{
+				var serviceResult = await usersService.Update(mapper.Map<UserUpdaterDTO>(userResponse));
 
-			if (serviceResult.IsSuccess)
-				return mapper.Map<UserResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+				if (serviceResult.IsSuccess)
+					return mapper.Map<UserResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при изменении объекта пользователя: {errorMessage}", this, nameof(this.Update), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -86,11 +121,19 @@ namespace CarsStorageApi.Controllers
 		[HttpDelete("{id}")]
 		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{
-			var serviceResult = await usersService.Delete(id);
+			try
+			{
+				var serviceResult = await usersService.Delete(id);
 
-			if (serviceResult.IsSuccess)
-				return serviceResult.Result;
-			throw serviceResult.ServiceError;
+				if (serviceResult.IsSuccess)
+					return serviceResult.Result;
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при удалении пользователя по его идентификатору: {errorMessage}", this, nameof(this.Delete), exception.Message);
+				throw;
+			}
 		}
 	}
 }

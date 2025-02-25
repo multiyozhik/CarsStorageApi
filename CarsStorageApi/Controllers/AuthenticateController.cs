@@ -22,9 +22,10 @@ namespace CarsStorageApi.Controllers
 	/// <param name="usersService">Объект сервиса для пользователей.</param>
 	/// <param name="mapper">Объект меппера.</param>
 	/// <param name="initialConfig">Объект начальной конфигурации.</param>
+	/// <param name="logger">Объект для выполнения логирования.</param>
 	[ApiController]
 	[Route("[controller]")]
-	public class AuthenticateController(IAuthenticateService authService, IUsersService usersService, IMapper mapper, IOptions<InitialConfig> initialConfig) : ControllerBase
+	public class AuthenticateController(IAuthenticateService authService, IUsersService usersService, IMapper mapper, IOptions<InitialConfig> initialConfig, ILogger<AuthenticateController> logger) : ControllerBase
 	{
 		/// <summary>
 		/// Метод контроллера для регистрации пользователя в приложении.
@@ -35,12 +36,20 @@ namespace CarsStorageApi.Controllers
 		[HttpPost("Register")]
 		public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterUserRequest registerUserRequest)
 		{
-			var userCreaterDTO = mapper.Map<UserCreaterDTO>(registerUserRequest);
-			userCreaterDTO.RoleNamesList = [initialConfig.Value.InitialRoleName];
-			var serviceResult = await usersService.Create(userCreaterDTO);
-			if (serviceResult.IsSuccess)
-				return mapper.Map<UserResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+			try
+			{
+				var userCreaterDTO = mapper.Map<UserCreaterDTO>(registerUserRequest);
+				userCreaterDTO.RoleNamesList = [initialConfig.Value.InitialRoleName];
+				var serviceResult = await usersService.Create(userCreaterDTO);
+				if (serviceResult.IsSuccess)
+					return mapper.Map<UserResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch(Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при регистрации пользователя в приложении: {errorMessage}", this, nameof(this.Register), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -53,10 +62,18 @@ namespace CarsStorageApi.Controllers
 		[HttpPost("LogIn")]
 		public async Task<ActionResult<JWTTokenRequestResponse>> LogIn([FromBody] LoginUserRequest loginDataRequest)
 		{
-			var serviceResult = await authService.LogIn(mapper.Map<UserLoginDTO>(loginDataRequest));
-			if (serviceResult.IsSuccess)
-				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+			try
+			{
+				var serviceResult = await authService.LogIn(mapper.Map<UserLoginDTO>(loginDataRequest));
+				if (serviceResult.IsSuccess)
+					return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch(Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при входе пользователя в приложение: {errorMessage}", this, nameof(this.LogIn), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -67,10 +84,19 @@ namespace CarsStorageApi.Controllers
 		[HttpGet("signin-google")]     //должен совпадать с redirect uri при регистрации в Google Api https://localhost:{port}/signin-google
 		public async Task GoogleLogin()
 		{
-			await HttpContext.ChallengeAsync(GoogleDefaults.AuthenticationScheme, new AuthenticationProperties
+			try 
 			{
-				RedirectUri = Url.Action("AuthResponseHandler", "Authenticate", new { authScheme = CookieAuthenticationDefaults.AuthenticationScheme })
-			});
+				await HttpContext.ChallengeAsync(GoogleDefaults.AuthenticationScheme, new AuthenticationProperties
+				{
+					RedirectUri = Url.Action("AuthResponseHandler", "Authenticate", new { authScheme = CookieAuthenticationDefaults.AuthenticationScheme })
+				});
+			}
+			catch(Exception exception) 
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при входе пользователя в приложение при успешной аутентификации в Google: {errorMessage}", 
+					this, nameof(GoogleLogin), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -81,10 +107,19 @@ namespace CarsStorageApi.Controllers
 		[HttpGet("signin-github")]    //должен совпадать с redirect uri при регистрации в GitHub https://localhost:{port}/signin-github
 		public async Task GitHubLogin()
 		{
-			await HttpContext.ChallengeAsync("GitHub", new AuthenticationProperties
+			try
 			{
-				RedirectUri = Url.Action("AuthResponseHandler", "Authenticate", new { authScheme = "GitHub" })
-			});
+				await HttpContext.ChallengeAsync("GitHub", new AuthenticationProperties
+				{
+					RedirectUri = Url.Action("AuthResponseHandler", "Authenticate", new { authScheme = "GitHub" })
+				});
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при входе пользователя в приложение при успешной аутентификации в GitHub: {errorMessage}", 
+					this, nameof(this.GitHubLogin), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -93,24 +128,33 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		/// <param name="authScheme">Схема аутентификации.</param>
 		/// <returns>Объект токена доступа.</returns>
+		[NonAction]
 		[HttpGet("AuthResponseHandler")]
 		public async Task<ActionResult<JWTTokenRequestResponse>> AuthResponseHandler([FromQuery] string authScheme)
 		{
-			var authResult = await HttpContext.AuthenticateAsync(authScheme);
-			if (!authResult.Succeeded)
+			try
 			{
-				return BadRequest();
+				var authResult = await HttpContext.AuthenticateAsync(authScheme);
+				if (!authResult.Succeeded)
+				{
+					return BadRequest();
+				}
+				var authUserDataDTO = new AuthUserDataDTO
+				{
+					UserName = authResult.Principal.FindFirst(ClaimTypes.Name)?.Value,
+					Email = authResult.Principal.FindFirst(ClaimTypes.Email)?.Value,
+					RolesNamesList = [initialConfig.Value.InitialRoleName]
+				};
+				var serviceResult = await authService.LogInAuthUser(authUserDataDTO);
+				if (serviceResult.IsSuccess)
+					return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
 			}
-			var authUserDataDTO = new AuthUserDataDTO
+			catch (Exception exception)
 			{
-				UserName = authResult.Principal.FindFirst(ClaimTypes.Name)?.Value,
-				Email = authResult.Principal.FindFirst(ClaimTypes.Email)?.Value,
-				RolesNamesList = [initialConfig.Value.InitialRoleName]
-			};
-			var serviceResult = await authService.LogInAuthUser(authUserDataDTO);
-			if (serviceResult.IsSuccess)
-				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+				logger.LogError("Ошибка в {controller} в {method} при обработке ответа от стороннего провайдера аутентификации: {errorMessage}", this, nameof(this.AuthResponseHandler), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -123,13 +167,21 @@ namespace CarsStorageApi.Controllers
 		[HttpPut("RefreshToken")]
 		public async Task<ActionResult<JWTTokenRequestResponse>> RefreshToken([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
 		{
-			if (jwtTokenRequestResponse is null || string.IsNullOrEmpty(jwtTokenRequestResponse.RefreshToken))
-				return Unauthorized();
-			var serviceResult = await authService.RefreshToken(mapper.Map<JWTTokenDTO>(jwtTokenRequestResponse));
+			try
+			{
+				if (jwtTokenRequestResponse is null || string.IsNullOrEmpty(jwtTokenRequestResponse.RefreshToken))
+					return Unauthorized();
+				var serviceResult = await authService.RefreshToken(mapper.Map<JWTTokenDTO>(jwtTokenRequestResponse));
 
-			if (serviceResult.IsSuccess)
-				return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+				if (serviceResult.IsSuccess)
+					return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch(Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в {method} при обновлении токена при истечении срока токена доступа: {errorMessage}", this, nameof(this.RefreshToken), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -142,12 +194,20 @@ namespace CarsStorageApi.Controllers
 		[HttpGet("LogOut")]
 		public async Task<ActionResult<int>> LogOut([FromHeader] string accessToken)
 		{
-			if (string.IsNullOrEmpty(accessToken))
-				return Unauthorized();
-			var serviceResult = await authService.LogOut(accessToken);
-			if (serviceResult.IsSuccess)
-				return serviceResult.Result;
-			throw serviceResult.ServiceError;
+			try
+			{
+				if (string.IsNullOrEmpty(accessToken))
+					return Unauthorized();
+				var serviceResult = await authService.LogOut(accessToken);
+				if (serviceResult.IsSuccess)
+					return serviceResult.Result;
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в {method} при выходe из приложения: {errorMessage}", this, nameof(this.LogOut), exception.Message);
+				throw;
+			}
 		}
 	}
 }

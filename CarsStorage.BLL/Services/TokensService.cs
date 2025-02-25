@@ -6,6 +6,7 @@ using CarsStorage.Abstractions.General;
 using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.BLL.Services.Config;
 using CarsStorage.DAL.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -20,7 +21,8 @@ namespace CarsStorage.BLL.Services.Services
 	/// <param name="tokensRepository">Репозиторий токенов.</param>
 	/// <param name="mapper">Объект меппера.</param>
 	/// <param name="jwtOptions">Объект конфигураций jwt-токена.</param>
-	public class TokensService(ITokensRepository tokensRepository, IMapper mapper, IOptions<JWTConfig> jwtOptions) : ITokensService
+	/// <param name="logger">Объект для выполнения логирования.</param>
+	public class TokensService(ITokensRepository tokensRepository, IMapper mapper, IOptions<JWTConfig> jwtOptions, ILogger<TokensService> logger) : ITokensService
 	{
 		/// <summary>
 		/// Метод генерации токена доступа.
@@ -45,6 +47,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method}  при генерации токена доступа: {errorMessage}", this, nameof(this.GetAccessToken), exception.Message);
 				return new ServiceResult<string>(new BadRequestException(exception.Message));
 			}
 
@@ -66,6 +69,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при обновлении токена доступа: {errorMessage}", this, nameof(this.GetRefreshToken), exception.Message);
 				return new ServiceResult<string>(new ServerException(exception.Message));
 			}
 		}
@@ -101,6 +105,8 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при получении из токена доступа с истекшим сроком жизни списка утверждений пользователя: {errorMessage}", 
+					this, nameof(this.GetClaimsPrincipalFromExperedToken), exception.Message);
 				return new ServiceResult<ClaimsPrincipal>(new BadRequestException(exception.Message));
 			}
 		}
@@ -120,6 +126,8 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при получении объекта токена по идентификатору пользователя: {errorMessage}", 
+					this, nameof(this.GetTokenByUserId), exception.Message);
 				return new ServiceResult<JWTTokenDTO>(new NotFoundException(exception.Message));
 			}
 		}
@@ -140,6 +148,8 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при обновлении объекта токена для пользователя по его идентификатору: {errorMessage}", 
+					this, nameof(this.UpdateToken), exception.Message);
 				return new ServiceResult<JWTTokenDTO>(new BadRequestException(exception.Message));
 			}
 		}
@@ -159,6 +169,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при очистке объекта токена доступа по строке токена доступа: {errorMessage}", this, nameof(this.ClearToken), exception.Message);
 				return new ServiceResult<int>(new BadRequestException(exception.Message));
 			}
 		}

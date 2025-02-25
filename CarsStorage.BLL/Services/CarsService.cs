@@ -5,6 +5,7 @@ using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.General;
 using CarsStorage.Abstractions.ModelsDTO.Car;
 using CarsStorage.DAL.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace CarsStorage.BLL.Services.Services
 {
@@ -13,7 +14,8 @@ namespace CarsStorage.BLL.Services.Services
 	/// </summary>
 	/// <param name="carsRepository">Репозиторий автомобилей.</param>
 	/// <param name="mapper">Объект меппера.</param>
-	public class CarsService(ICarsRepository carsRepository, IMapper mapper) : ICarsService
+	/// <param name="logger">Объект для выполнения логирования.</param>
+	public class CarsService(ICarsRepository carsRepository, IMapper mapper, ILogger<CarsService> logger) : ICarsService
 	{
 		/// <summary>
 		/// Метод для получения списка всех автомобилей.
@@ -29,6 +31,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при получении списка автомобилей: {errorMessage}", this, nameof(this.GetList), exception.Message);
 				return new ServiceResult<List<CarDTO>>(new NotFoundException(exception.Message));
 			}			
 		}
@@ -48,6 +51,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при создании нового объекта автомобиля: {errorMessage}", this, nameof(this.Create), exception.Message);
 				return new ServiceResult<CarDTO>(new BadRequestException(exception.Message));
 			}
 		}
@@ -67,6 +71,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при изменении данных автомобиля: {errorMessage}", this, nameof(this.Update), exception.Message);
 				return new ServiceResult<CarDTO>(new BadRequestException(exception.Message));
 			}
 		}
@@ -86,6 +91,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при удалении объекта автомобиля по его идентификатору: {errorMessage}", this, nameof(this.Delete), exception.Message);
 				return new ServiceResult<int>(new BadRequestException(exception.Message));
 			}
 		}
@@ -106,6 +112,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при изменении количества автомобилей по его идентификатору: {errorMessage}", this, nameof(this.UpdateCount), exception.Message);
 				return new ServiceResult<CarDTO>(new BadRequestException(exception.Message));
 			}
 		}
@@ -125,6 +132,7 @@ namespace CarsStorage.BLL.Services.Services
 			}
 			catch (Exception exception)
 			{
+				logger.LogError("Ошибка в {service} в {method} при попытке сделать объект автомобиля недоступным для просмотра по его идентификатору: {errorMessage}", this, nameof(this.MakeInaccessible), exception.Message);
 				return new ServiceResult<CarDTO>(new BadRequestException(exception.Message));
 			}
 		}

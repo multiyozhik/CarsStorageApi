@@ -12,9 +12,10 @@ namespace CarsStorageApi.Controllers
 	/// </summary>
 	/// <param name="carsService">Объект сервиса автомобилей.</param>
 	/// <param name="mapper">Объект меппера.</param>
+	/// <param name="logger">Объект для выполнения логирования.</param>
 	[ApiController]
 	[Route("[controller]/[action]")]
-	public class CarsController(ICarsService carsService, IMapper mapper) : ControllerBase
+	public class CarsController(ICarsService carsService, IMapper mapper, ILogger<AuthenticateController> logger) : ControllerBase
 	{
 		/// <summary>
 		/// Метод возвращает список автомобилей.
@@ -24,16 +25,24 @@ namespace CarsStorageApi.Controllers
 		[HttpGet]
 		public async Task<ActionResult<List<CarResponse>>> GetList()
 		{
-			var serviceResult = await carsService.GetList();
-			if (serviceResult.IsSuccess)
+			try
 			{
-				var carsList = serviceResult.Result.Select(mapper.Map<CarResponse>).ToList();
-				return (HttpContext.User.HasClaim(c => c.Value == "RequierBrowseCars"))
-					? carsList.Where(c => c.IsAccassible).ToList()
-					: carsList;
+				var serviceResult = await carsService.GetList();
+				if (serviceResult.IsSuccess)
+				{
+					var carsList = serviceResult.Result.Select(mapper.Map<CarResponse>).ToList();
+					return (HttpContext.User.HasClaim(c => c.Value == "RequierBrowseCars"))
+						? carsList.Where(c => c.IsAccassible).ToList()
+						: carsList;
+				}
+				else
+					throw serviceResult.ServiceError;
 			}
-			else
-				throw serviceResult.ServiceError;
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при получении списка автомобилей: {errorMessage}", this, nameof(this.GetList), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -46,12 +55,20 @@ namespace CarsStorageApi.Controllers
 		[HttpPost]
 		public async Task<ActionResult<CarResponse>> Create([FromBody] CarRequest carRequest)
 		{
-			var serviceResult = await carsService.Create(mapper.Map<CarCreaterDTO>(carRequest));
-			
-			if (serviceResult.IsSuccess)
-				return mapper.Map<CarResponse>(serviceResult.Result);
-			else
-				throw serviceResult.ServiceError;
+			try
+			{
+				var serviceResult = await carsService.Create(mapper.Map<CarCreaterDTO>(carRequest));
+
+				if (serviceResult.IsSuccess)
+					return mapper.Map<CarResponse>(serviceResult.Result);
+				else
+					throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при создании объекта автомобиля: {errorMessage}", this, nameof(this.Create), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -64,11 +81,19 @@ namespace CarsStorageApi.Controllers
 		[HttpPut]
 		public async Task<ActionResult<CarResponse>> Update([FromBody] CarResponse carResponse)
 		{
-			var serviceResult = await carsService.Update(mapper.Map<CarDTO>(carResponse));
+			try
+			{
+				var serviceResult = await carsService.Update(mapper.Map<CarDTO>(carResponse));
 
-			if (serviceResult.IsSuccess)
-				return mapper.Map<CarResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+				if (serviceResult.IsSuccess)
+					return mapper.Map<CarResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при изменении объекта автомобиля: {errorMessage}", this, nameof(this.Update), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -81,11 +106,19 @@ namespace CarsStorageApi.Controllers
 		[HttpDelete]
 		public async Task<ActionResult<int>> Delete([FromQuery] int id)
 		{
-			var serviceResult = await carsService.Delete(id);
+			try
+			{
+				var serviceResult = await carsService.Delete(id);
 
-			if (serviceResult.IsSuccess)
-				return mapper.Map<int>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+				if (serviceResult.IsSuccess)
+					return mapper.Map<int>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при удалении объекта автомобиля: {errorMessage}", this, nameof(this.Delete), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -98,12 +131,20 @@ namespace CarsStorageApi.Controllers
 		[HttpPut]
 		public async Task<ActionResult<CarResponse>> UpdateCount([FromBody] CarCountRequest carCountRequest)
 		{
-			var serviceResult = await carsService.UpdateCount(carCountRequest.Id, carCountRequest.Count);
+			try
+			{
+				var serviceResult = await carsService.UpdateCount(carCountRequest.Id, carCountRequest.Count);
 
-			if (serviceResult.IsSuccess)
-				return mapper.Map<CarResponse>(serviceResult.Result);
-			else
-				return BadRequest(serviceResult.ServiceError);
+				if (serviceResult.IsSuccess)
+					return mapper.Map<CarResponse>(serviceResult.Result);
+				else
+					return BadRequest(serviceResult.ServiceError);
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при изменении количества автомобилей: {errorMessage}", this, nameof(this.UpdateCount), exception.Message);
+				throw;
+			}
 		}
 
 
@@ -116,11 +157,19 @@ namespace CarsStorageApi.Controllers
 		[HttpPut]
 		public async Task<ActionResult<CarResponse>> MakeInaccessible([FromQuery]int id)
 		{
-			var serviceResult = await carsService.MakeInaccessible(id);
+			try
+			{
+				var serviceResult = await carsService.MakeInaccessible(id);
 
-			if (serviceResult.IsSuccess)
-				return mapper.Map<CarResponse>(serviceResult.Result);
-			throw serviceResult.ServiceError;
+				if (serviceResult.IsSuccess)
+					return mapper.Map<CarResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при попытке сделать объект недоступным для просмотра: {errorMessage}", this, nameof(this.MakeInaccessible), exception.Message);
+				throw;
+			}
 		}
 	}
 }

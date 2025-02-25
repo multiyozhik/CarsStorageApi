@@ -7,13 +7,13 @@ namespace CarsStorageApi.Middlewares
 	/// Класс middleware для обработки исключений.
 	/// </summary>
 	/// <param name="next">Делегат для обработки http-запроса.</param>
-	public class ExceptionHandlingMiddleware(RequestDelegate next)
+	/// <param name="logger">Объект для выполнения логирования.</param>
+	public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 	{
 		/// <summary>
 		/// Метод обработки http-запроса.
 		/// </summary>
-		/// <param name="httpContext"></param>
-		/// <returns></returns>
+		/// <param name="httpContext">Контекст http-запроса.</param>
 		public async Task InvokeAsync(HttpContext httpContext)
 		{
 			try
@@ -22,15 +22,24 @@ namespace CarsStorageApi.Middlewares
 			}
 			catch (Exception exception)
 			{
+				var error = exception switch
+				{
+					BadRequestException badRequestException => $"Некорректный запрос: {badRequestException.Message}",
+					ForbiddenException forbiddenException => $"Запрет доступа к ресурсу при обработке запроса: {forbiddenException.Message}",
+					NotFoundException notFoundException => $"Ресурс не найден при обработке запроса: {notFoundException.Message}",
+					UnauthorizedAccessException unauthorizedAccessException => $"Ошибка аутентификации при обработке запроса: {unauthorizedAccessException.Message}", 
+					_ => $"Необработанное исключение: {exception.Message}"
+				};
+				logger.LogError(error);
 				await HandleExceptionAsync(httpContext, exception);
 			}
 		}
 
 
 		/// <summary>
-		/// Метод обработки исключения, возвращает объект, содержащий статус код ошибки и ее сообщение.
+		/// Метод обработки исключения, возвращает в ответе клиенту статус код ошибки и ее сообщение.
 		/// </summary>
-		/// <param name="httpContext">Объект http-контекста.</param>
+		/// <param name="httpContext">Контекст http-запроса.</param>
 		/// <param name="exception">Объект исключения.</param>
 		private static async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
 		{
