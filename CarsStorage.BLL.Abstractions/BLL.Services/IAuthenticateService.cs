@@ -1,6 +1,7 @@
 ﻿using CarsStorage.Abstractions.General;
 using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.Abstractions.ModelsDTO.User;
+using CarsStorage.BLL.Abstractions.ModelsDTO.User;
 
 namespace CarsStorage.Abstractions.BLL.Services
 {
@@ -18,11 +19,19 @@ namespace CarsStorage.Abstractions.BLL.Services
 
 
 		/// <summary>
-		/// Метод для логина пользователей, аутентифицированных на стороннем провайдере аутентификации.
+		/// Метод создает объект пользователя по данным от стороннего провайдера аутентификации, если пользователь не был зарегистрирован.
 		/// </summary>
-		/// <param name="authUserDataDTO">Объект с данными пользователя, полученных от стороннего провайдера аутентификации.</param>
+		/// <param name="authUserDataDTO">Объект, представляющий данные об аутентифицированном пользователе.</param>
+		/// <returns>Объект пользователя.</returns>
+		public Task<ServiceResult<UserDTO>> CreateAuthUserIfNotExist(AuthUserDataDTO authUserDataDTO);
+
+
+		/// <summary>
+		/// Метод для входа в приложение пользователя, аутентифицированного на стороннем провайдере аутентификации.
+		/// </summary>
+		/// <param name="userDTO">Объект аутентифицированного пользователя.</param>
 		/// <returns>Объект токена доступа.</returns>
-		public Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUserDataDTO authUserDataDTO);
+		public Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(UserDTO userDTO);
 
 
 		/// <summary>

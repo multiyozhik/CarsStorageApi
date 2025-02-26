@@ -34,6 +34,8 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Объект данных пользователя, возвращаемых клиенту.</returns>
 		[AllowAnonymous]
 		[HttpPost("Register")]
+		[ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterUserRequest registerUserRequest)
 		{
 			try
@@ -60,6 +62,9 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Объект токена доступа.</returns>
 		[AllowAnonymous]
 		[HttpPost("LogIn")]
+		[ProducesResponseType(typeof(List<JWTTokenRequestResponse>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task<ActionResult<JWTTokenRequestResponse>> LogIn([FromBody] LoginUserRequest loginDataRequest)
 		{
 			try
@@ -82,6 +87,9 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		[AllowAnonymous]               //по url https://localhost:{port}/Authenticate/signin-google
 		[HttpGet("signin-google")]     //должен совпадать с redirect uri при регистрации в Google Api https://localhost:{port}/signin-google
+		[ProducesResponseType(typeof(Task), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task GoogleLogin()
 		{
 			try 
@@ -105,6 +113,9 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		[AllowAnonymous]               //по url https://localhost:{port}/Authenticate/signin-github
 		[HttpGet("signin-github")]    //должен совпадать с redirect uri при регистрации в GitHub https://localhost:{port}/signin-github
+		[ProducesResponseType(typeof(Task), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task GitHubLogin()
 		{
 			try
@@ -128,8 +139,11 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		/// <param name="authScheme">Схема аутентификации.</param>
 		/// <returns>Объект токена доступа.</returns>
-		[NonAction]
 		[HttpGet("AuthResponseHandler")]
+		[ProducesResponseType(typeof(JWTTokenRequestResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task<ActionResult<JWTTokenRequestResponse>> AuthResponseHandler([FromQuery] string authScheme)
 		{
 			try
@@ -145,10 +159,14 @@ namespace CarsStorageApi.Controllers
 					Email = authResult.Principal.FindFirst(ClaimTypes.Email)?.Value,
 					RolesNamesList = [initialConfig.Value.InitialRoleName]
 				};
-				var serviceResult = await authService.LogInAuthUser(authUserDataDTO);
-				if (serviceResult.IsSuccess)
-					return mapper.Map<JWTTokenRequestResponse>(serviceResult.Result);
-				throw serviceResult.ServiceError;
+				var createUserServiceResult = await authService.CreateAuthUserIfNotExist(authUserDataDTO);
+				if (!createUserServiceResult.IsSuccess)
+					throw createUserServiceResult.ServiceError;
+				var loginAuthUserServiceResult = await authService.LogInAuthUser(createUserServiceResult.Result);
+				if (!loginAuthUserServiceResult.IsSuccess)
+					throw loginAuthUserServiceResult.ServiceError;
+				return mapper.Map<JWTTokenRequestResponse>(loginAuthUserServiceResult.Result);
+				
 			}
 			catch (Exception exception)
 			{
@@ -165,6 +183,9 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Обновленный объект токена.</returns>
 		[AllowAnonymous]
 		[HttpPut("RefreshToken")]
+		[ProducesResponseType(typeof(JWTTokenRequestResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		public async Task<ActionResult<JWTTokenRequestResponse>> RefreshToken([FromBody] JWTTokenRequestResponse jwtTokenRequestResponse)
 		{
 			try
@@ -192,6 +213,10 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Идентификатор пользователя, вышедшего из приложения.</returns>
 		[Authorize]
 		[HttpGet("LogOut")]
+		[ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task<ActionResult<int>> LogOut([FromHeader] string accessToken)
 		{
 			try

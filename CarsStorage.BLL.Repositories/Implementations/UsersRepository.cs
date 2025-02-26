@@ -90,7 +90,7 @@ namespace CarsStorage.DAL.Repositories.Implementations
 			try
 			{
 				var user = await dbContext.Users.Include(u => u.RolesList).FirstOrDefaultAsync(u => u.UserEntityId == userEntity.UserEntityId)
-				?? throw new Exception("Пользователь с заданным Id не найден");
+					?? throw new Exception("Пользователь с заданным Id не найден");
 				user.UserName = userEntity.UserName;
 				user.Email = userEntity.Email;
 				user.RolesList = userEntity.RolesList;

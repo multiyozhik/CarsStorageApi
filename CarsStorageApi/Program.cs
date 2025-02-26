@@ -1,5 +1,6 @@
 ﻿using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.DAL.Repositories;
+using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Services.Config;
 using CarsStorage.BLL.Services.Services;
@@ -16,10 +17,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Octokit;
+using Serilog;
 using System.Reflection;
 using System.Security.Claims;
-using Serilog;
-using CarsStorage.Abstractions.Exceptions;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,8 @@ ConfigureServices(builder.Services, builder.Configuration);
 var app = builder.Build();
 
 Configure(app, app.Environment);
+
+
 
 static void ConfigureServices(IServiceCollection services, IConfiguration config)
 {
@@ -57,7 +60,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	{
 		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
 		options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
-		options.DefaultChallengeScheme = "GitHub";
+		//options.DefaultChallengeScheme = "GitHub";
 		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 	})
 	.AddCookie()
@@ -226,7 +229,7 @@ static void Configure(WebApplication app, IHostEnvironment env)
 static void ValidateAppConfigs(IConfiguration jwtConfig)
 {
 	var initialConfig = jwtConfig.GetSection("InitialConfig")
-		?? throw new ServerException("Отсутствуют начальные конфигурации.");
+	?? throw new ServerException("Отсутствуют начальные конфигурации.");
 	if (string.IsNullOrEmpty(initialConfig["InitialRoleName"]))
 		throw new ServerException("Не определена роль пользователя при его регистрации в конфигурациях приложения.");
 

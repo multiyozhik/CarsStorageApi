@@ -23,6 +23,10 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Список объектов автомобилей, возвращаемый клиенту.</returns>
 		[Authorize(Policy = "RequierBrowseCars")]
 		[HttpGet]
+		[ProducesResponseType(typeof(List<CarResponse>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult<List<CarResponse>>> GetList()
 		{
 			try
@@ -53,6 +57,10 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Созданный объект данных автомобиля, возвращаемых клиенту.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPost]
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
 		public async Task<ActionResult<CarResponse>> Create([FromBody] CarRequest carRequest)
 		{
 			try
@@ -79,6 +87,11 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Измененный объект данных автомобиля, возвращаемых клиенту.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
 		public async Task<ActionResult<CarResponse>> Update([FromBody] CarResponse carResponse)
 		{
 			try
@@ -104,6 +117,9 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Идентификатор удаленного объекта автомобиля.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpDelete]
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
 		public async Task<ActionResult<int>> Delete([FromQuery] int id)
 		{
 			try
@@ -129,6 +145,11 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Измененный объект автомобиля, возвращаемый клиенту.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult<CarResponse>> UpdateCount([FromBody] CarCountRequest carCountRequest)
 		{
 			try
@@ -155,6 +176,10 @@ namespace CarsStorageApi.Controllers
 		/// <returns>Измененный объект автомобиля, возвращаемый клиенту.</returns>
 		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult<CarResponse>> MakeInaccessible([FromQuery]int id)
 		{
 			try

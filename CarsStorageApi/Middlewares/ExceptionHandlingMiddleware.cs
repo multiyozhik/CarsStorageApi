@@ -1,5 +1,4 @@
 ﻿using CarsStorage.Abstractions.Exceptions;
-using System.Net;
 
 namespace CarsStorageApi.Middlewares
 {
@@ -19,22 +18,25 @@ namespace CarsStorageApi.Middlewares
 			try
 			{
 				await next(httpContext);
+				if (httpContext.Response.StatusCode == StatusCodes.Status401Unauthorized)
+					throw new UnauthorizedAccessException($"Попытка неавторизованного доступа при обработке запроса: {httpContext.Request.Path}");
+				if (httpContext.Response.StatusCode == StatusCodes.Status403Forbidden)
+					throw new ForbiddenException($"Доступ запрещен при обработке запроса: {httpContext.Request.Path}");
 			}
 			catch (Exception exception)
 			{
 				var error = exception switch
 				{
-					BadRequestException badRequestException => $"Некорректный запрос: {badRequestException.Message}",
-					ForbiddenException forbiddenException => $"Запрет доступа к ресурсу при обработке запроса: {forbiddenException.Message}",
-					NotFoundException notFoundException => $"Ресурс не найден при обработке запроса: {notFoundException.Message}",
-					UnauthorizedAccessException unauthorizedAccessException => $"Ошибка аутентификации при обработке запроса: {unauthorizedAccessException.Message}", 
-					_ => $"Необработанное исключение: {exception.Message}"
+					BadRequestException _ => $"Некорректный запрос.",
+					ForbiddenException _ => $"Ошибка авторизации.",
+					NotFoundException _ => $"Ресурс не найден.",
+					UnauthorizedAccessException _ => $"Ошибка аутентификации.",
+					_ => $"Необработанное исключение."
 				};
-				logger.LogError(error);
+				logger.LogError("Статус код {status}. {error} {message}", httpContext.Response.StatusCode, error, exception.Message);
 				await HandleExceptionAsync(httpContext, exception);
 			}
 		}
-
 
 		/// <summary>
 		/// Метод обработки исключения, возвращает в ответе клиенту статус код ошибки и ее сообщение.
@@ -44,18 +46,13 @@ namespace CarsStorageApi.Middlewares
 		private static async Task HandleExceptionAsync(HttpContext httpContext, Exception exception)
 		{
 			var response = httpContext.Response;
-			var statusCode = exception switch
+			if (response.StatusCode == StatusCodes.Status401Unauthorized || response.StatusCode == StatusCodes.Status403Forbidden)
+				await httpContext.Response.WriteAsync(exception.Message);
+			else
 			{
-				BadRequestException _ => (int)HttpStatusCode.BadRequest,
-				ForbiddenException _ => (int)HttpStatusCode.Forbidden,
-				NotFoundException _ => (int)HttpStatusCode.NotFound,
-				UnauthorizedAccessException _ => (int)HttpStatusCode.Unauthorized,
-				_ => (int)HttpStatusCode.InternalServerError
-			};
-
-			response.StatusCode = statusCode;
-			response.ContentType = "application/json";
-			await response.WriteAsJsonAsync(new { ExceptionMessage = exception.Message });
+				response.ContentType = "application/json";
+				await response.WriteAsJsonAsync(new { ExceptionMessage = exception.Message, StatusCodes = response.StatusCode });
+			}
 		}
 	}
 }

@@ -15,7 +15,7 @@ namespace CarsStorageApi.Controllers
 	/// <param name="logger">Объект для выполнения логирования.</param>
 	[ApiController]
 	[Authorize(Policy = "RequierManageUsers")]
-	[Route("[controller]/[action]")]	
+	[Route("[controller]/[action]")]
 	public class UsersController(IUsersService usersService, IMapper mapper, ILogger<UsersController> logger) : ControllerBase
 	{
 		/// <summary>
@@ -23,6 +23,10 @@ namespace CarsStorageApi.Controllers
 		/// </summary>
 		/// <returns>Список всех пользователей.</returns>
 		[HttpGet]
+		[ProducesResponseType(typeof(IEnumerable<UserResponse>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult<IEnumerable<UserResponse>>> GetList()
 		{
 			try
@@ -47,6 +51,11 @@ namespace CarsStorageApi.Controllers
 		/// <param name="id">Идентификатор пользователя.</param>
 		/// <returns>Объект пользователя, возвращаемый клиенту.</returns>
 		[HttpGet("{id}")]
+		[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult<UserResponse>> GetById([FromRoute] int id)
 		{
 			try
@@ -71,6 +80,10 @@ namespace CarsStorageApi.Controllers
 		/// <param name="userRequest">Объект данных пользователя, передаваемых клиентом при создании нового пользователя с ролью.</param>
 		/// <returns>Созданный объект пользователя, возвращаемый клиенту.</returns>
 		[HttpPost]
+		[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
 		public async Task<ActionResult<UserResponse>> Create([FromBody] UserRequest userRequest)			
 		{
 			try
@@ -95,6 +108,11 @@ namespace CarsStorageApi.Controllers
 		/// <param name="userResponse">Объект пользователя.</param>
 		/// <returns>Измененный объект пользователя, возвращаемый клиенту.</returns>
 		[HttpPut]
+		[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult<UserResponse>> Update([FromBody] UserResponse userResponse)
 		{
 			try
@@ -119,6 +137,10 @@ namespace CarsStorageApi.Controllers
 		/// <param name="id">Идентификатор пользователя.</param>
 		/// <returns>Идентификатор удаленного  пользователя.</returns>
 		[HttpDelete("{id}")]
+		[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{
 			try

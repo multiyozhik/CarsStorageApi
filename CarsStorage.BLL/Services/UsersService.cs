@@ -35,7 +35,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при получении списка всех пользователей: {errorMessage}", this, nameof(this.GetList), exception.Message);
-				return new ServiceResult<List<UserDTO>>(new NotFoundException(exception.Message));
+				throw new NotFoundException(exception.Message);
 			}
 		}
 
@@ -55,7 +55,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при получении объекта пользователя по его идентификатору: {errorMessage}", this, nameof(this.GetById), exception.Message);
-				return new ServiceResult<UserDTO>(new NotFoundException(exception.Message));
+				throw new BadRequestException(exception.Message);
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace CarsStorage.BLL.Services.Services
 				userEntity.Hash = hashedPassword.Hash;
 				userEntity.Salt = hashedPassword.Salt;
 				if (userCreaterDTO.RoleNamesList is null)
-					throw new Exception("Не определены роли пользователя.");
+					throw new BadRequestException("Не определены роли пользователя.");
 				userEntity.RolesList = await usersRepository.GetRolesByRoleNames(userCreaterDTO.RoleNamesList);
 				var createdUserEntity = await usersRepository.Create(userEntity);
 				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(createdUserEntity));
@@ -82,7 +82,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при создании объекта пользователя: {errorMessage}", this, nameof(this.Create), exception.Message);
-				return new ServiceResult<UserDTO>(new BadRequestException(exception.Message));
+				throw new BadRequestException(exception.Message);
 			}
 		}
 
@@ -106,7 +106,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при изменении объекта пользователя: {errorMessage}", this, nameof(this.Update), exception.Message);
-				return new ServiceResult<UserDTO>(new BadRequestException(exception.Message));
+				throw new BadRequestException(exception.Message);
 			}
 		}
 
@@ -125,7 +125,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при удалении объекта пользователя по его идентификатору: {errorMessage}", this, nameof(this.Delete), exception.Message);
-				return new ServiceResult<int>(new BadRequestException(exception.Message));
+				throw new BadRequestException(exception.Message);
 			}
 		}
 	}

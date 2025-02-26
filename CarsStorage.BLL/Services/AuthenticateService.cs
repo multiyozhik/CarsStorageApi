@@ -44,17 +44,17 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при входе пользователя в приложение: {errorMessage}", this, nameof(this.LogIn), exception.Message);
-				return new ServiceResult<JWTTokenDTO>(new UnauthorizedAccessException(exception.Message));
+				throw new BadRequestException(exception.Message);
 			}
 		}
 
 
 		/// <summary>
-		/// Метод для входа аутентифицированного пользователя в приложение.
+		/// Метод создает объект пользователя по данным от стороннего провайдера аутентификации, если пользователь не был зарегистрирован.
 		/// </summary>
 		/// <param name="authUserDataDTO">Объект, представляющий данные об аутентифицированном пользователе.</param>
-		/// <returns>Объект токена доступа.</returns>
-		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(AuthUserDataDTO authUserDataDTO)
+		/// <returns>Объект пользователя.</returns>
+		public async Task<ServiceResult<UserDTO>> CreateAuthUserIfNotExist(AuthUserDataDTO authUserDataDTO)
 		{
 			try
 			{
@@ -69,17 +69,36 @@ namespace CarsStorage.BLL.Services.Services
 					};
 					userEntity = await usersRepository.Create(userEntity);
 				}
-				var userDTO = mapper.Map<UserDTO>(userEntity);
+				return new ServiceResult<UserDTO>(mapper.Map<UserDTO>(userEntity));
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {service} в {method} при создании пользователя после сторонней аутентификации: {errorMessage}", this, nameof(this.LogInAuthUser), exception.Message);
+				throw new BadRequestException(exception.Message);
+			}
+		}
+
+
+
+		/// <summary>
+		/// Метод для входа в приложение пользователя, аутентифицированного на стороннем провайдере аутентификации.
+		/// </summary>
+		/// <param name="userDTO">Объект аутентифицированного пользователя.</param>
+		/// <returns>Объект токена доступа.</returns>
+		public async Task<ServiceResult<JWTTokenDTO>> LogInAuthUser(UserDTO userDTO)
+		{
+			try
+			{				
 				var jwtTokenDTO = await GetJWTToken(userDTO);
 				var updateTokenResult = await tokenService.UpdateToken(userDTO.Id, jwtTokenDTO);
 				if (!updateTokenResult.IsSuccess)
 					throw updateTokenResult.ServiceError;
-				return new ServiceResult<JWTTokenDTO>(jwtTokenDTO);
+				return new ServiceResult<JWTTokenDTO>(updateTokenResult.Result);
 			}
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при входе аутентифицированного пользователя в приложение: {errorMessage}", this, nameof(this.LogInAuthUser), exception.Message);
-				return new ServiceResult<JWTTokenDTO>(new NotFoundException(exception.Message));
+				throw new BadRequestException(exception.Message);
 			}
 		}
 
@@ -118,7 +137,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при обновлении токена доступа: {errorMessage}", this, nameof(this.RefreshToken), exception.Message);
-				return new ServiceResult<JWTTokenDTO>(new UnauthorizedAccessException(exception.Message));
+				throw new BadRequestException(exception.Message);
 			}
 		}
 
@@ -140,7 +159,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при выходе пользователя из приложения: {errorMessage}", this, nameof(this.LogOut), exception.Message);
-				return new ServiceResult<int>(new BadRequestException(exception.Message));
+				throw new BadRequestException(exception.Message);
 			}
 		}
 
@@ -176,7 +195,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при получении объекта токена доступа: {errorMessage}", this, nameof(this.GetJWTToken), exception.Message);
-				throw new ServerException(exception.Message);
+				throw new BadRequestException(exception.Message);
 			}
 		}
 	}
