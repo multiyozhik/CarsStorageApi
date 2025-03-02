@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.ModelsDTO.User;
+using CarsStorageApi.Filters;
 using CarsStorageApi.Models.UserModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ namespace CarsStorageApi.Controllers
 	[ApiController]
 	[Authorize(Policy = "RequierManageUsers")]
 	[Route("[controller]/[action]")]
+	[ServiceFilter(typeof(AcceptHeaderActionFilter))]
 	public class UsersController(IUsersService usersService, IMapper mapper, ILogger<UsersController> logger) : ControllerBase
 	{
 		/// <summary>

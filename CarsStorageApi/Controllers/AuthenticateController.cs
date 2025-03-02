@@ -3,6 +3,7 @@ using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.ModelsDTO.Token;
 using CarsStorage.Abstractions.ModelsDTO.User;
 using CarsStorageApi.Config;
+using CarsStorageApi.Filters;
 using CarsStorageApi.Models.TokenModels;
 using CarsStorageApi.Models.UserModels;
 using Microsoft.AspNetCore.Authentication;
@@ -25,6 +26,7 @@ namespace CarsStorageApi.Controllers
 	/// <param name="logger">Объект для выполнения логирования.</param>
 	[ApiController]
 	[Route("[controller]")]
+	[ServiceFilter(typeof(AcceptHeaderActionFilter))]
 	public class AuthenticateController(IAuthenticateService authService, IUsersService usersService, IMapper mapper, IOptions<InitialConfig> initialConfig, ILogger<AuthenticateController> logger) : ControllerBase
 	{
 		/// <summary>

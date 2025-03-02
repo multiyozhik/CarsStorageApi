@@ -8,6 +8,7 @@ using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.DbContexts;
 using CarsStorage.DAL.Repositories.Implementations;
 using CarsStorageApi.Config;
+using CarsStorageApi.Filters;
 using CarsStorageApi.Middlewares;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -144,6 +145,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddControllers();
 
+	services.AddScoped<AcceptHeaderActionFilter>();
+
 	//отключаем фильтр, чтобы обработка шла через middleware, и там реализовано логирование
 	//services.AddControllersWithViews(options =>
 	//{
@@ -188,7 +191,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		});
 	});
 
-	services.AddCors();
+	services.AddCors(options => options.AddPolicy("CorsPolicy",
+		builder => builder.AllowAnyOrigin().WithHeaders("Accept").AllowAnyMethod()));
 }
 
 
@@ -213,7 +217,7 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.UseStatusCodePages();
 
-	app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+	app.UseCors("CorsPolicy");
 
 	app.UseAuthentication();
 
@@ -221,7 +225,11 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.MapControllers();
 
-	app.UseRouting();	
+	app.UseRouting();
+
+	app.UseMiddleware<TechnicalWorksMiddleware>();
+
+	app.UseWebSockets(); 
 
 	app.Run();
 }

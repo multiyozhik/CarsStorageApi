@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CarsStorage.Abstractions.BLL.Services;
 using CarsStorage.Abstractions.ModelsDTO.Car;
+using CarsStorageApi.Filters;
 using CarsStorageApi.Models.CarModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,7 @@ namespace CarsStorageApi.Controllers
 	/// <param name="logger">Объект для выполнения логирования.</param>
 	[ApiController]
 	[Route("[controller]/[action]")]
+	[ServiceFilter(typeof(AcceptHeaderActionFilter))]
 	public class CarsController(ICarsService carsService, IMapper mapper, ILogger<AuthenticateController> logger) : ControllerBase
 	{
 		/// <summary>
