@@ -20,6 +20,7 @@ namespace CarsStorageApi.Controllers
 		/// Метод для запуска технических работ.
 		/// </summary>
 		/// <returns>Строка сообщения о начатых технических работах.</returns>
+		[HttpGet]
 		public async Task<ActionResult<string>> StartTechnicalWorks()
 		{
 			try
@@ -41,6 +42,7 @@ namespace CarsStorageApi.Controllers
 		/// Метод для прекращения технических работ.
 		/// </summary>
 		/// <returns>Строка сообщения о завершении технических работ.</returns>
+		[HttpGet]
 		public async Task<ActionResult<string>> StopTechnicalWorks()
 		{
 			try
