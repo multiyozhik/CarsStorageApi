@@ -17,7 +17,8 @@ namespace CarsStorage.BLL.Services.Utils
 		{
 			while (webSocket.State == WebSocketState.Open)
 			{
-				if (await technicalWorksService.HasTechnicalWorks())
+				var isUnderMaintenance = await technicalWorksService.IsUnderMaintenance();
+				if (isUnderMaintenance.Result)
 				{
 					var message = "Ведутся технические работы.";
 					var bytes = System.Text.Encoding.UTF8.GetBytes(message);

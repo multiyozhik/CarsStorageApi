@@ -16,7 +16,8 @@ namespace CarsStorageApi.Middlewares
 		/// <returns>Возвращает 503 ошибку при проведении технических работ.</returns>
 		public async Task Invoke(HttpContext context)
 		{
-			if (await technicalWorksService.HasTechnicalWorks())
+			var isUnderMaintenance =  await technicalWorksService.IsUnderMaintenance();  //try-catch
+			if (isUnderMaintenance.Result)
 			{
 				context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
 				await context.Response.WriteAsync("Сервис временно недоступен, ведутся технические работы по обслуживанию.");

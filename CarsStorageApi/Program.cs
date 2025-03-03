@@ -55,13 +55,15 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<ITokensService, TokensService>()
 		.AddScoped<IPasswordHasher, PasswordHasher>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
-		.AddScoped<ICarsService, CarsService>();
+		.AddScoped<ICarsService, CarsService>()
+		.AddScoped<ITechnicalWorksService, TechnicalWorksService>()
+		.AddScoped<IDbStatesRepository, DbStatesRepository>();
+
 
 	services.AddAuthentication(options =>
 	{
 		options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
 		options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
-		//options.DefaultChallengeScheme = "GitHub";
 		options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 	})
 	.AddCookie()
@@ -160,7 +162,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddSwaggerGen(option =>
 	{
 		option.SwaggerDoc("v1", new OpenApiInfo { Title = "CarsStorageAPI", Version = "v1", Description = "ASP.NET Core Web API для управления данными о хранящихся на складе автомобилях." });
-		
+
 		var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
 		var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 		option.IncludeXmlComments(xmlPath);
@@ -229,7 +231,7 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.UseMiddleware<TechnicalWorksMiddleware>();
 
-	app.UseWebSockets(); 
+	app.UseWebSockets();
 
 	app.Run();
 }
@@ -253,7 +255,7 @@ static void ValidateAppConfigs(IConfiguration jwtConfig)
 		throw new ServerException("Не определено время жизни токена в конфигурациях приложения.");
 }
 
-static bool GetParameterValue(string jwtParameter) 
-	=> (bool.TryParse(jwtParameter, out bool parameterValue)) 
+static bool GetParameterValue(string jwtParameter)
+	=> (bool.TryParse(jwtParameter, out bool parameterValue))
 	? parameterValue
 	: throw new ServerException("Параметр валидации токена должен быть равным true или false.");

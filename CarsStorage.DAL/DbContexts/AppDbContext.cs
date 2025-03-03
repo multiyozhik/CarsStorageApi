@@ -32,6 +32,12 @@ namespace CarsStorage.DAL.DbContexts
 
 
 		/// <summary>
+		/// Набор состояний (конфигураций) БД.
+		/// </summary>
+		public DbSet<DbStateEntity> DbStates { get; set; }
+
+
+		/// <summary>
 		/// Метод для конфигурирования и инициализации БД.
 		/// </summary>
 		/// <param name="modelBuilder">Объект API конфигурирования.</param>
@@ -43,6 +49,7 @@ namespace CarsStorage.DAL.DbContexts
 			modelBuilder.ApplyConfiguration(new UsersConfig());
 			modelBuilder.ApplyConfiguration(new UsersRolesConfig());
 			modelBuilder.ApplyConfiguration(new CarsConfig());
+			modelBuilder.ApplyConfiguration(new DbStatesConfig());
 		}
 	}
 }
