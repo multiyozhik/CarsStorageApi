@@ -6,6 +6,7 @@ using CarsStorage.BLL.Services.Config;
 using CarsStorage.BLL.Services.Services;
 using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.DbContexts;
+using CarsStorage.DAL.Models;
 using CarsStorage.DAL.Repositories.Implementations;
 using CarsStorageApi.Config;
 using CarsStorageApi.Filters;
@@ -19,6 +20,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Octokit;
 using Serilog;
+using System.Linq;
+using System.Net.WebSockets;
 using System.Reflection;
 using System.Security.Claims;
 
@@ -57,8 +60,9 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>()
 		.AddScoped<ITechnicalWorksService, TechnicalWorksService>()
-		.AddScoped<IDbStatesRepository, DbStatesRepository>();
-
+		.AddTransient<TechnicalWorksMiddleware>()		
+		.AddScoped<IDbStatesRepository, DbStatesRepository>()
+		.AddScoped<AcceptHeaderActionFilter>();
 
 	services.AddAuthentication(options =>
 	{
@@ -147,14 +151,6 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddControllers();
 
-	services.AddScoped<AcceptHeaderActionFilter>();
-
-	//отключаем фильтр, чтобы обработка шла через middleware, и там реализовано логирование
-	//services.AddControllersWithViews(options =>
-	//{
-	//	options.Filters.Add<GlobalExceptionFilter>();
-	//});
-
 	services.AddAutoMapper(Assembly.Load("CarsStorageApi"));
 	services.AddAutoMapper(Assembly.Load("CarsStorage.BLL.Services"));
 	services.AddAutoMapper(Assembly.Load("CarsStorage.DAL.Repositories"));
@@ -226,13 +222,27 @@ static void Configure(WebApplication app, IHostEnvironment env)
 
 	app.UseAuthorization();
 
-	app.MapControllers();
-
 	app.UseRouting();
 
-	app.UseMiddleware<TechnicalWorksMiddleware>();
+	app.UseMiddleware<TechnicalWorksMiddleware>();	
 
 	app.UseWebSockets();
+
+	app.Use(async (context, next) =>
+	{
+		if (context.WebSockets.IsWebSocketRequest)
+		{
+			var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+			var webSocketHandler = new WebSocketHandler(context.RequestServices.GetService<ITechnicalWorksService>());
+			await webSocketHandler.HandleWebSocketConnection(webSocket);
+		}
+		else
+		{
+			await next();
+		}
+	});
+
+	app.MapControllers();
 
 	app.Run();
 }

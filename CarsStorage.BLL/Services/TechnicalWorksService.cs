@@ -26,7 +26,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при запуске технических работ: {errorMessage}", this, nameof(this.StartTechnicalWorks), exception.Message);
-				throw new NotFoundException(exception.Message);
+				throw new ServerException(exception.Message);
 			}
 		}
 
@@ -44,7 +44,7 @@ namespace CarsStorage.BLL.Services.Services
 			catch (Exception exception)
 			{
 				logger.LogError("Ошибка в {service} в {method} при остановке технических работ: {errorMessage}", this, nameof(this.StopTechnicalWorks), exception.Message);
-				throw new NotFoundException(exception.Message);
+				throw new ServerException(exception.Message);
 			}
 		}
 
