@@ -15,12 +15,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.BLL.Services", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.DAL", "CarsStorage.DAL\CarsStorage.DAL.csproj", "{ABF7EB27-5423-4C5E-8FE5-3F88BE76B278}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.Abstractions", "CarsStorage.BLL.Abstractions\CarsStorage.Abstractions.csproj", "{C8F1FBE3-15BA-4A0B-A94D-2167418B9D64}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.Abstractions", "CarsStorage.Abstractions\CarsStorage.Abstractions.csproj", "{C8F1FBE3-15BA-4A0B-A94D-2167418B9D64}"
 	ProjectSection(ProjectDependencies) = postProject
 		{ABF7EB27-5423-4C5E-8FE5-3F88BE76B278} = {ABF7EB27-5423-4C5E-8FE5-3F88BE76B278}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.DAL.Repositories", "CarsStorage.BLL.Repositories\CarsStorage.DAL.Repositories.csproj", "{78B6B750-E784-4116-B4D9-E50CD7103EB4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarsStorage.DAL.Repositories", "CarsStorage.DAL.Repositories\CarsStorage.DAL.Repositories.csproj", "{78B6B750-E784-4116-B4D9-E50CD7103EB4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{ABF7EB27-5423-4C5E-8FE5-3F88BE76B278} = {ABF7EB27-5423-4C5E-8FE5-3F88BE76B278}
 	EndProjectSection

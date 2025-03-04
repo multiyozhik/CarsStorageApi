@@ -6,7 +6,6 @@ using CarsStorage.BLL.Services.Config;
 using CarsStorage.BLL.Services.Services;
 using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.DbContexts;
-using CarsStorage.DAL.Models;
 using CarsStorage.DAL.Repositories.Implementations;
 using CarsStorageApi.Config;
 using CarsStorageApi.Filters;
@@ -20,8 +19,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Octokit;
 using Serilog;
-using System.Linq;
-using System.Net.WebSockets;
 using System.Reflection;
 using System.Security.Claims;
 

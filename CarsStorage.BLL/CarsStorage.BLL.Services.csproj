@@ -14,8 +14,8 @@
 	</ItemGroup>
 	
   <ItemGroup>
-    <ProjectReference Include="..\CarsStorage.BLL.Abstractions\CarsStorage.Abstractions.csproj" />
-    <ProjectReference Include="..\CarsStorage.BLL.Repositories\CarsStorage.DAL.Repositories.csproj" />
+    <ProjectReference Include="..\CarsStorage.Abstractions\CarsStorage.Abstractions.csproj" />
+    <ProjectReference Include="..\CarsStorage.DAL.Repositories\CarsStorage.DAL.Repositories.csproj" />
   </ItemGroup>
 
 </Project>
