@@ -1,62 +1,202 @@
-using CarsStorage.BLL.Abstractions;
-using CarsStorage.BLL.Interfaces;
-using CarsStorageApi.Mappers;
+﻿using AutoMapper;
+using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.ModelsDTO.Car;
+using CarsStorageApi.Filters;
+using CarsStorageApi.Models.CarModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarsStorageApi.Controllers
 {
+	/// <summary>
+	/// Класс контроллера для автомобилей.
+	/// </summary>
+	/// <param name="carsService">Объект сервиса автомобилей.</param>
+	/// <param name="mapper">Объект меппера.</param>
+	/// <param name="logger">Объект для выполнения логирования.</param>
 	[ApiController]
-	[Authorize]
 	[Route("[controller]/[action]")]
-	
-	public class CarsController(ICarsService carsService) : ControllerBase
+	[ServiceFilter(typeof(AcceptHeaderActionFilter))]
+	public class CarsController(ICarsService carsService, IMapper mapper, ILogger<AuthenticateController> logger) : ControllerBase
 	{
-		private readonly ICarsService carsService = carsService;
-		private readonly CarMapper carMapper = new();
-
-		[Authorize(Roles = "manager,user")]
+		/// <summary>
+		/// Метод возвращает список автомобилей.
+		/// </summary>
+		/// <returns>Список объектов автомобилей, возвращаемый клиенту.</returns>
+		[Authorize(Policy = "RequierBrowseCars")]
 		[HttpGet]
-		public async Task<IEnumerable<CarDTO>> GetCars()
+		[ProducesResponseType(typeof(List<CarResponse>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<List<CarResponse>>> GetList()
 		{
-			var carList = await carsService.GetList();
-			return carList.Select(carMapper.CarToCarDto);
-		}
-
-		[Authorize(Roles = "manager,user")]
-		[HttpPost]
-		public async Task Create([FromBody] CreaterCarDTO createrCarDTO)
-		{
-			var car = new Car()
+			try
 			{
-				Id = Guid.NewGuid(),
-				Make = createrCarDTO.Make,
-				Model = createrCarDTO.Model,
-				Color = createrCarDTO.Color,
-				Count = createrCarDTO.Count
-			};
-			await carsService.Create(car);
+				var serviceResult = await carsService.GetList();
+				if (serviceResult.IsSuccess)
+				{
+					var carsList = serviceResult.Result.Select(mapper.Map<CarResponse>).ToList();
+					return (HttpContext.User.HasClaim(c => c.Value == "RequierBrowseCars"))
+						? carsList.Where(c => c.IsAccassible).ToList()
+						: carsList;
+				}
+				else
+					throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при получении списка автомобилей: {errorMessage}", this, nameof(this.GetList), exception.Message);
+				throw;
+			}
 		}
 
-		[Authorize(Roles = "manager")]
+
+		/// <summary>
+		/// Метод для создания объекта автомобиля.
+		/// </summary>
+		/// <param name="carRequest">Объект данных автомобиля, передаваемых клиентом.</param>
+		/// <returns>Созданный объект данных автомобиля, возвращаемых клиенту.</returns>
+		[Authorize(Policy = "RequierManageCars")]
+		[HttpPost]
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		public async Task<ActionResult<CarResponse>> Create([FromBody] CarRequest carRequest)
+		{
+			try
+			{
+				var serviceResult = await carsService.Create(mapper.Map<CarCreaterDTO>(carRequest));
+
+				if (serviceResult.IsSuccess)
+					return mapper.Map<CarResponse>(serviceResult.Result);
+				else
+					throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при создании объекта автомобиля: {errorMessage}", this, nameof(this.Create), exception.Message);
+				throw;
+			}
+		}
+
+
+		/// <summary>
+		/// Метод для изменения объекта автомобиля.
+		/// </summary>
+		/// <param name="carResponse">Объект автомобиля.</param>
+		/// <returns>Измененный объект данных автомобиля, возвращаемых клиенту.</returns>
+		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task Update([FromBody] CarDTO carDTO)
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		public async Task<ActionResult<CarResponse>> Update([FromBody] CarResponse carResponse)
 		{
-			await carsService.Update(carMapper.CarDtoToCar(carDTO));
+			try
+			{
+				var serviceResult = await carsService.Update(mapper.Map<CarDTO>(carResponse));
+
+				if (serviceResult.IsSuccess)
+					return mapper.Map<CarResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при изменении объекта автомобиля: {errorMessage}", this, nameof(this.Update), exception.Message);
+				throw;
+			}
 		}
 
-		[Authorize(Roles = "manager")]
-		[HttpDelete("{id}")]
-		public async Task Delete([FromRoute] Guid id)
+
+		/// <summary>
+		/// Метод для удаления объекта автомобиля по его идентификатору.
+		/// </summary>
+		/// <param name="id">Идентификатор объекта автомобиля.</param>
+		/// <returns>Идентификатор удаленного объекта автомобиля.</returns>
+		[Authorize(Policy = "RequierManageCars")]
+		[HttpDelete]
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		public async Task<ActionResult<int>> Delete([FromQuery] int id)
 		{
-			await carsService.Delete(id);
+			try
+			{
+				var serviceResult = await carsService.Delete(id);
+
+				if (serviceResult.IsSuccess)
+					return mapper.Map<int>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при удалении объекта автомобиля: {errorMessage}", this, nameof(this.Delete), exception.Message);
+				throw;
+			}
 		}
 
-		[Authorize(Roles = "manager")]
+
+		/// <summary>
+		/// Метод для изменения количества у объекта автомобиля с идентификатором id.
+		/// </summary>
+		/// <param name="carCountRequest">Объект данных автомобиля, передаваемых клиентом.</param>
+		/// <returns>Измененный объект автомобиля, возвращаемый клиенту.</returns>
+		[Authorize(Policy = "RequierManageCars")]
 		[HttpPut]
-		public async Task UpdateCount([FromRoute] Guid id, [FromQuery] int count)
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<CarResponse>> UpdateCount([FromBody] CarCountRequest carCountRequest)
 		{
-			await carsService.UpdateCount(id, count);
+			try
+			{
+				var serviceResult = await carsService.UpdateCount(carCountRequest.Id, carCountRequest.Count);
+
+				if (serviceResult.IsSuccess)
+					return mapper.Map<CarResponse>(serviceResult.Result);
+				else
+					return BadRequest(serviceResult.ServiceError);
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при изменении количества автомобилей: {errorMessage}", this, nameof(this.UpdateCount), exception.Message);
+				throw;
+			}
+		}
+
+
+		/// <summary>
+		/// Метод для изменения объекта автомобиля так, чтобы объект был недоступен для просмотра (обычным пользователем).
+		/// </summary>
+		/// <param name="id">Идентификатор объекта автомобиля.</param>
+		/// <returns>Измененный объект автомобиля, возвращаемый клиенту.</returns>
+		[Authorize(Policy = "RequierManageCars")]
+		[HttpPut]
+		[ProducesResponseType(typeof(CarResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<CarResponse>> MakeInaccessible([FromQuery]int id)
+		{
+			try
+			{
+				var serviceResult = await carsService.MakeInaccessible(id);
+
+				if (serviceResult.IsSuccess)
+					return mapper.Map<CarResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при попытке сделать объект недоступным для просмотра: {errorMessage}", this, nameof(this.MakeInaccessible), exception.Message);
+				throw;
+			}
 		}
 	}
 }

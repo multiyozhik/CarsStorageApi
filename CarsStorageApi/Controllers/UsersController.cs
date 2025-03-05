@@ -1,65 +1,163 @@
-﻿using CarsStorage.BLL.Abstractions;
-using CarsStorage.BLL.Config;
-using CarsStorageApi.Config;
-using CarsStorageApi.Mappers;
+﻿using AutoMapper;
+using CarsStorage.Abstractions.BLL.Services;
+using CarsStorage.Abstractions.ModelsDTO.User;
+using CarsStorageApi.Filters;
+using CarsStorageApi.Models.UserModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace CarsStorageApi.Controllers
 {
+	/// <summary>
+	/// Класс контроллера пользователей.
+	/// </summary>
+	/// <param name="usersService">Сервис пользователей.</param>
+	/// <param name="mapper">Объект меппера.</param>
+	/// <param name="logger">Объект для выполнения логирования.</param>
 	[ApiController]
-	[Authorize(Roles = "admin")]
+	[Authorize(Policy = "RequierManageUsers")]
 	[Route("[controller]/[action]")]
-	
-	public class UsersController(IUsersService usersService, IOptions<RoleNamesConfig> roleNamesConfig) : ControllerBase
+	[ServiceFilter(typeof(AcceptHeaderActionFilter))]
+	public class UsersController(IUsersService usersService, IMapper mapper, ILogger<UsersController> logger) : ControllerBase
 	{
-		private readonly UserMapper userMapper = new();
-
+		/// <summary>
+		/// Метод возвращает список всех пользователей.
+		/// </summary>
+		/// <returns>Список всех пользователей.</returns>
 		[HttpGet]
-		public async Task<IEnumerable<UserDTO>> GetList()
+		[ProducesResponseType(typeof(IEnumerable<UserResponse>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<IEnumerable<UserResponse>>> GetList()
 		{
-			var appUsersList = await usersService.GetList();
-			return appUsersList.Select(userMapper.AppUserToUserDto);
+			try
+			{
+				var serviceResult = await usersService.GetList();
+
+				if (serviceResult.IsSuccess)
+					return serviceResult.Result.Select(mapper.Map<UserResponse>).ToList();
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при получении списка пользователей: {errorMessage}", this, nameof(this.GetList), exception.Message);
+				throw;
+			}
 		}
 
+
+		/// <summary>
+		/// Метод возвращает пользователя по его идентификатору.
+		/// </summary>
+		/// <param name="id">Идентификатор пользователя.</param>
+		/// <returns>Объект пользователя, возвращаемый клиенту.</returns>
 		[HttpGet("{id}")]
-		public async Task<ActionResult<UserDTO>> GetById([FromRoute] Guid id)
+		[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<UserResponse>> GetById([FromRoute] int id)
 		{
-			var appUser = await usersService.GetById(id);
-			if (appUser.Value is not null)
-				return userMapper.AppUserToUserDto(appUser.Value);
-			return NotFound("Пользователь не найден"); 
+			try
+			{
+				var serviceResult = await usersService.GetById(id);
+
+				if (serviceResult.IsSuccess)
+					return mapper.Map<UserResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при получении пользователя по его идентификатору: {errorMessage}", this, nameof(this.GetById), exception.Message);
+				throw;
+			}
 		}
 
 
+		/// <summary>
+		/// Метод для создания объекта пользователя.
+		/// </summary>
+		/// <param name="userRequest">Объект данных пользователя, передаваемых клиентом при создании нового пользователя с ролью.</param>
+		/// <returns>Созданный объект пользователя, возвращаемый клиенту.</returns>
 		[HttpPost]
-		public async Task<IActionResult> Create([FromBody] RegisterUserDTO registerUserDTO)			
+		[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		public async Task<ActionResult<UserResponse>> Create([FromBody] UserRequest userRequest)			
 		{
-			if (string.IsNullOrWhiteSpace(registerUserDTO.UserName)
-				|| string.IsNullOrWhiteSpace(registerUserDTO.Email)
-				|| string.IsNullOrWhiteSpace(registerUserDTO.Password))
-				return BadRequest("Ошибка ввода данных пользователя");
-
-			if (roleNamesConfig.Value.DefaultUserRoleNames is null)
-				throw new Exception("Не заданы конфигурации, значение роли пользователя по умолчанию");
-			else
-				registerUserDTO.Roles ??= roleNamesConfig.Value.DefaultUserRoleNames;
-
-			return await usersService.Create(userMapper.RegUserDtoToRegAppUser(registerUserDTO));
+			try
+			{
+				var userCreaterDTO = mapper.Map<UserCreaterDTO>(userRequest);
+				var serviceResult = await usersService.Create(userCreaterDTO);
+				if (serviceResult.IsSuccess)
+					return mapper.Map<UserResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при создании объекта пользователя: {errorMessage}", this, nameof(this.Create), exception.Message);
+				throw;
+			}
 		}
 
 
+		/// <summary>
+		/// Метод для изменения объекта пользователя.
+		/// </summary>
+		/// <param name="userResponse">Объект пользователя.</param>
+		/// <returns>Измененный объект пользователя, возвращаемый клиенту.</returns>
 		[HttpPut]
-		public async Task<IActionResult> Update([FromBody] UserDTO userDTO)
+		[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<UserResponse>> Update([FromBody] UserResponse userResponse)
 		{
-			return await usersService.Update(userMapper.UserDtoToAppUser(userDTO));
+			try
+			{
+				var serviceResult = await usersService.Update(mapper.Map<UserUpdaterDTO>(userResponse));
+
+				if (serviceResult.IsSuccess)
+					return mapper.Map<UserResponse>(serviceResult.Result);
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при изменении объекта пользователя: {errorMessage}", this, nameof(this.Update), exception.Message);
+				throw;
+			}
 		}
 
+
+		/// <summary>
+		/// Метод для удаления пользователя по его идентификатору.
+		/// </summary>
+		/// <param name="id">Идентификатор пользователя.</param>
+		/// <returns>Идентификатор удаленного  пользователя.</returns>
 		[HttpDelete("{id}")]
-		public async Task<IActionResult> Delete([FromRoute] Guid id)
+		[ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+		[ProducesResponseType(StatusCodes.Status403Forbidden)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<int>> Delete([FromRoute] int id)
 		{
-			return await usersService.Delete(id);
+			try
+			{
+				var serviceResult = await usersService.Delete(id);
+
+				if (serviceResult.IsSuccess)
+					return serviceResult.Result;
+				throw serviceResult.ServiceError;
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {controller} в методе {method} при удалении пользователя по его идентификатору: {errorMessage}", this, nameof(this.Delete), exception.Message);
+				throw;
+			}
 		}
 	}
 }
