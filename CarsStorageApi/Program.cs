@@ -2,6 +2,7 @@
 using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.ModelsDTO;
+using CarsStorage.BLL.Services.Clients;
 using CarsStorage.BLL.Services.Config;
 using CarsStorage.BLL.Services.Services;
 using CarsStorage.BLL.Services.Utils;
@@ -44,8 +45,12 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddOptions<JWTConfig>().BindConfiguration("JWTConfig");
 
+	services.AddOptions<DaDataApiConfig>().BindConfiguration("DaDataApiConfig");
+
 	services.AddDbContext<AppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
+
+	services.AddHttpClient();
 
 	services
 		.AddScoped<IUsersRepository, UsersRepository>()
@@ -56,6 +61,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IPasswordHasher, PasswordHasher>()
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>()
+		.AddScoped<ILocationService, LocationService>()
+		.AddScoped<IDaDataClient, DaDataClient>()
 		.AddScoped<ITechnicalWorksService, TechnicalWorksService>()
 		.AddTransient<TechnicalWorksMiddleware>()		
 		.AddScoped<IDbStatesRepository, DbStatesRepository>()

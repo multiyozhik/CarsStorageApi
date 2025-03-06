@@ -1,0 +1,100 @@
+﻿namespace CarsStorage.Abstractions.ModelsDTO.Location
+{
+	/// <summary>
+	/// Класс адреса DaData API.
+	/// </summary>
+	public class AddressDTO
+	{
+		public string? Source { get; set; }
+		public string? Result { get; set; }
+		public string? Postal_code { get; set; }
+		public string? Country { get; set; }
+		public string? Country_iso_code { get; set; }
+		public string? Federal_district { get; set; }
+		public string? Region_fias_id { get; set; }
+		public string? Region_kladr_id { get; set; }
+		public string? Region_iso_code { get; set; }
+		public string? Region_with_type { get; set; }
+		public string? Region_type { get; set; }
+		public string? Region_type_full { get; set; }
+		public string? Region { get; set; }
+		public object? Area_fias_id { get; set; }
+		public object? Area_kladr_id { get; set; }
+		public object? Area_with_type { get; set; }
+		public object? Area_type { get; set; }
+		public object? Area_type_full { get; set; }
+		public object? Area { get; set; }
+		public object? City_fias_id { get; set; }
+		public object? City_kladr_id { get; set; }
+		public object? City_with_type { get; set; }
+		public object? City_type { get; set; }
+		public object? City_type_full { get; set; }
+		public object? City { get; set; }
+		public string? City_area { get; set; }
+		public object? City_district_fias_id { get; set; }
+		public object? City_district_kladr_id { get; set; }
+		public string? City_district_with_type { get; set; }
+		public string? City_district_type { get; set; }
+		public string? City_district_type_full { get; set; }
+		public string? City_district { get; set; }
+		public object? Settlement_fias_id { get; set; }
+		public object? Settlement_kladr_id { get; set; }
+		public object? Settlement_with_type { get; set; }
+		public object? Settlement_type { get; set; }
+		public object? Settlement_type_full { get; set; }
+		public object? Settlement { get; set; }
+		public string? Street_fias_id { get; set; }
+		public string? Street_kladr_id { get; set; }
+		public string? Street_with_type { get; set; }
+		public string? Street_type { get; set; }
+		public string? Street_type_full { get; set; }
+		public string? Street { get; set; }
+		public object? Stead_fias_id { get; set; }
+		public object? Stead_kladr_id { get; set; }
+		public object? Stead_cadnum { get; set; }
+		public object? Stead_type { get; set; }
+		public object? Stead_type_full { get; set; }
+		public object? Stead { get; set; }
+		public string? House_fias_id { get; set; }
+		public string? House_kladr_id { get; set; }
+		public string? House_cadnum { get; set; }
+		public string? House_type { get; set; }
+		public string? House_type_full { get; set; }
+		public string? House { get; set; }
+		public object? Block_type { get; set; }
+		public object? Block_type_full { get; set; }
+		public object? Block { get; set; }
+		public object? Entrance { get; set; }
+		public object? Floor { get; set; }
+		public object? Flat_fias_id { get; set; }
+		public object? Flat_cadnum { get; set; }
+		public object? Flat_type { get; set; }
+		public object? Flat_type_full { get; set; }
+		public object? Flat { get; set; }
+		public object? Flat_area { get; set; }
+		public string? Square_meter_price { get; set; }
+		public object? Flat_price { get; set; }
+		public object? Postal_box { get; set; }
+		public string? Fias_id { get; set; }
+		public string? Fias_code { get; set; }
+		public string? Fias_level { get; set; }
+		public string? Fias_actuality_state { get; set; }
+		public string? Kladr_id { get; set; }
+		public string? Capital_marker { get; set; }
+		public string? Okato { get; set; }
+		public string? Oktmo { get; set; }
+		public string? Tax_office { get; set; }
+		public string? Tax_office_legal { get; set; }
+		public string? Timezone { get; set; }
+		public string? Geo_lat { get; set; }
+		public string? Geo_lon { get; set; }
+		public string? Beltway_hit { get; set; }
+		public object? Beltway_distance { get; set; }
+		public int? Qc_geo { get; set; }
+		public int? Qc_complete { get; set; }
+		public int? Qc_house { get; set; }
+		public int? Qc { get; set; }
+		public object? Unparsed_parts { get; set; }
+		public List<MetroDTO>? Metro { get; set; }
+	}
+}
