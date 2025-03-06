@@ -23,7 +23,6 @@ using System.Reflection;
 using System.Security.Claims;
 
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((hostBuilderContext, logConfig) => logConfig.ReadFrom.Configuration(hostBuilderContext.Configuration));
@@ -57,7 +56,7 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<IAuthenticateService, AuthenticateService>()
 		.AddScoped<ICarsService, CarsService>()
 		.AddScoped<ITechnicalWorksService, TechnicalWorksService>()
-		.AddTransient<TechnicalWorksMiddleware>()		
+		.AddTransient<TechnicalWorksMiddleware>()
 		.AddScoped<IDbStatesRepository, DbStatesRepository>()
 		.AddScoped<AcceptHeaderActionFilter>();
 
