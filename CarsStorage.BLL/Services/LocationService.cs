@@ -11,6 +11,7 @@ namespace CarsStorage.BLL.Services.Services
 	/// Класс сервиса определения локации пользователя.
 	/// </summary>
 	/// <param name="daDataClient">Объект клиента сервиса DaData.</param>
+	/// <param name="logger">Объект для логирования.</param>
 	public class LocationService(IDaDataClient daDataClient, ILogger<LocationService> logger): ILocationService
 	{
 		/// <summary>
@@ -26,18 +27,14 @@ namespace CarsStorage.BLL.Services.Services
 				return new ServiceResult<LocationDTO>(
 					new LocationDTO()
 					{
-						AddressList = suggestionList.Select(s => s.unrestricted_value).ToList()
+						AddressList = suggestionList.Select(s => s.Unrestricted_value).ToList()
 					});
 			}
 			catch (Exception exception)
 			{
-				logger.LogError("Ошибка в {service} в {method} при запуске технических работ: {errorMessage}", this, nameof(this.GetUserLocation), exception.Message);
+				logger.LogError("Ошибка в {service} в {method} при определении локации пользователя: {errorMessage}", this, nameof(this.GetUserLocation), exception.Message);
 				throw new ServerException(exception.Message);
-			}
-
-
-
-			
+			}			
 		}
 	}
 }

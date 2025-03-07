@@ -24,13 +24,12 @@ namespace CarsStorageApi.Controllers
 		/// <summary>
 		/// Метод определения локации пользователя.
 		/// </summary>
-		/// <param name="coordinateRequest">Объект координат пользователя.</param>
-		/// <returns></returns>
+		/// <param name="coordinatesHeader">Строка объекта координат пользователя.</param>
+		/// <returns>Объект локации пользователя.</returns>
 		[HttpGet]
 		public async Task<ActionResult<LocationDTO>> GetUserLocation([FromHeader(Name = "Coordinates")] string coordinatesHeader)
 		{
-			//{ "lat": 55.878, "lon": 37.653 }
-
+			//{"lat": 55.601983, "lon": 37.359486, "radius_meters": 50}
 			try
 			{
 				var coordinateRequest = JsonSerializer.Deserialize<CoordinateRequest>(coordinatesHeader);
@@ -42,7 +41,7 @@ namespace CarsStorageApi.Controllers
 			}
 			catch (Exception exception)
 			{
-				logger.LogError("Ошибка в {controller} в методе {method} при запуске технических работ: {errorMessage}", this, nameof(this.GetUserLocation), exception.Message);
+				logger.LogError("Ошибка в {controller} в методе {method} при определении локации пользователя: {errorMessage}", this, nameof(this.GetUserLocation), exception.Message);
 				throw;
 			}
 		}

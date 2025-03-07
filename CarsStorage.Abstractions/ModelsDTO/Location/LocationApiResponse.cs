@@ -2,6 +2,6 @@
 {
 	public class LocationApiResponse
 	{
-		public List<SuggestionDTO> suggestions { get; set; } = [];
+		public List<SuggestionDTO> Suggestions { get; set; } = [];
 	}
 }

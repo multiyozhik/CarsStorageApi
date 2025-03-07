@@ -1,33 +1,55 @@
-﻿using CarsStorage.Abstractions.ModelsDTO.Location;
+﻿using CarsStorage.Abstractions.Exceptions;
+using CarsStorage.Abstractions.ModelsDTO.Location;
 using CarsStorage.BLL.Services.Config;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace CarsStorage.BLL.Services.Clients
 {
-	public class DaDataClient(IHttpClientFactory httpClientFactory, IOptions<DaDataApiConfig> options) : IDaDataClient
+	/// <summary>
+	/// Класс клиента, взаимодействующего с DaData API.
+	/// </summary>
+	/// <param name="httpClientFactory">Объект фабрики для создания клиента для отправки запросов на API.</param>
+	/// <param name="options">Объект конфигураций DaData API.</param>
+	/// <param name="logger">Объект для логирования.</param>
+	public class DaDataClient(IHttpClientFactory httpClientFactory, IOptions<DaDataApiConfig> options, ILogger<DaDataClient> logger) : IDaDataClient
 	{
 		private readonly DaDataApiConfig daDataApiConfig = options.Value;
 
+		/// <summary>
+		/// Метод для получения данных по локации пользователя.
+		/// </summary>
+		/// <param name="coordinateDTO">Объект координат пользователя.</param>
+		/// <returns>Список возможных объектов с данными по локации пользователя.</returns>
 		public async Task<List<SuggestionDTO>> GetLocation(CoordinateDTO coordinateDTO)
 		{
-			var request = new HttpRequestMessage(HttpMethod.Get, new Uri(daDataApiConfig.LocationApiUrl));
+			try
+			{
+				var request = new HttpRequestMessage(HttpMethod.Post, new Uri(daDataApiConfig.LocationApiUrl))
+				{
+					Headers =
+				{
+					Authorization = new AuthenticationHeaderValue("Token", daDataApiConfig.Token),
+					Accept = { new MediaTypeWithQualityHeaderValue("application/json") }
+				},
+					Content = JsonContent.Create(coordinateDTO)
+				};
 
-			request.Headers.Authorization = new AuthenticationHeaderValue("Token", daDataApiConfig.Token);
-			request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+				var httpClient = httpClientFactory.CreateClient();
+				var response = await httpClient.SendAsync(request);
+				response.EnsureSuccessStatusCode();
 
-			var content = new StringContent(JsonSerializer.Serialize(coordinateDTO));
-			content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-			
-			request.Content = content;
-
-			var httpClient = httpClientFactory.CreateClient();
-			var response = await httpClient.SendAsync(request);
-			//var str = await response.Content.ReadAsStringAsync();
-			var apiResponse = await response.Content.ReadFromJsonAsync<LocationApiResponse>();
-			return apiResponse.suggestions;
+				var apiResponse = await response.Content.ReadFromJsonAsync<LocationApiResponse>();
+				return apiResponse.Suggestions ?? [];
+			}
+			catch (Exception exception)
+			{
+				logger.LogError("Ошибка в {service} в {method}  при выполнении запроса к DaData API: {errorMessage}", this, nameof(this.GetLocation), exception.Message);
+				throw new ServerException(exception.Message);
+			}
 		}
 	}
 }
