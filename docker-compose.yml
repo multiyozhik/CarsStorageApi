@@ -5,22 +5,27 @@ networks:
     driver: bridge
 
 services:
-  carsstorageapi:
+  carsstorageapi-service:
     image: carsstorageapi
+    container_name: api
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: CarsStorageApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # - ASPNETCORE_URLS=http://+
+
     ports:
-      - "5243:80"  
-      - "7251:443"  
+      - "8080:8080"  
+      - "8081:8081"  
     depends_on:
       - db
     networks:
       - carsstorageapi-network
 
   db:
-    image: postgres:latest
-    container_name: carsstorageapi
+    image: postgres:14
+    container_name: carsstorageapi-db
     restart: always
     environment:
       POSTGRES_DB: carsstorage

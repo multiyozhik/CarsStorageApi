@@ -7,7 +7,7 @@
     <UserSecretsId>bc21008d-64f4-47f8-a609-e11ed3904d54</UserSecretsId>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	<DocumentationFile>bin\Debug\net6.0\CarsStorageApi.xml</DocumentationFile>
-	<DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
+	<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	<IsPackable>true</IsPackable>
 	<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
 	<ContainerRuntimeIdentifier>win-x64</ContainerRuntimeIdentifier>

@@ -8,10 +8,10 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["CarsStorageApi/CarsStorageApi.csproj", "CarsStorageApi/"]
-COPY ["CarsStorage.BLL/CarsStorage.BLL.Services.csproj", "CarsStorage.BLL/"]
-COPY ["CarsStorage.Abstractions/CarsStorage.Abstractions.csproj", "CarsStorage.Abstractions/"]
-COPY ["CarsStorage.DAL/CarsStorage.DAL.csproj", "CarsStorage.DAL/"]
-COPY ["CarsStorage.DAL.Repositories/CarsStorage.DAL.Repositories.csproj", "CarsStorage.DAL.Repositories/"]
+COPY ["../CarsStorage.BLL/CarsStorage.BLL.Services.csproj", "CarsStorage.BLL/"]
+COPY ["../CarsStorage.Abstractions/CarsStorage.Abstractions.csproj", "CarsStorage.Abstractions/"]
+COPY ["../CarsStorage.DAL/CarsStorage.DAL.csproj", "CarsStorage.DAL/"]
+COPY ["../CarsStorage.DAL.Repositories/CarsStorage.DAL.Repositories.csproj", "CarsStorage.DAL.Repositories/"]
 RUN dotnet restore "CarsStorageApi/CarsStorageApi.csproj"
 
 COPY . .
