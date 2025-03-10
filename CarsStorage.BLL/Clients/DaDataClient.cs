@@ -31,10 +31,10 @@ namespace CarsStorage.BLL.Services.Clients
 				var request = new HttpRequestMessage(HttpMethod.Post, new Uri(daDataApiConfig.LocationApiUrl))
 				{
 					Headers =
-				{
-					Authorization = new AuthenticationHeaderValue("Token", daDataApiConfig.Token),
-					Accept = { new MediaTypeWithQualityHeaderValue("application/json") }
-				},
+					{
+						Authorization = new AuthenticationHeaderValue("Token", daDataApiConfig.Token),
+						Accept = { new MediaTypeWithQualityHeaderValue("application/json") }
+					},
 					Content = JsonContent.Create(coordinateDTO)
 				};
 
