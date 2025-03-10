@@ -1,25 +1,54 @@
+
+
+networks:
+  carsstorageapi-network:
+    driver: bridge
+
 services:
-  carsstorageapi:
-    image: carsstorageapi-211283
+  carsstorageapi-service:
+    image: carsstorageapi
+    container_name: api
     build:
       context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8001:443"  
+      dockerfile: CarsStorageApi/Dockerfile
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Database=CarsStorage;Username=postgres;Password=pgroot; 
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:8081;http://+:8080 
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/Certificates/aspnetapp.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=certpwd
+
+    ports:
+      - "8080:8080"  
+      - "8081:8081"  
     depends_on:
       - db
+    networks:
+      - carsstorageapi-network
+    volumes:
+      - ./Certificates:/app/Certificates
+
   db:
-    image: postgres:latest
+    image: postgres:17
+    container_name: carsstorageapi-db
+    restart: always
     environment:
-      POSTGRES_DB: CarsStorage
+      POSTGRES_DB: carsstorage
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pgroot
     ports:
       - "5432:5432"
     volumes:
-      - ./db_data:/var/lib/postgres
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - carsstorageapi-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
 
+volumes:
+  pgdata:
 
 
