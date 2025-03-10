@@ -30,9 +30,4 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 COPY CarsStorageApi/appsettings.json /app/appsettings.json
 
-# HTTPS конфигурация
-RUN mkdir -p /app/Certificates
-COPY ../Certificates/aspnetapp.pfx /app/Certificates/
-RUN chmod 644 /app/Certificates/aspnetapp.pfx
-
 ENTRYPOINT ["dotnet", "CarsStorageApi.dll"]

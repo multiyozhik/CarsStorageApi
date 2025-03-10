@@ -13,9 +13,7 @@ services:
       dockerfile: CarsStorageApi/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:8081;http://+:8080 
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/Certificates/aspnetapp.pfx
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=certpwd
+      # - ASPNETCORE_URLS=http://+
 
     ports:
       - "8080:8080"  
@@ -24,11 +22,9 @@ services:
       - db
     networks:
       - carsstorageapi-network
-    volumes:
-      - ./Certificates:/app/Certificates
 
   db:
-    image: postgres:17
+    image: postgres:14
     container_name: carsstorageapi-db
     restart: always
     environment:
