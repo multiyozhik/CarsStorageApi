@@ -4,6 +4,7 @@ using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Services.Clients;
 using CarsStorage.BLL.Services.Config;
+using CarsStorage.BLL.Services.Rabbit;
 using CarsStorage.BLL.Services.Services;
 using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.DbContexts;
@@ -27,10 +28,7 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((hostBuilderContext, logConfig) => logConfig.ReadFrom.Configuration(hostBuilderContext.Configuration));
-//builder.WebHost.UseUrls(
-//	"http://localhost:5243"
-//	//"https://localhost:7251"
-//);
+
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
@@ -49,8 +47,9 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 
 	services.AddOptions<DaDataApiConfig>().BindConfiguration("DaDataApiConfig");
 
-	services.AddDbContext<AppDbContext>(options =>
-		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
+	services.AddOptions<RabbitMqConfig>().BindConfiguration("RabbitMqConfig");
+
+	services.AddDbContext<AppDbContext>(options => options.UseNpgsql(config.GetConnectionString("NpgConnection")));
 
 	services.AddHttpClient();
 
@@ -68,7 +67,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<ITechnicalWorksService, TechnicalWorksService>()
 		.AddTransient<TechnicalWorksMiddleware>()
 		.AddScoped<IDbStatesRepository, DbStatesRepository>()
-		.AddScoped<AcceptHeaderActionFilter>();
+		.AddScoped<AcceptHeaderActionFilter>()
+		.AddSingleton<IPublisherService, RabbitPublisherService>();
 
 	services.AddAuthentication(options =>
 	{

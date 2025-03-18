@@ -10,10 +10,10 @@ namespace CarsStorage.BLL.Services.Services
 	/// Класс сервиса по проведению технических работ.
 	/// </summary>
 	/// <param name="repository">Репозиторий технических работ.</param>
-	public class TechnicalWorksService(IDbStatesRepository repository, ILogger<TechnicalWorksService> logger) : ITechnicalWorksService
+	public class TechnicalWorksService(IDbStatesRepository repository, ILogger<TechnicalWorksService> logger, IPublisherService rabbitProducerService) : ITechnicalWorksService
 	{
 		/// <summary>
-		/// Метод для запуска технических работ.
+		/// Метод для запуска технических работ и публикации сообщения .
 		/// </summary>
 		/// <returns>Строка сообщения о запуске технических работ.</returns>
 		public async Task<ServiceResult<string>> StartTechnicalWorks()
@@ -21,6 +21,7 @@ namespace CarsStorage.BLL.Services.Services
 			try
 			{
 				await repository.Update(true);
+				await PublishMessage("В настоящее время проводятся технические работы.");
 				return new ServiceResult<string>("В настоящее время проводятся технические работы.");
 			}
 			catch (Exception exception)
@@ -39,6 +40,7 @@ namespace CarsStorage.BLL.Services.Services
 			try
 			{
 				await repository.Update(false);
+				await PublishMessage("Технические работы завершены.");
 				return new ServiceResult<string>("Технические работы завершены.");
 			}
 			catch (Exception exception)
@@ -57,6 +59,24 @@ namespace CarsStorage.BLL.Services.Services
 		{
 			var isUnderMaintenance = await repository.IsUnderMaintenance();
 			return new ServiceResult<bool>(isUnderMaintenance);
+		}
+
+
+		/// <summary>
+		/// Метод для рассылки сообщения о запуске или остановке технических работ с помощью rabbitProducerService. 
+		/// </summary>
+		/// <param name="message">Строка сообщения.</param>
+		private async Task PublishMessage(string message)
+		{
+			try
+			{
+				await rabbitProducerService.Publish(message);
+			}
+			catch (Exception exception) 
+			{
+				logger.LogError("Ошибка в {service} в {method} при рассылке сообщения о запуске или остановке технических работ: {errorMessage}", this, nameof(this.StartTechnicalWorks), exception.Message);
+				throw new ServerException(exception.Message);
+			}			
 		}
 	}
 }
