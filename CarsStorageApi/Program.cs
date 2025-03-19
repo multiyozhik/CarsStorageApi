@@ -4,6 +4,7 @@ using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.ModelsDTO;
 using CarsStorage.BLL.Services.Clients;
 using CarsStorage.BLL.Services.Config;
+using CarsStorage.BLL.Services.Kafka;
 using CarsStorage.BLL.Services.Services;
 using CarsStorage.BLL.Services.Utils;
 using CarsStorage.DAL.DbContexts;
@@ -27,10 +28,7 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((hostBuilderContext, logConfig) => logConfig.ReadFrom.Configuration(hostBuilderContext.Configuration));
-//builder.WebHost.UseUrls(
-//	"http://localhost:5243"
-//	//"https://localhost:7251"
-//);
+
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
@@ -48,6 +46,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 	services.AddOptions<JWTConfig>().BindConfiguration("JWTConfig");
 
 	services.AddOptions<DaDataApiConfig>().BindConfiguration("DaDataApiConfig");
+
+	services.AddProducer<Message>(config.GetSection("KafkaConfig"));
 
 	services.AddDbContext<AppDbContext>(options =>
 		options.UseNpgsql(config.GetConnectionString("NpgConnection")));
@@ -68,7 +68,8 @@ static void ConfigureServices(IServiceCollection services, IConfiguration config
 		.AddScoped<ITechnicalWorksService, TechnicalWorksService>()
 		.AddTransient<TechnicalWorksMiddleware>()
 		.AddScoped<IDbStatesRepository, DbStatesRepository>()
-		.AddScoped<AcceptHeaderActionFilter>();
+		.AddScoped<AcceptHeaderActionFilter>()
+		.AddSingleton<IKafkaProducer<Message>,KafkaProducer<Message>>();
 
 	services.AddAuthentication(options =>
 	{

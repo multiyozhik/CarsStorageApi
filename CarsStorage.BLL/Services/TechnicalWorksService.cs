@@ -2,6 +2,7 @@
 using CarsStorage.Abstractions.DAL.Repositories;
 using CarsStorage.Abstractions.Exceptions;
 using CarsStorage.Abstractions.General;
+using CarsStorage.BLL.Services.Kafka;
 using Microsoft.Extensions.Logging;
 
 namespace CarsStorage.BLL.Services.Services
@@ -10,7 +11,7 @@ namespace CarsStorage.BLL.Services.Services
 	/// Класс сервиса по проведению технических работ.
 	/// </summary>
 	/// <param name="repository">Репозиторий технических работ.</param>
-	public class TechnicalWorksService(IDbStatesRepository repository, ILogger<TechnicalWorksService> logger) : ITechnicalWorksService
+	public class TechnicalWorksService(IDbStatesRepository repository, ILogger<TechnicalWorksService> logger, IKafkaProducer<Message> kafkaProducer) : ITechnicalWorksService
 	{
 		/// <summary>
 		/// Метод для запуска технических работ.
@@ -21,10 +22,12 @@ namespace CarsStorage.BLL.Services.Services
 			try
 			{
 				await repository.Update(true);
+				await kafkaProducer.ProduceAsync(new Message() { Text = "В настоящее время проводятся технические работы." }, cancellationToken: default);
 				return new ServiceResult<string>("В настоящее время проводятся технические работы.");
 			}
 			catch (Exception exception)
 			{
+				var innner = exception.InnerException;
 				logger.LogError("Ошибка в {service} в {method} при запуске технических работ: {errorMessage}", this, nameof(this.StartTechnicalWorks), exception.Message);
 				throw new ServerException(exception.Message);
 			}
