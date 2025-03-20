@@ -78,6 +78,7 @@ namespace CarsStorageApi.Controllers
 			}
 			catch(Exception exception)
 			{
+				Console.WriteLine(exception.InnerException.InnerException.ToString());
 				logger.LogError("Ошибка в {controller} в методе {method} при входе пользователя в приложение: {errorMessage}", this, nameof(this.LogIn), exception.Message);
 				throw;
 			}

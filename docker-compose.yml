@@ -6,8 +6,8 @@ networks:
 
 services:
   carsstorageapi-service:
-    image: carsstorageapi
-    container_name: api
+    image: carsstorageapi-rabbitmq
+    container_name: carsstorageapi-rabbitmq
     build:
       context: .
       dockerfile: CarsStorageApi/Dockerfile
@@ -16,16 +16,53 @@ services:
       - ASPNETCORE_URLS=https://+:8081;http://+:8080 
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/Certificates/aspnetapp.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=certpwd
-
+      - RabbitMQ__Host=rabbitmq
+      - ConnectionStrings__DefaultConnection=Host=db;Database=CarsStorage;Username=postgres;Password=pgroot
     ports:
       - "8080:8080"  
       - "8081:8081"  
     depends_on:
       - db
+      - rabbitmq
     networks:
       - carsstorageapi-network
     volumes:
       - ./Certificates:/app/Certificates
+  
+  listener:
+    build:
+      context: .
+      dockerfile: ListenerService/Dockerfile
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:8085;http://+:8086
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/Certificates/aspnetapp.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=certpwd
+      - RabbitMQ__Host=rabbitmq
+    ports:
+      - "8085:8085"  
+      - "8086:8086" 
+    networks:
+      - carsstorageapi-network
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=multiyozhik
+      - RABBITMQ_DEFAULT_PASS=sviri_30251721
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq/data:/var/lib/rabbitmq/
+      - ./rabbitmq/logs:/var/log/rabbitmq/
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    networks:
+      - carsstorageapi-network
 
   db:
     image: postgres:17
