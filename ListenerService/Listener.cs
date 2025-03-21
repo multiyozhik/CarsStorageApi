@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+п»їusing Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -6,30 +6,30 @@ using System.Text;
 namespace ListenerService
 {
 	/// <summary>
-	/// Класс для прослушивания сообщений от RabbitMq в фоновом режиме.
+	/// РљР»Р°СЃСЃ РґР»СЏ РїСЂРѕСЃР»СѓС€РёРІР°РЅРёСЏ СЃРѕРѕР±С‰РµРЅРёР№ РѕС‚ RabbitMq РІ С„РѕРЅРѕРІРѕРј СЂРµР¶РёРјРµ.
 	/// </summary>
 	public class Listener : BackgroundService
 	{
 		/// <summary>
-		/// Закрытое поле для конфигураций RabbitMq.
+		/// Р—Р°РєСЂС‹С‚РѕРµ РїРѕР»Рµ РґР»СЏ РєРѕРЅС„РёРіСѓСЂР°С†РёР№ RabbitMq.
 		/// </summary>
 		private readonly RabbitMqConfig rabbitMqConfig;
 
 		/// <summary>
-		/// Закрытое поле для фабрики создания подключения к RabbitMq с использованием конфигураций.
+		/// Р—Р°РєСЂС‹С‚РѕРµ РїРѕР»Рµ РґР»СЏ С„Р°Р±СЂРёРєРё СЃРѕР·РґР°РЅРёСЏ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє RabbitMq СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј РєРѕРЅС„РёРіСѓСЂР°С†РёР№.
 		/// </summary>
 		private readonly ConnectionFactory factory;
 
 		/// <summary>
-		/// Объект для логирования.
+		/// РћР±СЉРµРєС‚ РґР»СЏ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ.
 		/// </summary>
 		private readonly ILogger logger;
 
 		/// <summary>
-		/// Конструктор для создания объекта для прослушивания сообщений от RabbitMq в фоновом режиме.
+		/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РґР»СЏ СЃРѕР·РґР°РЅРёСЏ РѕР±СЉРµРєС‚Р° РґР»СЏ РїСЂРѕСЃР»СѓС€РёРІР°РЅРёСЏ СЃРѕРѕР±С‰РµРЅРёР№ РѕС‚ RabbitMq РІ С„РѕРЅРѕРІРѕРј СЂРµР¶РёРјРµ.
 		/// </summary>
-		/// <param name="options">Объект конфигураций RabbitMq.</param>
-		/// <param name="exchangerOptions">Объект конфигураций обменника RabbitMq.</param>
+		/// <param name="options">РћР±СЉРµРєС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёР№ RabbitMq.</param>
+		/// <param name="exchangerOptions">РћР±СЉРµРєС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёР№ РѕР±РјРµРЅРЅРёРєР° RabbitMq.</param>
 		public Listener(IOptions<RabbitMqConfig> options, ILogger<Listener> logger)
 		{
 			rabbitMqConfig = options.Value;
@@ -39,9 +39,9 @@ namespace ListenerService
 
 
 		/// <summary>
-		/// Метод фонового режима прослушивания.
+		/// РњРµС‚РѕРґ С„РѕРЅРѕРІРѕРіРѕ СЂРµР¶РёРјР° РїСЂРѕСЃР»СѓС€РёРІР°РЅРёСЏ.
 		/// </summary>
-		/// <param name="stoppingToken">Объект для токена отмены.</param>
+		/// <param name="stoppingToken">РћР±СЉРµРєС‚ РґР»СЏ С‚РѕРєРµРЅР° РѕС‚РјРµРЅС‹.</param>
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 		{
 			try
@@ -50,7 +50,7 @@ namespace ListenerService
 				using var channel = await connection.CreateChannelAsync(cancellationToken: stoppingToken);
 				await channel.ExchangeDeclareAsync(exchange: rabbitMqConfig.ExchangeName, ExchangeType.Fanout, durable: true, autoDelete: false, arguments: null, cancellationToken: stoppingToken);
 
-				var queueDeclareResult = await channel.QueueDeclareAsync(cancellationToken: stoppingToken);       //временная очередь
+				var queueDeclareResult = await channel.QueueDeclareAsync(cancellationToken: stoppingToken);       //РІСЂРµРјРµРЅРЅР°СЏ РѕС‡РµСЂРµРґСЊ
 				string queueName = queueDeclareResult.QueueName;
 				await channel.QueueBindAsync(queue: queueName, exchange: rabbitMqConfig.ExchangeName, routingKey: string.Empty, cancellationToken: stoppingToken);
 
@@ -61,7 +61,7 @@ namespace ListenerService
 				{
 					byte[] body = ea.Body.ToArray();
 					var message = Encoding.UTF8.GetString(body);
-					Console.WriteLine($"Получено сообщение: {message}");
+					Console.WriteLine($"РџРѕР»СѓС‡РµРЅРѕ СЃРѕРѕР±С‰РµРЅРёРµ: {message}");
 					await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
 				};
 
@@ -69,12 +69,12 @@ namespace ListenerService
 
 				while (!stoppingToken.IsCancellationRequested)
 				{
-					await Task.Delay(10000, stoppingToken);                                                     //чтобы сразу не закрывался после запуска
+					await Task.Delay(10000, stoppingToken);                                                     //С‡С‚РѕР±С‹ СЃСЂР°Р·Сѓ РЅРµ Р·Р°РєСЂС‹РІР°Р»СЃСЏ РїРѕСЃР»Рµ Р·Р°РїСѓСЃРєР°
 				}
 			}
 			catch (Exception exception)
 			{
-				logger.LogError("Ошибка в {service} в {method} при прослушивании сообщений с помощью RabbitMq: {errorMessage}", this, nameof(this.ExecuteAsync), exception.Message);
+				logger.LogError("РћС€РёР±РєР° РІ {service} РІ {method} РїСЂРё РїСЂРѕСЃР»СѓС€РёРІР°РЅРёРё СЃРѕРѕР±С‰РµРЅРёР№ СЃ РїРѕРјРѕС‰СЊСЋ RabbitMq: {errorMessage}", this, nameof(this.ExecuteAsync), exception.Message);
 				throw new Exception(exception.Message);
 			}
 		}

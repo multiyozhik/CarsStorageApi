@@ -12,6 +12,7 @@ using CarsStorage.DAL.Repositories.Implementations;
 using CarsStorageApi.Config;
 using CarsStorageApi.Filters;
 using CarsStorageApi.Middlewares;
+using Google;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -34,6 +35,25 @@ ConfigureServices(builder.Services, builder.Configuration);
 var app = builder.Build();
 
 Configure(app, app.Environment);
+
+Console.WriteLine("########################################################");
+
+using (var scope = app.Services.CreateScope())
+{
+	var services = scope.ServiceProvider;
+	try
+	{
+		var dbContext = services.GetRequiredService<AppDbContext>();
+		dbContext.Database.Migrate();
+		Console.WriteLine("Миграции успешно применены.");
+	}
+	catch (Exception ex)
+	{
+		Console.WriteLine($"Ошибка применения миграций: {ex.Message}");
+	}
+}
+
+app.Run();
 
 
 
@@ -249,8 +269,6 @@ static void Configure(WebApplication app, IHostEnvironment env)
 	});
 
 	app.MapControllers();
-
-	app.Run();
 }
 
 static void ValidateAppConfigs(IConfiguration jwtConfig)

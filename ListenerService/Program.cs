@@ -1,4 +1,4 @@
-using ListenerService;
+﻿using ListenerService;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddOptions<RabbitMqConfig>().BindConfiguration("RabbitMqConfig");

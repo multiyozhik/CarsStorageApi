@@ -6,8 +6,8 @@ networks:
 
 services:
   carsstorageapi-service:
-    image: carsstorageapi-rabbitmq
-    container_name: carsstorageapi-rabbitmq
+    image: carsstorageapi-rabbit-api
+    container_name: carsstorageapi-rabbit-api    
     build:
       context: .
       dockerfile: CarsStorageApi/Dockerfile
@@ -17,7 +17,7 @@ services:
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/Certificates/aspnetapp.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=certpwd
       - RabbitMQ__Host=rabbitmq
-      - ConnectionStrings__DefaultConnection=Host=db;Database=CarsStorage;Username=postgres;Password=pgroot
+      - ConnectionStrings__NpgConnection=Host=db;Database=carsstorage;Username=postgres;Password=pgroot
     ports:
       - "8080:8080"  
       - "8081:8081"  
@@ -28,6 +28,8 @@ services:
       - carsstorageapi-network
     volumes:
       - ./Certificates:/app/Certificates
+    command: >
+      sh -c "dotnet ef database update && dotnet CarsStorageApi.dll"
   
   listener:
     build:
@@ -54,6 +56,7 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=multiyozhik
       - RABBITMQ_DEFAULT_PASS=sviri_30251721
+      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq.conf
     ports:
       - "5672:5672"
       - "15672:15672"
